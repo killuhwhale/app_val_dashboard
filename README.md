@@ -12,7 +12,7 @@
         - sudo service ssh restart
 
 ## Execute SSH Command From GCP
-ssh samus@98.45.154.253 "source appium/bin/activate; python3 appium/src/main.py -i 192.168.0.133:1337;"
+ssh samus@92.23.642.127 "source appium/bin/activate; python3 appium/src/main.py -i 192.168.0.133:1337;"
 
 
 # Dev Env
@@ -20,6 +20,23 @@ ssh samus@98.45.154.253 "source appium/bin/activate; python3 appium/src/main.py 
 "[typescriptreact]": {
     "editor.formatOnSave": true
 }
+
+
+# TODO()
+Add Sorting to AppResults
+Add Label to Start and End Date
+Enhance Label to AppRunResults next num results, also make overflow-x-auto
+Create modal for History and Logs
+    History should show a list of hist w/ imgs
+    Logs should be printed with markup
+
+Create a few graphs to show the data.
+   - A set of graphs for the selected AppRun Result
+        - Show Totals
+
+   - A set of graphs for all the app runs selected
+    - Show Totals compared in each run
+
 
 
 # FireStore Structure
