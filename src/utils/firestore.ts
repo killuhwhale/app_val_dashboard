@@ -11,7 +11,9 @@ const backEndApp =
   firebase.getApps()[0] ??
   initializeApp(
     {
-      credential: admin.credential.cert(firebaseServiceAccount),
+      credential: admin.credential.cert(
+        firebaseServiceAccount as unknown as firebase.ServiceAccount
+      ),
       projectId: serviceAccount.projectId,
       storageBucket: serviceAccount.storageBucket,
     },
