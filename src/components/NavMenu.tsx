@@ -10,7 +10,7 @@ const NavMenu: React.FC = () => {
   return (
     <aside
       id="logo-sidebar"
-      className="fixed left-0 top-0 z-40 h-screen w-48 -translate-x-full  bg-transparent pt-20 transition-transform sm:translate-x-0"
+      className="fixed left-0 top-0 z-40 h-screen w-52 -translate-x-full  bg-transparent pt-20 transition-transform sm:translate-x-0"
       aria-label="Sidebar"
     >
       <div className="h-full overflow-y-auto bg-transparent px-3 pb-4">
