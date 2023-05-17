@@ -4,7 +4,6 @@ import {
   type NextAuthOptions,
   type DefaultSession,
 } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
@@ -13,8 +12,6 @@ import GoogleProvider from "next-auth/providers/google";
 import { FirestoreAdapter } from "@next-auth/firebase-adapter";
 
 import { firestore, auth, backEndApp } from "~/utils/firestore";
-import { signInWithCustomToken } from "firebase/auth";
-import { frontEndAuth } from "~/utils/frontFirestore";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -31,11 +28,6 @@ declare module "next-auth" {
       // role: UserRole;
     } & DefaultSession["user"];
   }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
 }
 
 /**
@@ -47,20 +39,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     session: async ({ session, user }) => {
       let customToken = "";
-      if (["andayac@gmail.com"].indexOf(user.email) >= 0) {
-        try {
-          // const fbAuth = await getAuth();
 
+      const isDevAct = ["andayac@gmail.com"].indexOf(user.email) >= 0;
+      const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
+
+      if (isDevAct || isGoogler) {
+        try {
           customToken = await auth.createCustomToken(user.email ?? "");
-          const userCredential = await signInWithCustomToken(
-            frontEndAuth,
-            customToken
-          );
-          console.log("User logged in? ", userCredential.user);
-          console.log("Custome token:", customToken);
-          // customToken = customToken;
+          // console.log("Custom token:", customToken);
         } catch (err) {
-          console.log("Error getAuth(): ", err);
+          console.log("Error auth.createCustomToken(): ", err);
         }
       }
 
@@ -73,27 +61,33 @@ export const authOptions: NextAuthOptions = {
         },
       };
     },
-    signIn: async ({ account, profile, user, credentials }) => {
-      console.log("Sign in called with ", account?.id_token, profile);
+    signIn: ({ account, profile, user, credentials }) => {
+      console.log("Sign in called with ", account?.expires_at, profile);
       if (
         account &&
         profile &&
         profile.email &&
         account.provider === "google"
       ) {
-        if (["andayac@gmail.com"].indexOf(profile.email) >= 0) {
-          // const fbAuth = await getAuth();
-          // const customToken = await fbAuth.createCustomToken(user.email ?? "");
-          // console.log("Custome token:", customToken);
-          // user.custom_token = customToken;
-          return true;
-        }
+        const isDevAct = ["andayac@gmail.com"].indexOf(profile.email) >= 0;
+        //   abc@google.com => ['abc', 'google.com']
+        const isGoogler = (profile.email.split("@")[1] ?? "") === "google.com";
+        console.log(
+          "isDev or isGoog",
+          isDevAct,
+          isGoogler,
+          isDevAct || isGoogler
+        );
+        return isDevAct || isGoogler;
       }
+
+      console.log("Sign in: false");
       return false;
     },
   },
 
   adapter: FirestoreAdapter(firestore),
+  // adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,

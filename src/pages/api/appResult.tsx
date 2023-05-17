@@ -13,7 +13,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello" });
   else if (req.method !== "POST") return;
   try {
-    const body = req.body;
+    const body: string = req.body as string;
     const {
       status,
       package_name,
@@ -28,7 +28,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       invalid,
       history,
       logs,
-    } = JSON.parse(body);
+    } = JSON.parse(body) as RawAppResult;
     const docRefParent = db.collection(`AppRuns`).doc(`${run_id}`);
 
     const parentRes = await docRefParent.set({
@@ -101,14 +101,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       },
       error: null,
     });
-  } catch (err) {
+  } catch (err: any) {
     console.log(err);
     res.status(500).json({
       data: {
         success: false,
         data: null,
       },
-      error: `Err posting: ${err}`,
+      error: `Err posting: ${String(err)}`,
     });
   }
 };

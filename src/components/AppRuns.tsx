@@ -20,13 +20,15 @@ const AppRuns: React.FC<{
       <div className={`flex space-x-4 overflow-auto  p-2`}>
         {docs && docs.length ? (
           docs.map((docu: QueryDocumentSnapshot<DocumentData>) => {
+            const data = docu.data() as unknown as AppRun;
             return (
               <div
+                key={docu.id}
                 className="flex max-h-[30px] min-h-[30px] min-w-[140px] items-center justify-center border border-slate-400 bg-slate-900 p-4 text-white hover:bg-slate-700"
                 onClick={() => onSelect(docu)}
               >
                 <p className="text-ellipsis text-xs sm:text-sm md:text-base">
-                  {displayDate(new Date(docu.data().date.seconds * 1000))}
+                  {displayDate(new Date(data.date?.seconds * 1000))}
                 </p>
               </div>
             );

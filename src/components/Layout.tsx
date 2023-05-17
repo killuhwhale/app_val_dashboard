@@ -9,14 +9,13 @@ const PageLayout: NextPage<{ children: ReactNode }> = ({ children }) => {
   const sesh = useFirebaseSession();
   const router = useRouter();
 
+  // "/api/auth/signin?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fsettings"
   useEffect(() => {
     if (sesh.status === "unauthenticated") {
-      router.push(
-        "/api/auth/signin?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fsettings"
-      );
+      void router.push("/api/auth/signin");
     }
   });
-
+  console.log("Auth status in Layout: ", sesh.status);
   /** from-sky-800 to-fuchsia-300 */
   return (
     <div className=" min-h-screen w-full bg-gradient-to-b from-slate-600 to-sky-900">

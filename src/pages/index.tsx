@@ -8,35 +8,7 @@ import FullColumn from "~/components/columns/FullColumn";
 import HalfColumn from "~/components/columns/HalfColumn";
 import ThirdColumn from "~/components/columns/ThirdColumn";
 import { api } from "~/utils/api";
-import { frontEndAuth } from "~/utils/frontFirestore";
-
-const useFirebaseSession = () => {
-  const session = useSession();
-  const [status, setStatus] = useState(session.status);
-
-  useEffect(() => {
-    if (status == "authenticated") return;
-
-    if (session && session.status === "authenticated") {
-      // signInWithCredential(auth, )  TODO() Setup Firebase/Auth for lcient side?
-      console.log("signInWithCustomToken", session.data.user);
-
-      signInWithCustomToken(frontEndAuth, session.data.user.custom_token).then(
-        () => {
-          setStatus("authenticated");
-        }
-      );
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (session.status !== "authenticated") {
-      setStatus(session.status);
-    }
-  }, [session.status]);
-
-  return { data: session.data, status };
-};
+import { frontEndAuth, useFirebaseSession } from "~/utils/frontFirestore";
 
 export const formatDateToString = (date: Date): string => {
   return date.toLocaleDateString("en-US", {

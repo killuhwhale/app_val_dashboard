@@ -7,33 +7,12 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
-import { filter } from "~/utils/algos";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import { filter, filterOptions } from "~/utils/algos";
 import { frontFirestore } from "~/utils/frontFirestore";
 import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
 import ViewLogsModal from "./modals/ViewLogsModal";
-
-interface FBDate {
-  seconds: number;
-  nanoseconds: number;
-}
-
-type AppResult = {
-  status: number;
-  package_name: string;
-  name: string;
-  report_title: string;
-  run_id: string;
-  run_ts: FBDate;
-  build: string;
-  timestamp: FBDate;
-  reason: string;
-  new_name: string;
-  invalid: string;
-  history: string;
-  logs: string;
-};
 
 const displayDateWithTime = (date: Date): string => {
   return (
@@ -57,9 +36,13 @@ export const displayDate = (date: Date): string => {
 
 interface AppResultRowProps {
   appResult: AppResult;
+  decoratedPackageName?: string;
 }
 
-const AppResultRow: React.FC<AppResultRowProps> = ({ appResult }) => {
+const AppResultRow: React.FC<AppResultRowProps> = ({
+  appResult,
+  decoratedPackageName,
+}) => {
   const [showHistory, setShowHistory] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
 
@@ -79,6 +62,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({ appResult }) => {
     logs,
   } = appResult;
   const hasLogs = logs.length > 0;
+  console.log("decoratedPackageNames", decoratedPackageName);
   return (
     <tr
       className={`${
@@ -88,9 +72,15 @@ const AppResultRow: React.FC<AppResultRowProps> = ({ appResult }) => {
       }  text-white`}
       key={timestamp.toString()}
     >
-      <td className=" whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {package_name}
-      </td>
+      <td
+        className=" whitespace-nowrap px-6 py-4 text-xs font-medium"
+        dangerouslySetInnerHTML={{
+          __html:
+            decoratedPackageName && decoratedPackageName.length > 0
+              ? decoratedPackageName
+              : package_name,
+        }}
+      ></td>
       <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
         {name}
       </td>
@@ -160,6 +150,10 @@ const AppResults: React.FC<{
   const [filteredPackageNames, setFilteredPackageNames] = useState<number[]>(
     []
   );
+  const [
+    filteredPackageNamesDecoratedStings,
+    setFilteredPackageNamesDecoratedStings,
+  ] = useState<string[]>([]);
 
   const [sortKey, setSortKey] = useState("package_name");
   // Package Name Name Report Title Run Ts	Timestamp of app	Reason
@@ -175,7 +169,7 @@ const AppResults: React.FC<{
   };
 
   useEffect(() => {
-    let _appResults: AppResult[] = [];
+    const _appResults: AppResult[] = [];
     if (appResults.length > 0) return;
     const getSubCollection = async () => {
       const results = await getDocs(
@@ -190,17 +184,28 @@ const AppResults: React.FC<{
       setFilteredPackageNames(
         Array.from(Array(_appResults.length).keys()).map((idx) => idx)
       );
+      setFilteredPackageNamesDecoratedStings(
+        appResults.map((result: AppResult) => {
+          return result.package_name;
+        })
+      );
     };
 
-    getSubCollection();
+    getSubCollection().catch((err) => {
+      console.log("Error getting subcolelction.", err);
+    });
   }, [appResults]);
 
-  const [term, setTerm] = useState("");
-
-  const filterText = (term: string) => {
-    if (!term) {
+  const filterText = (searchTerm: string) => {
+    if (!searchTerm) {
+      // reset to all results
       setFilteredPackageNames(
         Array.from(Array(appResults.length).keys()).map((idx) => idx)
+      );
+      setFilteredPackageNamesDecoratedStings(
+        appResults.map((result: AppResult) => {
+          return result.package_name;
+        })
       );
       return;
     }
@@ -208,10 +213,14 @@ const AppResults: React.FC<{
     const stringData = appResults.map(
       (result: AppResult) => result.package_name
     );
-    console.log("Filter text: ", term, stringData);
-    const { items, marks } = filter(term, stringData, { word: false });
+    // console.log("Filter text: ", searchTerm, stringData);
+    const options: filterOptions = {
+      word: false,
+    };
+    const { items, marks } = filter(searchTerm, stringData, options);
+    // console.log("Filter results: ", marks);
     setFilteredPackageNames(items);
-    setTerm(term);
+    setFilteredPackageNamesDecoratedStings(marks);
   };
 
   const onHeaderClick = (key: string, idx: number) => {
@@ -238,7 +247,9 @@ const AppResults: React.FC<{
           <input
             placeholder="Package name"
             className=" block h-[40px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
-            onChange={(ev: any) => filterText(ev.target.value)}
+            onChange={(ev: ChangeEvent<HTMLInputElement>) =>
+              filterText(ev.target.value)
+            }
           />
         </div>
       </div>
@@ -372,14 +383,21 @@ const AppResults: React.FC<{
                   const sortDirIdx =
                     keysToIdx[sortKey as keyof typeof keysToIdx];
                   const sortDir = sortDirs[sortDirIdx] ?? 0;
-                  console.log("Sort dirs:", sortDirIdx, sortDir);
                   return appResult[sortKey as keyof AppResult] <
                     appResultB[sortKey as keyof AppResult]
                     ? sortDir
                     : -sortDir;
                 })
-                .map((appResult: AppResult) => {
-                  return <AppResultRow appResult={appResult} />;
+                .map((appResult: AppResult, idx: number) => {
+                  return (
+                    <AppResultRow
+                      key={`${appResult.run_id}_${appResult.report_title}_${appResult.package_name}`}
+                      appResult={appResult}
+                      decoratedPackageName={
+                        filteredPackageNamesDecoratedStings[idx]
+                      }
+                    />
+                  );
                 })
             ) : (
               <tr className="border-primary-200 bg-primary-100 border-b text-neutral-800">

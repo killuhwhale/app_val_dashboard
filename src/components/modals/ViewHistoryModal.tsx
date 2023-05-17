@@ -19,8 +19,6 @@ const ViewHistoryModal: React.FC<ViewHistoryModalProps> = ({
   appName,
 }) => {
   const hist = JSON.parse(history) as HistoryStep[];
-
-  console.log("isModalOpen", isOpen);
   return (
     <>
       {isOpen && (
@@ -29,14 +27,17 @@ const ViewHistoryModal: React.FC<ViewHistoryModalProps> = ({
             className="fixed inset-0 bg-gray-900 opacity-70 "
             onClick={onClose}
           ></div>
-          <div className="z-50 flex h-[80vh] w-full flex-col justify-between rounded-md bg-slate-700 bg-white p-4">
+          <div className="z-50 flex h-[80vh] w-full flex-col justify-between rounded-md bg-slate-700  p-4">
             <h2 className="mb-2 justify-center text-center  text-lg font-bold">
               {appName} History
             </h2>
             <div className="mb-8 mt-8 h-[75vh] overflow-y-auto">
               {hist.map((step: HistoryStep) => {
                 return (
-                  <div className="mb-4 flex flex-row">
+                  <div
+                    key={`${appName}_${step.msg}`}
+                    className="mb-4 flex flex-row"
+                  >
                     <div className="w-1/3">
                       <img
                         src={`https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png`}

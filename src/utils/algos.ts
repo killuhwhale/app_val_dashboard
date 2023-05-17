@@ -1,39 +1,66 @@
-import typeOf from "kind-of";
-import clone from "shallow-clone";
-import { isPlainObject } from "is-plain-object";
-
 interface Matches {
   items: number[];
   marks: string[];
 }
 
+export type filterOptions = {
+  case?: boolean;
+  mark?: boolean;
+  prefix?: string;
+  suffix?: string;
+  word: boolean;
+  limit?: number;
+};
+
+const makePrefix = (color: string) => {
+  return `<span style='color: ${color};'>`;
+};
+
+const getPrefix = (idx: number): string => {
+  switch (idx % 4) {
+    case 0:
+      return makePrefix("#ef4444"); // red
+    case 1:
+      return makePrefix("#4ade80"); // green
+    case 2:
+      return makePrefix("#60a5fa"); // blue
+    case 3:
+      return makePrefix("#fef08a"); // yellow
+    default:
+      return makePrefix("white");
+  }
+};
+
 // https://gist.github.com/vpalos/4334557
 export const filter = (
   query: string,
   items: string[],
-  options: { [x: string]: any }
+  options: filterOptions
 ) => {
   // option producer
   function option(name: string, value: string | number | boolean) {
     options = options || {};
-    return typeof options[name] !== "undefined" ? options[name] : value;
+    return typeof options[name as keyof filterOptions] !== "undefined"
+      ? options[name as keyof filterOptions]
+      : value;
   }
 
   // prepare options
-  var o_case = option("case", false);
-  var o_mark = option("mark", true);
-  var o_prefix = option("prefix", "<strong>");
-  var o_suffix = option("suffix", "</strong>");
-  var o_word = option("word", true);
-  var o_limit = option("limit", 0);
+  const ignoreCase = option("case", false);
+  const enableMarking = option("mark", true);
+  // const markPrefix = option("prefix", "<span style='color: green;'>");
+  // const markSuffix = option("suffix", "</span>");
+  const markSuffix = "</span>";
+  const matchWholeWords = option("word", true);
+  const limit = option("limit", 0);
 
   // prepare query
-  query = o_case ? query : query.toLowerCase();
-  query = query.replace(/\s+/g, o_word ? " " : "");
+  query = ignoreCase ? query : query.toLowerCase();
+  query = query.replace(/\s+/g, matchWholeWords ? " " : "");
   query = query.replace(/(^\s+|\s+$)/g, "");
-  const queryList = query.split(o_word ? " " : "");
+  const queryList = query.split(matchWholeWords ? " " : "");
 
-  var ql = queryList.length;
+  const ql = queryList.length;
 
   // prepare results
   const matches: Matches = {
@@ -41,45 +68,66 @@ export const filter = (
     marks: [],
   };
 
-  // search
-  for (var ii = 0, il = items.length; ii < il; ii++) {
+  let markNum = 0; // Tracks each mark to change style dynamically
+
+  // search itemIndex  itemsCount
+  for (
+    let itemIndex = 0, itemsCount = items.length;
+    itemIndex < itemsCount;
+    itemIndex++
+  ) {
     // prepare text
 
-    if (!items || !items[ii] || items === undefined || items[ii] === undefined)
+    if (
+      !items ||
+      !items[itemIndex] ||
+      items === undefined ||
+      items[itemIndex] === undefined
+    )
       continue;
 
-    var text = o_case ? items[ii] : items[ii]!.toLowerCase();
+    const text = ignoreCase
+      ? items[itemIndex]
+      : items[itemIndex]!.toLowerCase();
 
-    var mark = "";
+    let mark = "";
 
     // traverse
-    var ti = 0;
-    var wi = 0;
-    var wl = 0;
-    for (var qi = 0; qi < ql; qi++) {
-      if (!queryList || !queryList[qi]) continue;
+    let textIndex = 0;
+    let wordIndex = 0;
+    let wordLength = 0;
+    let queryIndex = 0;
+    for (queryIndex = 0; queryIndex < ql; queryIndex++) {
+      if (!queryList || !queryList[queryIndex]) continue;
 
-      wl = queryList[qi]!.length;
-      wi = text!.indexOf(queryList[qi]!, ti);
-      if (wi === -1) {
+      wordLength = queryList[queryIndex]!.length;
+      wordIndex = text!.indexOf(queryList[queryIndex]!, textIndex);
+      if (wordIndex === -1) {
         break;
       }
-      if (o_mark) {
-        if (wi > 0) {
-          mark += items[ii]!.slice(ti, wi);
+      if (enableMarking) {
+        if (wordIndex > 0) {
+          mark += items[itemIndex]!.slice(textIndex, wordIndex);
         }
-        mark += o_prefix + items[ii]!.slice(wi, wi + wl) + o_suffix;
+
+        mark += `${getPrefix(markNum)}${items[itemIndex]!.slice(
+          wordIndex,
+          wordIndex + wordLength
+        )}${markSuffix}`;
+
+        markNum += 1;
+        console.log("Marked first char", wordIndex);
       }
-      ti = wi + wl;
+      textIndex = wordIndex + wordLength;
     }
 
     // capture
-    if (qi == ql) {
-      if (o_mark) {
-        mark += items[ii]!.slice(ti);
+    if (queryIndex == ql) {
+      if (enableMarking) {
+        mark += items[itemIndex]!.slice(textIndex);
         matches.marks.push(mark);
       }
-      if (matches.items.push(ii) === o_limit && o_limit) {
+      if (matches.items.push(itemIndex) === limit && limit) {
         break;
       }
     }
@@ -89,10 +137,12 @@ export const filter = (
   return matches;
 };
 
+type deFun = (...args: string[]) => void;
+
 // https://www.freecodecamp.org/news/javascript-debounce-example/
-export const debounce = (func: any, timeout = 300) => {
+export const debounce = (func: deFun, timeout = 300) => {
   let timer: NodeJS.Timeout;
-  return (...args: any) => {
+  return (...args: string[]) => {
     clearTimeout(timer);
     timer = setTimeout(() => {
       console.log("Settimeout apply funcz");

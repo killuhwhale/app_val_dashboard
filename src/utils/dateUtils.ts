@@ -34,5 +34,10 @@ export const formatFromDatepickerToFirebase = (date: string): Date => {
   const d = dateInfo[2];
   const m = monthMap.get(dateInfo[1] ?? "Jan");
   const y = dateInfo[3];
+
+  if (d === undefined) return new Date(0);
+  if (m === undefined) return new Date(0);
+  if (y === undefined) return new Date(0);
+
   return new Date(`${m} ${d} ${y}`);
 };

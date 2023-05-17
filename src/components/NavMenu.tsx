@@ -49,7 +49,7 @@ const NavMenu: React.FC = () => {
             </Link>
           </li>
           <li>
-            <a
+            <Link
               href="/settings"
               className="flex items-center rounded-lg p-2  hover:bg-blue-500 "
             >
@@ -58,7 +58,7 @@ const NavMenu: React.FC = () => {
               {/* <span className="ml-3 inline-flex h-3 w-3 items-center justify-center rounded-full bg-blue-100 p-3 text-sm font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
                   3
                 </span> */}
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

@@ -30,11 +30,13 @@ const useFirebaseSession = () => {
       // signInWithCredential(auth, )  TODO() Setup Firebase/Auth for lcient side?
       console.log("signInWithCustomToken", session.data.user);
 
-      signInWithCustomToken(frontEndAuth, session.data.user.custom_token).then(
-        () => {
+      signInWithCustomToken(frontEndAuth, session.data.user.custom_token)
+        .then(() => {
           setStatus("authenticated");
-        }
-      );
+        })
+        .catch((err: any) => {
+          console.log("Error firebase session", err);
+        });
     }
   }, [session]);
 

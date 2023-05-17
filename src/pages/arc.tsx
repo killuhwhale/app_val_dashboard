@@ -58,13 +58,14 @@ const ARCPage: React.FC = () => {
     );
 
     const unsub = onSnapshot(q, (querySnapshot) => {
-      let appRuns: QueryDocumentSnapshot<DocumentData>[] = [];
-
-      querySnapshot.forEach(async (doc) => {
+      const appRuns: QueryDocumentSnapshot<DocumentData>[] = [];
+      querySnapshot.forEach((doc) => {
         console.log("QuerySnapshot doc: ", doc.data());
         appRuns.push(doc);
       });
       setAppRunResults(appRuns);
+
+      // Set a default doc
       if (init && appRuns[0]) {
         setSelectedDoc(appRuns[0]);
       }
