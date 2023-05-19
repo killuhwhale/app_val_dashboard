@@ -25,7 +25,7 @@ const ViewLogsModal: React.FC<ViewHistoryModalProps> = ({
             className="fixed inset-0 bg-gray-900 opacity-70 "
             onClick={onClose}
           ></div>
-          <div className="z-50 flex h-[80vh] w-full flex-col justify-between rounded-md bg-slate-700 bg-white p-4">
+          <div className="z-50 flex h-[80vh] w-full flex-col justify-between rounded-md bg-slate-700 p-4">
             <h2 className="mb-2 justify-center text-center  text-lg font-bold">
               {appName} Logs
             </h2>

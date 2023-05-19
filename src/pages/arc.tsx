@@ -1,11 +1,10 @@
 "use client";
-import { useSession } from "next-auth/react";
 
-import { signInWithCustomToken } from "firebase/auth";
 import {
   DocumentData,
   QueryDocumentSnapshot,
   collection,
+  getDocs,
   onSnapshot,
   query,
   where,
@@ -14,16 +13,15 @@ import React, { useEffect, useState } from "react";
 import AppRuns from "~/components/AppRuns";
 import DatePicker from "~/components/AppValDatePicker";
 import AppResults from "~/components/ResultTable";
+import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
+import LineChartPassFailTotals from "~/components/charts/LineChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
-import {
-  frontEndAuth,
-  frontFirestore,
-  useFirebaseSession,
-} from "~/utils/frontFirestore";
+import HalfColumn from "~/components/columns/HalfColumn";
 import {
   formatFirebaseDate,
   formatFromDatepickerToFirebase,
 } from "~/utils/dateUtils";
+import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
 
 const ARCPage: React.FC = () => {
   const [init, setInit] = useState(true);
@@ -42,7 +40,7 @@ const ARCPage: React.FC = () => {
   const [lastEndDate, setLastEndDate] = useState("");
 
   const sesh = useFirebaseSession();
-  console.log(sesh);
+  // console.log(sesh);
 
   useEffect(() => {
     if (
@@ -74,6 +72,114 @@ const ARCPage: React.FC = () => {
     setLastStartDate(startDate.toString());
     setLastEndDate(endDate.toString());
   }, [init, startDate, endDate]);
+
+  const [appResults, setAppResults] = useState<AppResult[]>([]);
+
+  useEffect(() => {
+    const _appResults: AppResult[] = [];
+    if (!selectedDoc) return;
+
+    const getSubCollection = async () => {
+      const results = await getDocs(
+        collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`)
+      );
+
+      results.forEach((appData) => {
+        console.log("appData: ", appData.data());
+        _appResults.push(appData.data() as AppResult);
+      });
+      processStats(_appResults);
+    };
+
+    getSubCollection().catch((err) => {
+      console.log("Error getting subcolelction.", err);
+    });
+  }, [selectedDoc]);
+
+  const [totalPassFail, setTotalPassFail] = useState<BarLineChartDataPoint[]>(
+    []
+  );
+  const [appReasonResults, setAppReasonResults] =
+    useState<BarLineChartDataPoint[]>();
+
+  const processStats = (appResults: AppResult[]) => {
+    console.log("Selected doc appResults: ", appResults);
+
+    // Process all stats here
+    let totalPass = 0;
+    let totalFail = 0;
+
+    const reasons = {
+      LOGGED_IN_FACEBOOK: 0,
+      LOGGED_IN_GOOLE: 0,
+      LOGGED_IN_EMAIL: 0,
+      PASS: 0,
+      FAIL: 0,
+      CRASH_WIN_DEATH: 0,
+      CRASH_FORCE_RM_ACT_RECORD: 0,
+      CRASH_ANR: 0,
+      CRASH_FDEBUG_CRASH: 0,
+      CRASH_FATAL_EXCEPTION: 0,
+      NEEDS_PRICE: 0,
+      INVALID: 0,
+      DID_NOT_OPEN: 0,
+    } as AppStatus;
+
+    for (let i = 0; i < appResults.length; i++) {
+      const {
+        status,
+        package_name,
+        name,
+        report_title,
+        run_id,
+        run_ts,
+        build,
+        timestamp,
+        reason,
+        new_name,
+        invalid,
+        history,
+        logs,
+      } = appResults[i]!;
+      if (status <= 0) {
+        totalPass++;
+      } else {
+        totalFail++;
+      }
+
+      if (status == -3) reasons.LOGGED_IN_FACEBOOK++;
+      if (status == -2) reasons.LOGGED_IN_GOOLE++;
+      if (status == -1) reasons.LOGGED_IN_EMAIL++;
+      if (status == 0) reasons.PASS++;
+      if (status == 1) reasons.FAIL++;
+      if (status == 2) reasons.CRASH_WIN_DEATH++;
+      if (status == 3) reasons.CRASH_FORCE_RM_ACT_RECORD++;
+      if (status == 4) reasons.CRASH_ANR++;
+      if (status == 5) reasons.CRASH_FDEBUG_CRASH++;
+      if (status == 6) reasons.CRASH_FATAL_EXCEPTION++;
+      if (status == 7) reasons.NEEDS_PRICE++;
+      if (status == 8) reasons.INVALID++;
+      if (status == 9) reasons.DID_NOT_OPEN++;
+    }
+
+    // Update all stats here with useState()
+    setAppResults(appResults);
+    setTotalPassFail([
+      { name: "Fail", uv: totalFail } as BarLineChartDataPoint,
+      { name: "Pass", uv: totalPass } as BarLineChartDataPoint,
+    ]);
+
+    console.log("reasons: ", reasons);
+
+    const reasonGraphData = Object.keys(reasons).map((key) => {
+      return {
+        name: key,
+        uv: reasons[key as keyof AppStatus],
+      } as BarLineChartDataPoint;
+    });
+
+    setAppReasonResults(reasonGraphData);
+  };
 
   return (
     <>
@@ -107,11 +213,12 @@ const ARCPage: React.FC = () => {
       </FullColumn>
 
       <FullColumn height="h-[530px] mt-6">
-        {selectedDoc ? (
+        {selectedDoc && appResults.length > 0 ? (
           <AppResults
             height={400}
             key={`key__${selectedDoc.id}`}
-            doc={selectedDoc}
+            parentKey={`key__${selectedDoc.id}`}
+            appResults={appResults}
           />
         ) : (
           <div className="flex h-[400px] flex-1 items-center justify-center">
@@ -119,6 +226,36 @@ const ARCPage: React.FC = () => {
           </div>
         )}
       </FullColumn>
+
+      <HalfColumn height="h-[450px]">
+        <div>
+          <h2 className="pl-10 text-center">Totals Bar Chart</h2>
+
+          <div className="h-[400px]">
+            {appResults.length > 0 ? (
+              <BarChartPassFailTotals data={totalPassFail} />
+            ) : (
+              <div className="flex h-[400px] flex-1 items-center justify-center">
+                <p className="text-white">Loading...</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="pl-10 text-center">Totals</h2>
+
+          <div className="h-[400px]">
+            {appReasonResults && appReasonResults.length > 0 ? (
+              <LineChartPassFailTotals data={appReasonResults} />
+            ) : (
+              <div className="flex h-[400px] flex-1 items-center justify-center">
+                <p className="text-white">Loading...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </HalfColumn>
     </>
   );
 };

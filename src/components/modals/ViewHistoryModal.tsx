@@ -18,7 +18,9 @@ const ViewHistoryModal: React.FC<ViewHistoryModalProps> = ({
   history,
   appName,
 }) => {
-  const hist = JSON.parse(history) as HistoryStep[];
+  const hist = history
+    ? (JSON.parse(history) as HistoryStep[])
+    : ([] as HistoryStep[]);
   return (
     <>
       {isOpen && (

@@ -1,16 +1,6 @@
-import {
-  DocumentData,
-  QueryDocumentSnapshot,
-  collection,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { filter, filterOptions } from "~/utils/algos";
-import { frontFirestore } from "~/utils/frontFirestore";
 import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
+import { filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
 import ViewLogsModal from "./modals/ViewLogsModal";
 
@@ -34,18 +24,15 @@ export const displayDate = (date: Date): string => {
   });
 };
 
-interface AppResultRowProps {
-  appResult: AppResult;
-  decoratedPackageName?: string;
-}
-
 const AppResultRow: React.FC<AppResultRowProps> = ({
   appResult,
   decoratedPackageName,
+  setShowLogs,
+  setShowHistory,
+  onSelectAppName,
+  onSelectHistory,
+  onSelectLogs,
 }) => {
-  const [showHistory, setShowHistory] = useState(false);
-  const [showLogs, setShowLogs] = useState(false);
-
   const {
     status,
     package_name,
@@ -64,89 +51,123 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
   const hasLogs = logs.length > 0;
   console.log("decoratedPackageNames", decoratedPackageName);
   return (
-    <tr
-      className={`${
-        status == 1
-          ? "border border-slate-600 bg-slate-900"
-          : "border border-rose-600 bg-rose-900"
-      }  text-white`}
-      key={timestamp.toString()}
-    >
-      <td
-        className=" whitespace-nowrap px-6 py-4 text-xs font-medium"
-        dangerouslySetInnerHTML={{
-          __html:
-            decoratedPackageName && decoratedPackageName.length > 0
-              ? decoratedPackageName
-              : package_name,
-        }}
-      ></td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {name}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {report_title}
-      </td>
-      {/* <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+    <>
+      <tr
+        className={`${
+          status <= 0
+            ? "border border-slate-600 bg-slate-900"
+            : "border border-rose-600 bg-rose-900"
+        }  text-white`}
+        key={timestamp.toString()}
+      >
+        <td
+          className={`sticky left-0   ${
+            status <= 0
+              ? "bg-gradient-to-r from-slate-900 via-slate-900 to-slate-700"
+              : "bg-gradient-to-r from-rose-900 via-rose-900 to-rose-700"
+          }  px-6 py-4 text-xs font-medium`}
+          dangerouslySetInnerHTML={{
+            __html:
+              decoratedPackageName && decoratedPackageName.length > 0
+                ? decoratedPackageName
+                : package_name,
+          }}
+        ></td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {name}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {report_title}
+        </td>
+        {/* <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
         {run_id}
       </td> */}
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {displayDate(new Date(run_ts.seconds * 1000))}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {build}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {displayDateWithTime(new Date(timestamp.seconds * 1000))}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {reason}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {new_name}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {invalid}
-      </td>
-      <td
-        onClick={() => setShowHistory(true)}
-        className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
-          status == 1 ? "hover:bg-slate-700" : "hover:bg-rose-700"
-        }`}
-      >
-        Click to view history
-      </td>
-      <td
-        onClick={() =>
-          hasLogs ? setShowLogs(true) : () => console.log("No logs to show")
-        }
-        className={`whitespace-nowrap px-6 py-4 text-xs font-medium hover:bg-slate-700 ${
-          status == 1 ? "hover:bg-slate-700" : "hover:bg-rose-700"
-        }`}
-      >
-        {hasLogs ? "Click to view logs" : "No Logs"}
-      </td>
-      <ViewHistoryModal
-        isOpen={showHistory}
-        history={history}
-        appName={name}
-        onClose={() => setShowHistory(!showHistory)}
-      />
-      <ViewLogsModal
-        isOpen={showLogs}
-        logs={logs}
-        onClose={() => setShowLogs(!showLogs)}
-        appName={name}
-      />
-    </tr>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {displayDate(new Date(run_ts.seconds * 1000))}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {build}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {displayDateWithTime(new Date(timestamp.seconds * 1000))}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {reason}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {new_name}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {invalid}
+        </td>
+        <td
+          onClick={() => {
+            if (history) {
+              onSelectAppName(name);
+              onSelectHistory(history);
+              setShowHistory(true);
+            } else {
+              console.log("No history to show");
+            }
+          }}
+          className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
+            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+          }`}
+        >
+          Click to view history
+        </td>
+        <td
+          onClick={() => {
+            if (hasLogs) {
+              onSelectAppName(name);
+              onSelectLogs(logs);
+              setShowLogs(true);
+            } else {
+              console.log("No logs to show");
+            }
+          }}
+          className={`whitespace-nowrap px-6 py-4 text-xs font-medium  ${
+            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+          }`}
+        >
+          {hasLogs ? "Click to view logs" : "No Logs"}
+        </td>
+      </tr>
+    </>
   );
 };
 
+const splitDateStringWithColor = (dateString: string): any[] => {
+  const chunks: string[] = dateString.split(" ");
+
+  const colors: string[] = [
+    "text-red-500", // red
+    "text-yellow-400", // yellow
+    "text-green-400", // green
+    "text-blue-400", // blue
+    "text-purple-700", // purple
+  ];
+
+  const result: any[] = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk: string = chunks[i] ?? "";
+    const color: string = colors[i % colors.length] ?? "";
+    result.push(
+      <span key={`${color}_${chunk}`} className={color}>
+        {chunk}
+      </span>
+    );
+  }
+
+  return result;
+};
+
 const AppResults: React.FC<{
-  doc: QueryDocumentSnapshot<DocumentData>;
+  appResults: AppResult[];
   height: number;
-}> = ({ doc, height }) => {
-  const [appResults, setAppResults] = useState<AppResult[]>([]);
+  parentKey: string;
+}> = ({ appResults, height, parentKey }) => {
   const [filteredPackageNames, setFilteredPackageNames] = useState<number[]>(
     []
   );
@@ -154,6 +175,12 @@ const AppResults: React.FC<{
     filteredPackageNamesDecoratedStings,
     setFilteredPackageNamesDecoratedStings,
   ] = useState<string[]>([]);
+
+  const [showHistory, setShowHistory] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [selHistory, onSelectHistory] = useState("");
+  const [selLogs, onSelectLogs] = useState("");
+  const [selAppName, onSelectAppName] = useState("");
 
   const [sortKey, setSortKey] = useState("package_name");
   // Package Name Name Report Title Run Ts	Timestamp of app	Reason
@@ -169,31 +196,17 @@ const AppResults: React.FC<{
   };
 
   useEffect(() => {
-    const _appResults: AppResult[] = [];
-    if (appResults.length > 0) return;
-    const getSubCollection = async () => {
-      const results = await getDocs(
-        collection(frontFirestore, `AppRuns/${doc.id}/apps`)
-      );
+    console.log("appResults", appResults);
 
-      results.forEach((appData) => {
-        console.log("appData: ", appData.data());
-        _appResults.push(appData.data() as AppResult);
-      });
-      setAppResults(_appResults);
-      setFilteredPackageNames(
-        Array.from(Array(_appResults.length).keys()).map((idx) => idx)
-      );
-      setFilteredPackageNamesDecoratedStings(
-        appResults.map((result: AppResult) => {
-          return result.package_name;
-        })
-      );
-    };
-
-    getSubCollection().catch((err) => {
-      console.log("Error getting subcolelction.", err);
-    });
+    console.log("setFilteredPackageNames");
+    setFilteredPackageNames(
+      Array.from(Array(appResults.length).keys()).map((idx) => idx)
+    );
+    setFilteredPackageNamesDecoratedStings(
+      appResults.map((result: AppResult) => {
+        return result.package_name;
+      })
+    );
   }, [appResults]);
 
   const filterText = (searchTerm: string) => {
@@ -240,7 +253,18 @@ const AppResults: React.FC<{
     <div className={`min-w-full flex-1 bg-slate-900`}>
       <div className="mt-6 flex w-full items-center justify-around">
         <div className="w-1/2">
-          <p className="ml-6 text-white">App results</p>
+          <p className="ml-6 text-white">
+            App results{" "}
+            {appResults[0]!?.run_ts.seconds ? (
+              splitDateStringWithColor(
+                displayDateWithTime(
+                  new Date(appResults[0]!?.run_ts.seconds * 1000)
+                )
+              ).map((spanEl: any) => spanEl)
+            ) : (
+              <></>
+            )}
+          </p>
         </div>
         <div className="flex w-1/2 items-center">
           <p className="mr-6 text-white">Filter</p>
@@ -265,7 +289,7 @@ const AppResults: React.FC<{
                 onClick={() => {
                   onHeaderClick("package_name", 0);
                 }}
-                className="px-6 py-4 hover:bg-slate-700"
+                className="sticky left-0 bg-slate-900 px-6 py-4  hover:bg-slate-700"
               >
                 <div className="flex items-center justify-center">
                   Package Name{" "}
@@ -375,7 +399,7 @@ const AppResults: React.FC<{
               </th>
             </tr>
           </thead>
-          <tbody className="overflow-y-auto bg-slate-900" key={doc.id}>
+          <tbody className="overflow-y-auto bg-slate-900" key={parentKey}>
             {appResults && appResults.length ? (
               appResults
                 .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
@@ -393,6 +417,11 @@ const AppResults: React.FC<{
                     <AppResultRow
                       key={`${appResult.run_id}_${appResult.report_title}_${appResult.package_name}`}
                       appResult={appResult}
+                      setShowHistory={(show: boolean) => setShowHistory(show)}
+                      setShowLogs={(show: boolean) => setShowLogs(show)}
+                      onSelectHistory={(text: string) => onSelectHistory(text)}
+                      onSelectLogs={(text: string) => onSelectLogs(text)}
+                      onSelectAppName={(text: string) => onSelectAppName(text)}
                       decoratedPackageName={
                         filteredPackageNamesDecoratedStings[idx]
                       }
@@ -410,6 +439,19 @@ const AppResults: React.FC<{
             )}
           </tbody>
         </table>
+        <ViewHistoryModal
+          isOpen={showHistory}
+          history={selHistory}
+          appName={selAppName}
+          onClose={() => setShowHistory(!showHistory)}
+        />
+
+        <ViewLogsModal
+          isOpen={showLogs}
+          logs={selLogs}
+          onClose={() => setShowLogs(!showLogs)}
+          appName={selAppName}
+        />
       </div>
     </div>
   );

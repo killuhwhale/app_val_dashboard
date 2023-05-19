@@ -1,7 +1,7 @@
 import React from "react";
 
 // Update with parent styling from Full Column in order to setup flex container in a similar way.
-const HalfColumn: React.FC<ContainerProps> = ({ children, height }) => {
+const ThirdColumn: React.FC<ContainerProps> = ({ children, height }) => {
   const ac = React.Children.toArray(children);
   return (
     <div className={`${height ? height : ""} mb-4 flex flex-col text-white`}>
@@ -20,4 +20,4 @@ const HalfColumn: React.FC<ContainerProps> = ({ children, height }) => {
   );
 };
 
-export default HalfColumn;
+export default ThirdColumn;

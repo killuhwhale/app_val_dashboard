@@ -21,6 +21,7 @@ const AppRuns: React.FC<{
         {docs && docs.length ? (
           docs.map((docu: QueryDocumentSnapshot<DocumentData>) => {
             const data = docu.data() as unknown as AppRun;
+            const isSelected = false;
             return (
               <div
                 key={docu.id}
