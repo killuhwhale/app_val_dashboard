@@ -11,6 +11,12 @@
   scrollbar-width: thin;
 }
 
+
+table {
+  /* Fixes a small portion on the left of the table that the user can see move underneath the stick Column */
+  margin-left: -1px;
+}
+
 /* Chrome, Edge, and Safari */
 *::-webkit-scrollbar {
   width: 10px;

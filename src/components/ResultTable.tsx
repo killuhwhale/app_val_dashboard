@@ -1,4 +1,9 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
 import { filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
@@ -90,6 +95,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
                 : package_name,
           }}
         ></td>
+
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {status_reasons.get(status)}
         </td>
@@ -183,7 +189,7 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   return result;
 };
 
-const AppResults: React.FC<{
+const ResultTable: React.FC<{
   appResults: RawAppResult[];
   height: number;
   parentKey: string;
@@ -194,7 +200,7 @@ const AppResults: React.FC<{
   const [
     filteredPackageNamesDecoratedStings,
     setFilteredPackageNamesDecoratedStings,
-  ] = useState<string[]>([]);
+  ] = useState<Map<string, string>>(new Map());
 
   const [showHistory, setShowHistory] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
@@ -218,18 +224,23 @@ const AppResults: React.FC<{
     reason: 7,
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     console.log("appResults", appResults);
 
     console.log("setFilteredPackageNames");
     setFilteredPackageNames(
       Array.from(Array(appResults.length).keys()).map((idx) => idx)
     );
-    setFilteredPackageNamesDecoratedStings(
-      appResults.map((result: RawAppResult) => {
-        return result.package_name;
-      })
-    );
+
+    // TODO update map to a;; results
+    const packageNameMarks = new Map<string, string>();
+    appResults.forEach((appResult: RawAppResult) => {
+      packageNameMarks.set(
+        appResult.package_name ?? "",
+        appResult.package_name ?? ""
+      );
+    });
+    setFilteredPackageNamesDecoratedStings(packageNameMarks);
   }, [appResults]);
 
   const filterText = (searchTerm: string) => {
@@ -238,11 +249,15 @@ const AppResults: React.FC<{
       setFilteredPackageNames(
         Array.from(Array(appResults.length).keys()).map((idx) => idx)
       );
-      setFilteredPackageNamesDecoratedStings(
-        appResults.map((result: RawAppResult) => {
-          return result.package_name;
-        })
-      );
+      // TODO update map to all results
+      const packageNameMarks = new Map<string, string>();
+      appResults.forEach((appResult: RawAppResult) => {
+        packageNameMarks.set(
+          appResult.package_name ?? "",
+          appResult.package_name ?? ""
+        );
+      });
+      setFilteredPackageNamesDecoratedStings(packageNameMarks);
       return;
     }
     // Updates filtered data.
@@ -256,7 +271,13 @@ const AppResults: React.FC<{
     const { items, marks } = filter(searchTerm, stringData, options);
     // console.log("Filter results: ", marks);
     setFilteredPackageNames(items);
-    setFilteredPackageNamesDecoratedStings(marks);
+    const packageNameMarks = new Map<string, string>();
+    items.forEach((filterIdx: number, idx: number) => {
+      const app = appResults[filterIdx];
+      packageNameMarks.set(app?.package_name ?? "", marks[idx] ?? "");
+    });
+
+    setFilteredPackageNamesDecoratedStings(packageNameMarks);
   };
 
   const onHeaderClick = (key: string, idx: number) => {
@@ -299,160 +320,163 @@ const AppResults: React.FC<{
         </div>
       </div>
       <div className={`block max-h-[465px] overflow-y-auto bg-slate-900`}>
-        <table
-          className={`max-w-full bg-slate-900 text-center text-sm font-light text-white`}
-          key={"TableStatic"}
-        >
-          <thead className="border-b font-medium dark:border-neutral-500">
-            <tr>
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("package_name", 1);
-                }}
-                className="sticky left-0 bg-slate-900 px-6 py-4  hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Package Name{" "}
-                  {sortDirs[1] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
+        {appResults && appResults.length ? (
+          <table
+            className={`max-w-full bg-slate-900 text-center text-sm font-light text-white`}
+            key={"TableStatic"}
+          >
+            <thead className="sticky top-0 z-50 border-b border-neutral-500 bg-slate-900 font-medium">
+              <tr>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("package_name", 1);
+                  }}
+                  className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Package Name{" "}
+                    {sortDirs[1] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
 
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("status", 0);
-                }}
-                className="sticky left-0 bg-slate-900 px-6 py-4  hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Status{" "}
-                  {sortDirs[0] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th
-                onClick={() => {
-                  onHeaderClick("name", 2);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Name{" "}
-                  {sortDirs[2] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("report_title", 3);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Report Title{" "}
-                  {sortDirs[3] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              {/* <th scope="col" className="px-6 py-4">
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("status", 0);
+                  }}
+                  className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Status{" "}
+                    {sortDirs[0] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => {
+                    onHeaderClick("name", 2);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Name{" "}
+                    {sortDirs[2] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("report_title", 3);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Report Title{" "}
+                    {sortDirs[3] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                {/* <th scope="col" className="px-6 py-4">
                   Run Id
                 </th> */}
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("run_ts", 4);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Run TS{" "}
-                  {sortDirs[4] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("build", 5);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Build{" "}
-                  {sortDirs[5] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("timestamp", 6);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Timestamp of app{" "}
-                  {sortDirs[6] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("reason", 7);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Reason{" "}
-                  {sortDirs[7] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th scope="col" className="px-6 py-4">
-                New_name
-              </th>
-              <th scope="col" className="px-6 py-4">
-                Invalid
-              </th>
-              <th scope="col" className="px-6 py-4">
-                History
-              </th>
-              <th scope="col" className="px-6 py-4">
-                Logs
-              </th>
-            </tr>
-          </thead>
-          <tbody className="overflow-y-auto bg-slate-900" key={parentKey}>
-            {appResults && appResults.length ? (
-              appResults
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("run_ts", 4);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Run TS{" "}
+                    {sortDirs[4] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("build", 5);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Build{" "}
+                    {sortDirs[5] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("timestamp", 6);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Timestamp of app{" "}
+                    {sortDirs[6] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("reason", 7);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Reason{" "}
+                    {sortDirs[7] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th scope="col" className="px-6 py-4">
+                  New_name
+                </th>
+                <th scope="col" className="px-6 py-4">
+                  Invalid
+                </th>
+                <th scope="col" className="px-6 py-4">
+                  History
+                </th>
+                <th scope="col" className="px-6 py-4">
+                  Logs
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              className="ml-5 overflow-y-auto bg-slate-900"
+              key={parentKey}
+            >
+              {appResults
                 .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
                 .sort((appResult: RawAppResult, appResultB: RawAppResult) => {
                   const sortDirIdx =
@@ -464,6 +488,10 @@ const AppResults: React.FC<{
                     : -sortDir;
                 })
                 .map((appResult: RawAppResult, idx: number) => {
+                  const curFilteredPackageNamesDecoratedStings =
+                    filteredPackageNamesDecoratedStings?.get(
+                      appResult.package_name
+                    );
                   return (
                     <AppResultRow
                       key={`${appResult.run_id}_${appResult.report_title}_${appResult.package_name}`}
@@ -474,22 +502,17 @@ const AppResults: React.FC<{
                       onSelectLogs={(text: string) => onSelectLogs(text)}
                       onSelectAppName={(text: string) => onSelectAppName(text)}
                       decoratedPackageName={
-                        filteredPackageNamesDecoratedStings[idx]
+                        curFilteredPackageNamesDecoratedStings
                       }
                     />
                   );
-                })
-            ) : (
-              <tr className="border-primary-200 bg-primary-100 border-b text-neutral-800">
-                <td className="whitespace-nowrap px-6 py-4 font-medium">
-                  Primary
-                </td>
-                <td className="whitespace-nowrap px-6 py-4">Cell</td>
-                <td className="whitespace-nowrap px-6 py-4">Cell</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                })}
+            </tbody>
+          </table>
+        ) : (
+          <></>
+        )}
+
         <ViewHistoryModal
           isOpen={showHistory}
           history={selHistory}
@@ -508,4 +531,4 @@ const AppResults: React.FC<{
   );
 };
 
-export default AppResults;
+export default ResultTable;

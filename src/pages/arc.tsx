@@ -1,5 +1,6 @@
 "use client";
 
+import { Unsubscribe } from "firebase/auth";
 import {
   DocumentData,
   QueryDocumentSnapshot,
@@ -10,10 +11,10 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import AppRuns from "~/components/AppRuns";
 import DatePicker from "~/components/AppValDatePicker";
-import AppResults from "~/components/ResultTable";
+import ResultTable from "~/components/ResultTable";
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import LineChartPassFailTotals from "~/components/charts/LineChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
@@ -26,6 +27,7 @@ import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
 
 const ARCPage: React.FC = () => {
   const [init, setInit] = useState(true);
+  const unSubRef = useRef<Unsubscribe>();
   const [appRunResults, setAppRunResults] = useState<
     QueryDocumentSnapshot<DocumentData>[]
   >([]);
@@ -95,7 +97,7 @@ const ARCPage: React.FC = () => {
       // processStats(_appResults);
 
       // Monitor collection as apps are added.
-      onSnapshot(
+      const unSub = onSnapshot(
         collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`),
         (colSnap: QuerySnapshot<DocumentData>) => {
           const _appResults: RawAppResult[] = [];
@@ -108,6 +110,8 @@ const ARCPage: React.FC = () => {
           processStats(_appResults);
         }
       );
+      if (unSubRef.current) unSubRef.current();
+      unSubRef.current = unSub;
     };
 
     getSubCollection().catch((err) => {
@@ -235,7 +239,7 @@ const ARCPage: React.FC = () => {
 
       <FullColumn height="h-[530px] mt-6">
         {selectedDoc && appResults.length > 0 ? (
-          <AppResults
+          <ResultTable
             height={400}
             key={`key__${selectedDoc.id}`}
             parentKey={`key__${selectedDoc.id}`}
