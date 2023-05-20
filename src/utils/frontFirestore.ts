@@ -1,6 +1,7 @@
 import { initializeApp as frontInitializeApp } from "firebase/app";
 import { getFirestore as getFrontFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signInWithCustomToken } from "firebase/auth";
@@ -17,6 +18,7 @@ const frontEndApp = frontInitializeApp(
   "frontend"
 );
 const frontEndAuth = getAuth(frontEndApp);
+const frontStorage = getStorage(frontEndApp);
 const frontFirestore = getFrontFirestore(frontEndApp);
 
 const useFirebaseSession = () => {
@@ -49,4 +51,4 @@ const useFirebaseSession = () => {
   return { data: session.data, status };
 };
 
-export { frontEndAuth, frontFirestore, useFirebaseSession };
+export { frontEndAuth, frontFirestore, frontStorage, useFirebaseSession };

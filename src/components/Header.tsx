@@ -9,11 +9,11 @@ const Header: React.FC = () => {
           <div className="flex items-center justify-start">
             <Link href="/" className="ml-2 flex md:mr-24">
               <img
-                src="images/red_diamond.png"
-                className="mr-3  h-8 rounded-md"
+                src="images/alien_head.png"
+                className="mr-3  h-12 rounded-md"
                 alt="App Logo"
               />
-              <span className="self-center whitespace-nowrap text-xl font-semibold text-stone-50 sm:text-2xl">
+              <span className="ml-3 self-center whitespace-nowrap text-xl font-semibold text-stone-50 sm:text-2xl">
                 App Val
               </span>
             </Link>

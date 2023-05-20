@@ -13,7 +13,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello" });
   else if (req.method !== "POST") return;
   try {
-    const body: string = req.body as string;
+    const body = req.body as RawAppResult;
+    console.log("Incoming body: ", body);
+
     const {
       status,
       package_name,
@@ -28,11 +30,28 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       invalid,
       history,
       logs,
-    } = JSON.parse(body) as RawAppResult;
+    } = JSON.parse(JSON.stringify(req.body)) as RawAppResult;
+
+    console.log(
+      "Time stamps: ",
+      typeof run_ts,
+      run_ts,
+      new Date(parseInt(run_ts.toString())),
+      typeof timestamp,
+      timestamp,
+      new Date(parseInt(timestamp.toString()))
+    );
+
+    // 1671955200000
+    // 1684523141000
+    // 1684523067000
+    // 1684524197878
+    // 1684524271
+    // 1684524733961
     const docRefParent = db.collection(`AppRuns`).doc(`${run_id}`);
 
     const parentRes = await docRefParent.set({
-      date: new Date(run_ts),
+      date: new Date(parseInt(run_ts.toString())),
     });
 
     const docRefSub = docRefParent
@@ -45,9 +64,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       name,
       report_title,
       run_id,
-      run_ts: new Date(run_ts),
+      run_ts: parseInt(run_ts.toString()),
       build,
-      timestamp: new Date(timestamp),
+      timestamp: parseInt(timestamp.toString()),
       reason,
       new_name,
       invalid,
@@ -102,7 +121,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       error: null,
     });
   } catch (err: any) {
-    console.log(err);
+    console.log("Caught error: ", err);
     res.status(500).json({
       data: {
         success: false,

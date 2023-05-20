@@ -1,18 +1,18 @@
 import {
-  BarChart,
   Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
 } from "recharts";
 import { CustomTooltip } from "~/utils/chartUtils";
 
 const colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "red", "pink"];
 
-const getPath = (x: any, y: any, width: any, height: any) => {
+const getPath = (x: number, y: number, width: number, height: number) => {
   return `M${x},${y + height}C${x + width / 3},${y + height} ${x + width / 2},${
     y + height / 3
   }
@@ -23,9 +23,18 @@ const getPath = (x: any, y: any, width: any, height: any) => {
   Z`;
 };
 
-const TriangleBar = (props: any) => {
-  const { fill, x, y, width, height } = props;
+type TriangleBarData = {
+  fill?: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+};
 
+const TriangleBar = (props: TriangleBarData) => {
+  const { fill, x, y, width, height } = props;
+  if (!fill || !x || !y || !width || !height)
+    return <path d="" stroke="none" fill={fill} />;
   return <path d={getPath(x, y, width, height)} stroke="none" fill={fill} />;
 };
 

@@ -12,8 +12,8 @@ const ViewLogsModal: React.FC<ViewHistoryModalProps> = ({
   logs,
   appName,
 }) => {
-  console.log("isModalOpen", isOpen);
-  console.log("logs.split ", logs.split("\n"));
+  // console.log("isModalOpen", isOpen);
+  // console.log("logs.split ", logs.split("\n"));
   return (
     <>
       {isOpen && (

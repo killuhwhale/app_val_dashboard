@@ -3,6 +3,7 @@ import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
 import { filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
 import ViewLogsModal from "./modals/ViewLogsModal";
+import { get } from "http";
 
 const displayDateWithTime = (date: Date): string => {
   return (
@@ -23,6 +24,22 @@ export const displayDate = (date: Date): string => {
     year: "numeric",
   });
 };
+
+const status_reasons = new Map<string, string>();
+
+status_reasons.set("-3", "LOGGED_IN_FACEBOOK");
+status_reasons.set("-2", "LOGGED_IN_GOOLE");
+status_reasons.set("-1", "LOGGED_IN_EMAIL");
+status_reasons.set("0", "PASS");
+status_reasons.set("1", "FAIL");
+status_reasons.set("2", "CRASH_WIN_DEATH");
+status_reasons.set("3", "CRASH_FORCE_RM_ACT_RECORD");
+status_reasons.set("4", "CRASH_ANR");
+status_reasons.set("5", "CRASH_FDEBUG_CRASH");
+status_reasons.set("6", "CRASH_FATAL_EXCEPTION");
+status_reasons.set("7", "NEEDS_PRICE");
+status_reasons.set("8", "INVALID");
+status_reasons.set("9", "DID_NOT_OPEN");
 
 const AppResultRow: React.FC<AppResultRowProps> = ({
   appResult,
@@ -49,12 +66,12 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
     logs,
   } = appResult;
   const hasLogs = logs.length > 0;
-  console.log("decoratedPackageNames", decoratedPackageName);
+  // console.log("decoratedPackageNames", decoratedPackageName);
   return (
     <>
       <tr
         className={`${
-          status <= 0
+          parseInt(status) <= 0
             ? "border border-slate-600 bg-slate-900"
             : "border border-rose-600 bg-rose-900"
         }  text-white`}
@@ -62,7 +79,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
       >
         <td
           className={`sticky left-0   ${
-            status <= 0
+            parseInt(status) <= 0
               ? "bg-gradient-to-r from-slate-900 via-slate-900 to-slate-700"
               : "bg-gradient-to-r from-rose-900 via-rose-900 to-rose-700"
           }  px-6 py-4 text-xs font-medium`}
@@ -74,6 +91,9 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
           }}
         ></td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {status_reasons.get(status)}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {name}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
@@ -83,13 +103,13 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
         {run_id}
       </td> */}
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {displayDate(new Date(run_ts.seconds * 1000))}
+          {displayDate(new Date(run_ts))}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {build}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {displayDateWithTime(new Date(timestamp.seconds * 1000))}
+          {displayDateWithTime(new Date(timestamp))}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {reason}
@@ -111,7 +131,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
             }
           }}
           className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
-            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+            parseInt(status) > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
           }`}
         >
           Click to view history
@@ -127,7 +147,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
             }
           }}
           className={`whitespace-nowrap px-6 py-4 text-xs font-medium  ${
-            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+            parseInt(status) > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
           }`}
         >
           {hasLogs ? "Click to view logs" : "No Logs"}
@@ -137,7 +157,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
   );
 };
 
-const splitDateStringWithColor = (dateString: string): any[] => {
+const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   const chunks: string[] = dateString.split(" ");
 
   const colors: string[] = [
@@ -148,7 +168,7 @@ const splitDateStringWithColor = (dateString: string): any[] => {
     "text-purple-700", // purple
   ];
 
-  const result: any[] = [];
+  const result: React.ReactNode[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk: string = chunks[i] ?? "";
@@ -164,7 +184,7 @@ const splitDateStringWithColor = (dateString: string): any[] => {
 };
 
 const AppResults: React.FC<{
-  appResults: AppResult[];
+  appResults: RawAppResult[];
   height: number;
   parentKey: string;
 }> = ({ appResults, height, parentKey }) => {
@@ -183,16 +203,19 @@ const AppResults: React.FC<{
   const [selAppName, onSelectAppName] = useState("");
 
   const [sortKey, setSortKey] = useState("package_name");
-  // Package Name Name Report Title Run Ts	Timestamp of app	Reason
-  const [sortDirs, setSortDirs] = useState([-1, -1, -1, -1, -1, -1]); // toggle between 1 and -1 by multiplying by -1
+  // Status, Package Name, Name, Report Title, Run Ts, Build,	Timestamp of app,	Reason, => Change this Headers and keysToIdx when adding new items to sort by
+  const [sortDirs, setSortDirs] = useState([-1, -1, -1, -1, -1, -1, -1, -1]); // toggle between 1 and -1 by multiplying by -1
 
+  // Sort by keys
   const keysToIdx = {
-    package_name: 0,
-    name: 1,
-    report_title: 2,
-    run_ts: 3,
-    timestamp: 4,
-    reason: 5,
+    status: 0,
+    package_name: 1,
+    name: 2,
+    report_title: 3,
+    run_ts: 4,
+    build: 5,
+    timestamp: 6,
+    reason: 7,
   };
 
   useEffect(() => {
@@ -203,7 +226,7 @@ const AppResults: React.FC<{
       Array.from(Array(appResults.length).keys()).map((idx) => idx)
     );
     setFilteredPackageNamesDecoratedStings(
-      appResults.map((result: AppResult) => {
+      appResults.map((result: RawAppResult) => {
         return result.package_name;
       })
     );
@@ -216,7 +239,7 @@ const AppResults: React.FC<{
         Array.from(Array(appResults.length).keys()).map((idx) => idx)
       );
       setFilteredPackageNamesDecoratedStings(
-        appResults.map((result: AppResult) => {
+        appResults.map((result: RawAppResult) => {
           return result.package_name;
         })
       );
@@ -224,7 +247,7 @@ const AppResults: React.FC<{
     }
     // Updates filtered data.
     const stringData = appResults.map(
-      (result: AppResult) => result.package_name
+      (result: RawAppResult) => result.package_name
     );
     // console.log("Filter text: ", searchTerm, stringData);
     const options: filterOptions = {
@@ -246,7 +269,7 @@ const AppResults: React.FC<{
       console.log("Setting sort Dirs: ", sortDirs);
       setSortDirs([...sortDirs]);
     }
-    setSortKey(key as keyof AppResult);
+    setSortKey(key as keyof RawAppResult);
   };
 
   return (
@@ -255,14 +278,12 @@ const AppResults: React.FC<{
         <div className="w-1/2">
           <p className="ml-6 text-white">
             App results{" "}
-            {appResults[0]!?.run_ts.seconds ? (
+            {appResults && appResults[0] && appResults[0]?.run_ts ? (
               splitDateStringWithColor(
-                displayDateWithTime(
-                  new Date(appResults[0]!?.run_ts.seconds * 1000)
-                )
-              ).map((spanEl: any) => spanEl)
+                displayDateWithTime(new Date(appResults[0].run_ts))
+              ).map((spanEl: React.ReactNode) => spanEl)
             ) : (
-              <></>
+              <p>No date</p>
             )}
           </p>
         </div>
@@ -287,12 +308,29 @@ const AppResults: React.FC<{
               <th
                 scope="col"
                 onClick={() => {
-                  onHeaderClick("package_name", 0);
+                  onHeaderClick("package_name", 1);
                 }}
                 className="sticky left-0 bg-slate-900 px-6 py-4  hover:bg-slate-700"
               >
                 <div className="flex items-center justify-center">
                   Package Name{" "}
+                  {sortDirs[1] === -1 ? (
+                    <MdArrowDownward size={24} />
+                  ) : (
+                    <MdArrowUpward size={24} />
+                  )}
+                </div>
+              </th>
+
+              <th
+                scope="col"
+                onClick={() => {
+                  onHeaderClick("status", 0);
+                }}
+                className="sticky left-0 bg-slate-900 px-6 py-4  hover:bg-slate-700"
+              >
+                <div className="flex items-center justify-center">
+                  Status{" "}
                   {sortDirs[0] === -1 ? (
                     <MdArrowDownward size={24} />
                   ) : (
@@ -302,13 +340,13 @@ const AppResults: React.FC<{
               </th>
               <th
                 onClick={() => {
-                  onHeaderClick("name", 1);
+                  onHeaderClick("name", 2);
                 }}
                 className="px-6 py-4 hover:bg-slate-700"
               >
                 <div className="flex items-center justify-center">
                   Name{" "}
-                  {sortDirs[1] === -1 ? (
+                  {sortDirs[2] === -1 ? (
                     <MdArrowDownward size={24} />
                   ) : (
                     <MdArrowUpward size={24} />
@@ -318,13 +356,13 @@ const AppResults: React.FC<{
               <th
                 scope="col"
                 onClick={() => {
-                  onHeaderClick("report_title", 2);
+                  onHeaderClick("report_title", 3);
                 }}
                 className="px-6 py-4 hover:bg-slate-700"
               >
                 <div className="flex items-center justify-center">
                   Report Title{" "}
-                  {sortDirs[2] === -1 ? (
+                  {sortDirs[3] === -1 ? (
                     <MdArrowDownward size={24} />
                   ) : (
                     <MdArrowUpward size={24} />
@@ -337,31 +375,12 @@ const AppResults: React.FC<{
               <th
                 scope="col"
                 onClick={() => {
-                  onHeaderClick("run_ts", 3);
+                  onHeaderClick("run_ts", 4);
                 }}
                 className="px-6 py-4 hover:bg-slate-700"
               >
                 <div className="flex items-center justify-center">
                   Run TS{" "}
-                  {sortDirs[3] === -1 ? (
-                    <MdArrowDownward size={24} />
-                  ) : (
-                    <MdArrowUpward size={24} />
-                  )}
-                </div>
-              </th>
-              <th scope="col" className="px-6 py-4">
-                Build
-              </th>
-              <th
-                scope="col"
-                onClick={() => {
-                  onHeaderClick("timestamp", 4);
-                }}
-                className="px-6 py-4 hover:bg-slate-700"
-              >
-                <div className="flex items-center justify-center">
-                  Timestamp of app{" "}
                   {sortDirs[4] === -1 ? (
                     <MdArrowDownward size={24} />
                   ) : (
@@ -372,13 +391,45 @@ const AppResults: React.FC<{
               <th
                 scope="col"
                 onClick={() => {
-                  onHeaderClick("reason", 5);
+                  onHeaderClick("build", 5);
+                }}
+                className="px-6 py-4 hover:bg-slate-700"
+              >
+                <div className="flex items-center justify-center">
+                  Build{" "}
+                  {sortDirs[5] === -1 ? (
+                    <MdArrowDownward size={24} />
+                  ) : (
+                    <MdArrowUpward size={24} />
+                  )}
+                </div>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  onHeaderClick("timestamp", 6);
+                }}
+                className="px-6 py-4 hover:bg-slate-700"
+              >
+                <div className="flex items-center justify-center">
+                  Timestamp of app{" "}
+                  {sortDirs[6] === -1 ? (
+                    <MdArrowDownward size={24} />
+                  ) : (
+                    <MdArrowUpward size={24} />
+                  )}
+                </div>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  onHeaderClick("reason", 7);
                 }}
                 className="px-6 py-4 hover:bg-slate-700"
               >
                 <div className="flex items-center justify-center">
                   Reason{" "}
-                  {sortDirs[5] === -1 ? (
+                  {sortDirs[7] === -1 ? (
                     <MdArrowDownward size={24} />
                   ) : (
                     <MdArrowUpward size={24} />
@@ -403,16 +454,16 @@ const AppResults: React.FC<{
             {appResults && appResults.length ? (
               appResults
                 .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
-                .sort((appResult: AppResult, appResultB: AppResult) => {
+                .sort((appResult: RawAppResult, appResultB: RawAppResult) => {
                   const sortDirIdx =
                     keysToIdx[sortKey as keyof typeof keysToIdx];
                   const sortDir = sortDirs[sortDirIdx] ?? 0;
-                  return appResult[sortKey as keyof AppResult] <
-                    appResultB[sortKey as keyof AppResult]
+                  return appResult[sortKey as keyof RawAppResult] <
+                    appResultB[sortKey as keyof RawAppResult]
                     ? sortDir
                     : -sortDir;
                 })
-                .map((appResult: AppResult, idx: number) => {
+                .map((appResult: RawAppResult, idx: number) => {
                   return (
                     <AppResultRow
                       key={`${appResult.run_id}_${appResult.report_title}_${appResult.package_name}`}

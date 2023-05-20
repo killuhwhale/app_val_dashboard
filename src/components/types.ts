@@ -8,7 +8,7 @@ type AppRun = {
 };
 
 type AppResult = {
-  status: number;
+  status: string;
   package_name: string;
   name: string;
   report_title: string;
@@ -24,7 +24,7 @@ type AppResult = {
 };
 
 type RawAppResult = {
-  status: number;
+  status: string;
   package_name: string;
   name: string;
   report_title: string;
@@ -40,7 +40,7 @@ type RawAppResult = {
 };
 
 interface AppResultRowProps {
-  appResult: AppResult;
+  appResult: RawAppResult;
   decoratedPackageName?: string;
 
   setShowHistory(show: boolean): void;

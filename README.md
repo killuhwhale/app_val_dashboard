@@ -1,4 +1,8 @@
+
+<img src="https://raw.githubusercontent.com/killuhwhale/app_val_dashboard/public/appvalDashboard.png?sanitize=true&raw=true" />
 # Deployment to GCP
+
+    gcloud auth application-default login
 
  Modify .env to prod URL
   - NEXTAUTH_URL="http://localhost:3000"

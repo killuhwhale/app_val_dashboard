@@ -3,6 +3,7 @@
 import {
   DocumentData,
   QueryDocumentSnapshot,
+  QuerySnapshot,
   collection,
   getDocs,
   onSnapshot,
@@ -35,7 +36,9 @@ const ARCPage: React.FC = () => {
   const [startDate, setStartDate] = useState(
     new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000)
   );
-  const [endDate, setEndDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(
+    new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000)
+  );
   const [lastStartDate, setLastStartDate] = useState("");
   const [lastEndDate, setLastEndDate] = useState("");
 
@@ -73,22 +76,38 @@ const ARCPage: React.FC = () => {
     setLastEndDate(endDate.toString());
   }, [init, startDate, endDate]);
 
-  const [appResults, setAppResults] = useState<AppResult[]>([]);
+  const [appResults, setAppResults] = useState<RawAppResult[]>([]);
 
   useEffect(() => {
-    const _appResults: AppResult[] = [];
+    // const _appResults: RawAppResult[] = [];
     if (!selectedDoc) return;
 
+    // eslint-disable-next-line
     const getSubCollection = async () => {
-      const results = await getDocs(
-        collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`)
-      );
+      // Get Doc on subcollection once, will not update as new apps are added.
+      // const results = await getDocs(
+      //   collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`)
+      // );
+      // results.forEach((appData) => {
+      //   console.log("appData: ", appData.data());
+      //   _appResults.push(appData.data() as RawAppResult);
+      // });
+      // processStats(_appResults);
 
-      results.forEach((appData) => {
-        console.log("appData: ", appData.data());
-        _appResults.push(appData.data() as AppResult);
-      });
-      processStats(_appResults);
+      // Monitor collection as apps are added.
+      onSnapshot(
+        collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`),
+        (colSnap: QuerySnapshot<DocumentData>) => {
+          const _appResults: RawAppResult[] = [];
+          console.log("Snapshot: ", colSnap.docs);
+
+          colSnap.docs.forEach((appData) => {
+            console.log("appData: ", appData.data());
+            _appResults.push(appData.data() as RawAppResult);
+          });
+          processStats(_appResults);
+        }
+      );
     };
 
     getSubCollection().catch((err) => {
@@ -102,7 +121,7 @@ const ARCPage: React.FC = () => {
   const [appReasonResults, setAppReasonResults] =
     useState<BarLineChartDataPoint[]>();
 
-  const processStats = (appResults: AppResult[]) => {
+  const processStats = (appResults: RawAppResult[]) => {
     console.log("Selected doc appResults: ", appResults);
 
     // Process all stats here
@@ -127,7 +146,7 @@ const ARCPage: React.FC = () => {
 
     for (let i = 0; i < appResults.length; i++) {
       const {
-        status,
+        status: _status,
         package_name,
         name,
         report_title,
@@ -141,6 +160,8 @@ const ARCPage: React.FC = () => {
         history,
         logs,
       } = appResults[i]!;
+      const status = parseInt(_status);
+
       if (status <= 0) {
         totalPass++;
       } else {

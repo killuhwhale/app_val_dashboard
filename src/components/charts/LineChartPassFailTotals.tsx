@@ -13,7 +13,17 @@ interface LineChartPassFailTotalsProps {
   data: BarLineChartDataPoint[];
 }
 
-const CustomizedDot = (props: any) => {
+type CustomDot = {
+  cx?: number;
+  cy?: number;
+  stroke?: number;
+  payload?: {
+    name: string;
+  };
+  value?: number;
+};
+
+const CustomizedDot = (props: CustomDot) => {
   const { cx, cy, stroke, payload, value } = props;
   const passedList = [
     "LOGGED_IN_EMAIL",
@@ -21,7 +31,7 @@ const CustomizedDot = (props: any) => {
     "LOGGED_IN_GOOLE",
     "PASS",
   ];
-  if (!value) return null;
+  if (!value || !payload || !cx || !cy) return null;
   if (passedList.indexOf(payload.name) >= 0) {
     return (
       <svg

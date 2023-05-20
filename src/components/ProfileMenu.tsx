@@ -36,8 +36,12 @@ const ProfileMenu: React.FC = () => {
             <span className="sr-only">Open user menu</span>
             <img
               ref={iconRef}
-              className="h-8 w-8 rounded-full"
-              src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              className="h-10 w-10 rounded-full"
+              src={
+                sessionData && sessionData.user && sessionData.user.image
+                  ? sessionData.user.image
+                  : "https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+              }
               alt="user photo"
             />
           </button>
