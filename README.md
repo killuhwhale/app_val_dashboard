@@ -1,5 +1,5 @@
 
-<img src="https://raw.githubusercontent.com/killuhwhale/app_val_dashboard/main/public/appvalDashboard.png?sanitize=true&raw=true" />
+<img src="https://raw.githubusercontent.com/killuhwhale/app_val_dashboard/tree/main/public/appvalDashboard.png?sanitize=true&raw=true" />
 # Deployment to GCP
 
     gcloud auth application-default login
