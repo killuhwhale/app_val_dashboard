@@ -40,7 +40,7 @@ const DatePicker: React.FC<{
             value={props.startDay.toString().split(" ").slice(0, 4).join(" ")}
           />
         </div>
-
+        <p>to</p>
         <div className=" relative w-1/2 max-w-sm pl-6">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-9">
             <svg

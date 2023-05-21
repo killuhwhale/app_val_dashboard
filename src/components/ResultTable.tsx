@@ -5,10 +5,11 @@ import React, {
   useState,
 } from "react";
 import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
-import { filter, filterOptions } from "~/utils/algos";
+import { debounce, filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
 import ViewLogsModal from "./modals/ViewLogsModal";
 import { get } from "http";
+import { colors } from "~/utils/dateUtils";
 
 const displayDateWithTime = (date: Date): string => {
   return (
@@ -166,14 +167,6 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
 const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   const chunks: string[] = dateString.split(" ");
 
-  const colors: string[] = [
-    "text-red-500", // red
-    "text-yellow-400", // yellow
-    "text-green-400", // green
-    "text-blue-400", // blue
-    "text-purple-700", // purple
-  ];
-
   const result: React.ReactNode[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
@@ -225,14 +218,10 @@ const ResultTable: React.FC<{
   };
 
   useLayoutEffect(() => {
-    console.log("appResults", appResults);
-
-    console.log("setFilteredPackageNames");
     setFilteredPackageNames(
       Array.from(Array(appResults.length).keys()).map((idx) => idx)
     );
 
-    // TODO update map to a;; results
     const packageNameMarks = new Map<string, string>();
     appResults.forEach((appResult: RawAppResult) => {
       packageNameMarks.set(
@@ -243,13 +232,13 @@ const ResultTable: React.FC<{
     setFilteredPackageNamesDecoratedStings(packageNameMarks);
   }, [appResults]);
 
-  const filterText = (searchTerm: string) => {
+  const filterText = (searchTerm: string): void => {
+    console.log("Filtering: ", searchTerm);
     if (!searchTerm) {
       // reset to all results
       setFilteredPackageNames(
         Array.from(Array(appResults.length).keys()).map((idx) => idx)
       );
-      // TODO update map to all results
       const packageNameMarks = new Map<string, string>();
       appResults.forEach((appResult: RawAppResult) => {
         packageNameMarks.set(
@@ -293,6 +282,8 @@ const ResultTable: React.FC<{
     setSortKey(key as keyof RawAppResult);
   };
 
+  const debFilterText = debounce(filterText, 350);
+
   return (
     <div className={`min-w-full flex-1 bg-slate-900`}>
       <div className="mt-6 flex w-full items-center justify-around">
@@ -308,13 +299,13 @@ const ResultTable: React.FC<{
             )}
           </p>
         </div>
-        <div className="flex w-1/2 items-center">
+        <div className="flex w-1/2 items-center p-1">
           <p className="mr-6 text-white">Filter</p>
           <input
             placeholder="Package name"
-            className=" block h-[40px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
+            className=" block h-[35px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
             onChange={(ev: ChangeEvent<HTMLInputElement>) =>
-              filterText(ev.target.value)
+              debFilterText(ev.target.value)
             }
           />
         </div>
@@ -325,7 +316,7 @@ const ResultTable: React.FC<{
             className={`max-w-full bg-slate-900 text-center text-sm font-light text-white`}
             key={"TableStatic"}
           >
-            <thead className="sticky top-0 z-50 border-b border-neutral-500 bg-slate-900 font-medium">
+            <thead className="sticky top-0 z-10 border-b border-neutral-500 bg-slate-900 font-medium">
               <tr>
                 <th
                   scope="col"

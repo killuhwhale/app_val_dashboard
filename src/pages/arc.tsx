@@ -27,6 +27,7 @@ import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
 
 const ARCPage: React.FC = () => {
   const [init, setInit] = useState(true);
+  const unSubRangeResultsRef = useRef<Unsubscribe>();
   const unSubRef = useRef<Unsubscribe>();
   const [appRunResults, setAppRunResults] = useState<
     QueryDocumentSnapshot<DocumentData>[]
@@ -45,7 +46,6 @@ const ARCPage: React.FC = () => {
   const [lastEndDate, setLastEndDate] = useState("");
 
   const sesh = useFirebaseSession();
-  // console.log(sesh);
 
   useEffect(() => {
     if (
@@ -56,14 +56,19 @@ const ARCPage: React.FC = () => {
 
     const q = query(
       collection(frontFirestore, "AppRuns"),
-      where("date", ">=", formatFirebaseDate(startDate)),
-      where("date", "<=", formatFirebaseDate(endDate))
+      where("date", ">=", formatFirebaseDate(new Date(startDate.getTime()))),
+      where(
+        "date",
+        "<=",
+        formatFirebaseDate(
+          new Date(endDate.getTime() + 1 * 24 * 60 * 60 * 1000)
+        )
+      )
     );
 
     const unsub = onSnapshot(q, (querySnapshot) => {
       const appRuns: QueryDocumentSnapshot<DocumentData>[] = [];
       querySnapshot.forEach((doc) => {
-        console.log("QuerySnapshot doc: ", doc.data());
         appRuns.push(doc);
       });
       setAppRunResults(appRuns);
@@ -73,6 +78,9 @@ const ARCPage: React.FC = () => {
         setSelectedDoc(appRuns[0]);
       }
     });
+    if (unSubRangeResultsRef.current) unSubRangeResultsRef.current();
+    unSubRangeResultsRef.current = unsub;
+
     setInit(false);
     setLastStartDate(startDate.toString());
     setLastEndDate(endDate.toString());
@@ -101,10 +109,8 @@ const ARCPage: React.FC = () => {
         collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`),
         (colSnap: QuerySnapshot<DocumentData>) => {
           const _appResults: RawAppResult[] = [];
-          console.log("Snapshot: ", colSnap.docs);
 
           colSnap.docs.forEach((appData) => {
-            console.log("appData: ", appData.data());
             _appResults.push(appData.data() as RawAppResult);
           });
           processStats(_appResults);
@@ -221,12 +227,13 @@ const ARCPage: React.FC = () => {
         />
       </FullColumn>
 
-      <FullColumn height="h-[85px]">
+      <FullColumn height="h-[120px]">
         <div className="h-full w-full items-center justify-center bg-slate-800">
           {appRunResults.length ? (
             <AppRuns
               docs={appRunResults}
               height={0}
+              selectedDoc={selectedDoc}
               onSelect={(sDoc) => setSelectedDoc(sDoc)}
             />
           ) : (
@@ -237,7 +244,7 @@ const ARCPage: React.FC = () => {
         </div>
       </FullColumn>
 
-      <FullColumn height="h-[530px] mt-6">
+      <FullColumn height="h-[545px] mt-6">
         {selectedDoc && appResults.length > 0 ? (
           <ResultTable
             height={400}

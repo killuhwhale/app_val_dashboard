@@ -116,7 +116,7 @@ export const filter = (
         )}${markSuffix}`;
 
         markNum += 1;
-        console.log("Marked first char", wordIndex);
+        // console.log("Marked first char", wordIndex);
       }
       textIndex = wordIndex + wordLength;
     }
@@ -137,16 +137,22 @@ export const filter = (
   return matches;
 };
 
-type deFun = (...args: string[]) => void;
-
 // https://www.freecodecamp.org/news/javascript-debounce-example/
-export const debounce = (func: deFun, timeout = 300) => {
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const debounce = (func: Function, timeout = 300) => {
   let timer: NodeJS.Timeout;
   return (...args: string[]) => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      console.log("Settimeout apply funcz");
       func.apply(this, args);
     }, timeout);
   };
 };
+
+// export const debounce = (fn: Function, ms = 300) => {
+//   let timeoutId: ReturnType<typeof setTimeout>;
+//   return function (this: any, ...args: any[]) {
+//     clearTimeout(timeoutId);
+//     timeoutId = setTimeout(() => fn.apply(this, args), ms);
+//   };
+// };

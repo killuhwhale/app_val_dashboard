@@ -11,6 +11,11 @@
   scrollbar-width: thin;
 }
 
+.dragtoscrollcontainer {
+  cursor: grab;
+  overflow: auto;
+}
+
 
 table {
   /* Fixes a small portion on the left of the table that the user can see move underneath the stick Column */

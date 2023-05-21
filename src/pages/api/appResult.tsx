@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { initializeApp, applicationDefault, cert } from "firebase-admin/app";
 import { firestore } from "~/utils/firestore";
+import { env } from "~/env.mjs";
 
 // initializeApp({
 //   credential: applicationDefault(),
@@ -11,7 +12,13 @@ const db = firestore;
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello" });
-  else if (req.method !== "POST") return;
+  else if (req.method !== "POST")
+    return res.status(404).json({ text: "Hello" });
+  else if (
+    req.headers.authorization !==
+    env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET
+  )
+    return res.status(403).json({ text: "Hello" });
   try {
     const body = req.body as RawAppResult;
     console.log("Incoming body: ", body);

@@ -20,7 +20,7 @@ const ProfileMenu: React.FC = () => {
   }, [ref.current]);
 
   return (
-    <div className="flex items-center">
+    <div className="z-50 flex  items-center">
       <div className="ml-3 flex flex-col items-end">
         <div>
           <button
@@ -47,7 +47,7 @@ const ProfileMenu: React.FC = () => {
           </button>
         </div>
         <div
-          className={`z-100 my-10  ${
+          className={`my-10  ${
             showDropdown ? "" : "hidden"
           } absolute list-none divide-y divide-gray-100 rounded bg-slate-900 text-base  shadow `}
           id="dropdown-user"

@@ -1,3 +1,18 @@
+export const colors: string[] = [
+  "text-red-500", // red
+  "text-yellow-400", // yellow
+  "text-green-400", // green
+  "text-blue-400", // blue
+  "text-purple-700", // purple
+];
+export const bcolors: string[] = [
+  "border-green-400", // green
+  "border-blue-400", // blue
+  "border-yellow-400", // yellow
+  "border-red-500", // red
+  "border-purple-700", // purple
+];
+
 const monthMap = new Map<string, number>([
   ["Jan", 1],
   ["Feb", 2],
@@ -34,10 +49,12 @@ export const formatFromDatepickerToFirebase = (date: string): Date => {
   const d = dateInfo[2];
   const m = monthMap.get(dateInfo[1] ?? "Jan");
   const y = dateInfo[3];
+  const t = dateInfo[4];
 
   if (d === undefined) return new Date(0);
   if (m === undefined) return new Date(0);
   if (y === undefined) return new Date(0);
-
-  return new Date(`${m} ${d} ${y}`);
+  if (t === undefined) return new Date(0);
+  const dateRangeDay = new Date(`${m} ${d} ${y}`);
+  return dateRangeDay;
 };
