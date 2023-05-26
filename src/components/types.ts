@@ -39,6 +39,17 @@ type RawAppResult = {
   logs: string;
 };
 
+type AmaceDBResult = {
+  appName: string;
+  pkgName: string;
+  runID: string;
+  runTS: number;
+  appTS: number;
+  status: number;
+  buildInfo: string;
+  deviceInfo: string;
+};
+
 interface AppResultRowProps {
   appResult: RawAppResult;
   decoratedPackageName?: string;

@@ -1,12 +1,24 @@
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
+  MdCenterFocusWeak,
   MdDashboardCustomize,
   MdLaptopChromebook,
   MdPhoneAndroid,
   MdSettings,
 } from "react-icons/md";
 
+const currentPageColor = "bg-emerald-900";
+
 const NavMenu: React.FC = () => {
+  const [currentLoc, setCurrentLoc] = useState("");
+  useEffect(() => {
+    if (window.location.href !== currentLoc) {
+      setCurrentLoc(window.location.href);
+      console.log("New location: ", window.location.href);
+    }
+  });
+
   return (
     <aside
       id="logo-sidebar"
@@ -27,7 +39,9 @@ const NavMenu: React.FC = () => {
           <li>
             <Link
               href="/arc"
-              className="flex items-center rounded-lg p-2  hover:bg-blue-500 "
+              className={`${
+                currentLoc.endsWith("/arc") ? currentPageColor : ""
+              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
             >
               <MdPhoneAndroid />
               <span className="ml-3 flex-1 whitespace-nowrap">ARC</span>
@@ -38,8 +52,24 @@ const NavMenu: React.FC = () => {
           </li>
           <li>
             <Link
+              href="/amace"
+              className={`${
+                currentLoc.endsWith("/amace") ? currentPageColor : ""
+              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
+            >
+              <MdCenterFocusWeak />
+              <span className="ml-3 flex-1 whitespace-nowrap">Amac-E</span>
+              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                Mobile
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/enterprise"
-              className="flex items-center rounded-lg p-2  hover:bg-blue-500 "
+              className={`${
+                currentLoc.endsWith("/enterprise") ? currentPageColor : ""
+              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
             >
               <MdLaptopChromebook />
               <span className="ml-3 flex-1 whitespace-nowrap">Enterprise</span>
@@ -51,7 +81,9 @@ const NavMenu: React.FC = () => {
           <li>
             <Link
               href="/settings"
-              className="flex items-center rounded-lg p-2  hover:bg-blue-500 "
+              className={`${
+                currentLoc.endsWith("/settings") ? currentPageColor : ""
+              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
             >
               <MdSettings />
               <span className="ml-3 flex-1 whitespace-nowrap">Settings</span>

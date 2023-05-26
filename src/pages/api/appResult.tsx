@@ -12,13 +12,13 @@ const db = firestore;
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello" });
-  else if (req.method !== "POST")
-    return res.status(404).json({ text: "Hello" });
+  else if (req.method?.toLocaleLowerCase() !== "post")
+    return res.status(404).json({ text: "Hello 404" });
   else if (
     req.headers.authorization !==
     env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET
   )
-    return res.status(403).json({ text: "Hello" });
+    return res.status(403).json({ text: "Hello unauthor guy" });
   try {
     const body = req.body as RawAppResult;
     console.log("Incoming body: ", body);

@@ -41,8 +41,11 @@ export const authOptions: NextAuthOptions = {
       let customToken = "";
 
       const isDevAct =
-        ["andayac@gmail.com", "testminnie001@gmail.com"].indexOf(user.email) >=
-        0;
+        [
+          "andayac@gmail.com",
+          "ethancox16@gmail.com",
+          "testminnie001@gmail.com",
+        ].indexOf(user.email) >= 0;
       const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
 
       if (isDevAct || isGoogler) {
@@ -72,9 +75,12 @@ export const authOptions: NextAuthOptions = {
         account.provider === "google"
       ) {
         const isDevAct =
-          ["andayac@gmail.com", "testminnie001@gmail.com"].indexOf(
-            profile.email
-          ) >= 0;
+          [
+            "andayac@gmail.com",
+            ,
+            "ethancox16@gmail.com",
+            "testminnie001@gmail.com",
+          ].indexOf(profile.email) >= 0;
         //   abc@google.com => ['abc', 'google.com']
         const isGoogler = (profile.email.split("@")[1] ?? "") === "google.com";
         console.log(

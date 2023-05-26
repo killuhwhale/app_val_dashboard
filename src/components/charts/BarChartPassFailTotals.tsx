@@ -10,7 +10,15 @@ import {
 } from "recharts";
 import { CustomTooltip } from "~/utils/chartUtils";
 
-const colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "red", "pink"];
+const colors = [
+  "#b91c1c",
+  "#00C49F",
+  "#0088FE",
+  "#FF8042",
+  "#701a75",
+  "#f43f5e",
+  "#fbbf24",
+];
 
 const getPath = (x: number, y: number, width: number, height: number) => {
   return `M${x},${y + height}C${x + width / 3},${y + height} ${x + width / 2},${
@@ -57,7 +65,7 @@ const BarChartPassFailTotals: React.FC<BarChartPassFailTotalsProps> = ({
           shape={<TriangleBar />}
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={colors[index % 20]} />
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
         </Bar>
         <CartesianGrid stroke="#cccccc55" strokeDasharray="5 5" />
