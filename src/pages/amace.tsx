@@ -14,13 +14,10 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import AmaceResultTable from "~/components/AmaceResultTable";
 import AmaceRuns from "~/components/AmaceRuns";
-import AppRuns from "~/components/AppRuns";
 import DatePicker from "~/components/AppValDatePicker";
-import ResultTable from "~/components/ResultTable";
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
-import LineChartPassFailTotals from "~/components/charts/LineChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
-import HalfColumn from "~/components/columns/HalfColumn";
+import { getAmaceReasonStatObj } from "~/utils/chartUtils";
 import {
   formatFirebaseDate,
   formatFromDatepickerToFirebase,
@@ -140,15 +137,7 @@ const AMACEPage: React.FC = () => {
   const processStats = (amaceResults: AmaceDBResult[]) => {
     console.log("Selected doc appResults: ", amaceResults);
 
-    const reasons = {
-      Fail: 10,
-      O4C: 10,
-      AMACE: 10,
-      NeedsPrice: 10,
-      OldVersion: 10,
-      FailedInstall: 10,
-      CountryNA: 10,
-    };
+    const reasons = getAmaceReasonStatObj();
 
     for (let i = 0; i < amaceResults.length; i++) {
       const {
@@ -163,27 +152,43 @@ const AMACEPage: React.FC = () => {
       } = amaceResults[i]!;
 
       if (status == 0) reasons.Fail++;
-      if (status == 1) reasons.O4C++;
-      if (status == 2) reasons.AMACE++;
-      if (status == 3) reasons.NeedsPrice++;
-      if (status == 4) reasons.OldVersion++;
-      if (status == 5) reasons.FailedInstall++;
-      if (status == 6) reasons.CountryNA++;
+      if (status == 1) reasons.PRICE++;
+      if (status == 2) reasons.OLDVERSION++;
+      if (status == 3) reasons.INSTALLFAIL++;
+      if (status == 4) reasons.COUNTRYNA++;
+      if (status == 5) reasons.O4C++;
+      if (status == 6) reasons.O4CFullScreenOnly++;
+      if (status == 7) reasons.IsFSToAmacE++;
+      if (status == 8) reasons.IsLockedPAmacE++;
+      if (status == 9) reasons.IsLockedTAmacE++;
+      if (status == 10) reasons.IsAmacE++;
+      if (status == 11) reasons.PWA++;
     }
 
     // Update all stats here with useState()
     setAppResults(amaceResults);
     setTotalByStatus([
       { name: "Fail", uv: reasons.Fail } as BarLineChartDataPoint,
+      { name: "PRICE", uv: reasons.PRICE } as BarLineChartDataPoint,
+      { name: "OLDVERSION", uv: reasons.OLDVERSION } as BarLineChartDataPoint,
+      { name: "INSTALLFAIL", uv: reasons.INSTALLFAIL } as BarLineChartDataPoint,
+      { name: "COUNTRYNA", uv: reasons.COUNTRYNA } as BarLineChartDataPoint,
       { name: "O4C", uv: reasons.O4C } as BarLineChartDataPoint,
-      { name: "AMACE", uv: reasons.AMACE } as BarLineChartDataPoint,
-      { name: "NeedsPrice", uv: reasons.NeedsPrice } as BarLineChartDataPoint,
-      { name: "OldVersion", uv: reasons.OldVersion } as BarLineChartDataPoint,
-      { name: "CountryNA", uv: reasons.CountryNA } as BarLineChartDataPoint,
       {
-        name: "FailedInstall",
-        uv: reasons.FailedInstall,
+        name: "O4CFullScreenOnly",
+        uv: reasons.O4CFullScreenOnly,
       } as BarLineChartDataPoint,
+      { name: "IsFSToAmacE", uv: reasons.IsFSToAmacE } as BarLineChartDataPoint,
+      {
+        name: "IsLockedPAmacE",
+        uv: reasons.IsLockedPAmacE,
+      } as BarLineChartDataPoint,
+      {
+        name: "IsLockedTAmacE",
+        uv: reasons.IsLockedTAmacE,
+      } as BarLineChartDataPoint,
+      { name: "IsAmacE", uv: reasons.IsAmacE } as BarLineChartDataPoint,
+      { name: "PWA", uv: reasons.PWA } as BarLineChartDataPoint,
     ]);
   };
 

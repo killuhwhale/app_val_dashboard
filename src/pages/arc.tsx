@@ -19,6 +19,7 @@ import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import LineChartPassFailTotals from "~/components/charts/LineChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
 import HalfColumn from "~/components/columns/HalfColumn";
+import { getReasonStatObj } from "~/utils/chartUtils";
 import {
   formatFirebaseDate,
   formatFromDatepickerToFirebase,
@@ -138,21 +139,7 @@ const ARCPage: React.FC = () => {
     let totalPass = 0;
     let totalFail = 0;
 
-    const reasons = {
-      LOGGED_IN_FACEBOOK: 0,
-      LOGGED_IN_GOOLE: 0,
-      LOGGED_IN_EMAIL: 0,
-      PASS: 0,
-      FAIL: 0,
-      CRASH_WIN_DEATH: 0,
-      CRASH_FORCE_RM_ACT_RECORD: 0,
-      CRASH_ANR: 0,
-      CRASH_FDEBUG_CRASH: 0,
-      CRASH_FATAL_EXCEPTION: 0,
-      NEEDS_PRICE: 0,
-      INVALID: 0,
-      DID_NOT_OPEN: 0,
-    } as AppStatus;
+    const reasons = getReasonStatObj();
 
     for (let i = 0; i < appResults.length; i++) {
       const {

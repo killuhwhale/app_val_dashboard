@@ -17,7 +17,7 @@
     - Edit .bashrc to allow non-interactive sessions, comment out lines at top of file.
     - Install openssh server: sudo apt-get install openssh-server
     - edit /etc/ssh/sshd_config
-        - Turn off passwords: PasswordAuthentication, PasswordAuthentication, UsePAM
+        - Turn off passwords (Uncomment and set value to no): PasswordAuthentication, PasswordAuthentication, UsePAM
     - On Server run (if no ~/.ssh/id_rsa.pub)
         -  ssh-keygen -t rsa -b 4096
     - Copy GCP server's ~/.ssh/id_rsa.pub to ~/.ssh/authorized_keys on Linux machine

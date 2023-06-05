@@ -8,24 +8,6 @@ import { firestore } from "~/utils/firestore";
 
 const db = firestore;
 
-const AppStatus = new Map<number, string>();
-AppStatus.set(0, "Fail");
-AppStatus.set(1, "O4C");
-AppStatus.set(2, "IsAmacE");
-AppStatus.set(3, "PRICE");
-AppStatus.set(4, "OLDVERSION");
-
-type AmaceResult = {
-  appName: string;
-  pkgName: string;
-  runID: string;
-  runTS: string;
-  appTS: string;
-  status: number;
-  buildInfo: string;
-  deviceInfo: string;
-};
-
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
   console.log(req.headers["content-type"]);
@@ -51,6 +33,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       runTS,
       buildInfo,
       deviceInfo,
+      isGame,
     } = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
 
     const docRefParent = db.collection(`AmaceRuns`).doc(`${runID}`);
@@ -72,6 +55,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       status,
       buildInfo,
       deviceInfo,
+      isGame,
     });
 
     console.log("Doc res", docRes);
@@ -88,6 +72,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           runTS,
           buildInfo,
           deviceInfo,
+          isGame,
         },
       },
       error: null,

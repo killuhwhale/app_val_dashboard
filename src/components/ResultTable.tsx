@@ -289,7 +289,7 @@ const ResultTable: React.FC<{
       <div className="mt-6 flex w-full items-center justify-around">
         <div className="w-1/2">
           <p className="ml-6 text-white">
-            App results{" "}
+            App results {`(${appResults.length}) `}
             {appResults && appResults[0] && appResults[0]?.run_ts ? (
               splitDateStringWithColor(
                 displayDateWithTime(new Date(appResults[0].run_ts))
