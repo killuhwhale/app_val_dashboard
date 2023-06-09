@@ -147,31 +147,35 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
 };
 
 const genText = (rows: AmaceDBResult[]) => {
-  return rows
-    .map((row: AmaceDBResult) => {
-      const {
-        appName,
-        appTS,
-        buildInfo,
-        deviceInfo,
-        isGame,
-        pkgName,
-        runID,
-        runTS,
-        status,
-      } = row;
+  const header =
+    "Package Name\tName\tStatus\tGame\tApp TS\tRun ID\tRun TS\tDevice Info\tBuild Info\n";
+  const data = [header];
+  rows.forEach((row: AmaceDBResult) => {
+    const {
+      appName,
+      appTS,
+      buildInfo,
+      deviceInfo,
+      isGame,
+      pkgName,
+      runID,
+      runTS,
+      status,
+    } = row;
 
-      // TODO remove replaceALl, amace.go is updated to strip the \n now...
-      return `${pkgName}\t${appName}\t${
+    // TODO remove replaceALl, amace.go is updated to strip the \n now...
+    data.push(
+      `${pkgName}\t${appName}\t${
         status_reasons.get(status.toString()) ?? "failedtogetkey"
       }\t${isGame ? "Game" : "App"}\t${displayDateWithTime(
         new Date(appTS)
       )}\t${runID}\t${displayDate(new Date(runTS))}\t${deviceInfo.replaceAll(
         "\n",
         ""
-      )}\t${buildInfo}\n`;
-    })
-    .join("");
+      )}\t${buildInfo}\n`
+    );
+  });
+  return data.join("");
 };
 
 const AmaceResultTable: React.FC<{

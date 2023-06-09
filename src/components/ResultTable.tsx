@@ -116,14 +116,15 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
         {run_id}
       </td> */}
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {displayDate(new Date(run_ts))}
+          {displayDateWithTime(new Date(timestamp))}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {build}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {displayDateWithTime(new Date(timestamp))}
+          {displayDate(new Date(run_ts))}
         </td>
+
         <td
           onClick={() => {
             if (history) {
@@ -180,29 +181,32 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
 };
 
 const genText = (rows: RawAppResult[]) => {
-  return rows
-    .map((row: RawAppResult) => {
-      const {
-        package_name,
-        status,
-        name,
-        report_title,
-        run_ts,
-        build,
-        timestamp,
-        history,
-        logs,
-        run_id,
-      } = row;
-      return `${package_name}\t${
+  const header =
+    "Package Name\tStatus\tName\tReport Title\tTimestamp of app\tBuild\tRun TS\tHistory\tLogs\n";
+  const data = [header];
+  rows.forEach((row: RawAppResult) => {
+    const {
+      package_name,
+      status,
+      name,
+      report_title,
+      run_ts,
+      build,
+      timestamp,
+      history,
+      logs,
+      run_id,
+    } = row;
+    data.push(
+      `${package_name}\t${
         status_reasons.get(status) ?? "failedtogetkey"
-      }\t${name}\t${report_title}\t${displayDate(
-        new Date(run_ts)
-      )}\t${build}\t${displayDateWithTime(
+      }\t${name}\t${report_title}\t${displayDateWithTime(
         new Date(timestamp)
-      )}\t${history}\t${logs}\n`;
-    })
-    .join("");
+      )}\t${build}\t${displayDate(new Date(run_ts))}\t${history}\t${logs}\n`
+    );
+  });
+
+  return data.join("");
 };
 
 const ResultTable: React.FC<{
@@ -464,19 +468,20 @@ const ResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("run_ts", 4);
+                    onHeaderClick("timestamp", 6);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Run TS{" "}
-                    {sortDirs[4] === -1 ? (
+                    Timestamp of app{" "}
+                    {sortDirs[6] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />
                     )}
                   </div>
                 </th>
+
                 <th
                   scope="col"
                   onClick={() => {
@@ -493,16 +498,17 @@ const ResultTable: React.FC<{
                     )}
                   </div>
                 </th>
+
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("timestamp", 6);
+                    onHeaderClick("run_ts", 4);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Timestamp of app{" "}
-                    {sortDirs[6] === -1 ? (
+                    Run TS{" "}
+                    {sortDirs[4] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />

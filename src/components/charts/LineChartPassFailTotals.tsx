@@ -27,8 +27,8 @@ const CustomizedDot = (props: CustomDot) => {
   const { cx, cy, stroke, payload, value } = props;
   const passedList = [
     "LOGGED_IN_EMAIL",
-    "LOGGED_IN_FACEBOOK",
-    "LOGGED_IN_GOOLE",
+    "LOGGED_IN_FB",
+    "LOGGED_IN_GOOGLE",
     "PASS",
   ];
   if (!value || !payload || !cx || !cy) return null;

@@ -176,25 +176,31 @@ const ARCPage: React.FC = () => {
       } = appResults[i]!;
       const status = parseInt(_status);
 
-      if (status <= 0) {
+      if (status > 0) {
         totalPass++;
       } else {
         totalFail++;
       }
 
-      if (status == -3) reasons.LOGGED_IN_FACEBOOK++;
-      if (status == -2) reasons.LOGGED_IN_GOOLE++;
-      if (status == -1) reasons.LOGGED_IN_EMAIL++;
-      if (status == 0) reasons.PASS++;
-      if (status == 1) reasons.FAIL++;
-      if (status == 2) reasons.CRASH_WIN_DEATH++;
-      if (status == 3) reasons.CRASH_FORCE_RM_ACT_RECORD++;
-      if (status == 4) reasons.CRASH_ANR++;
-      if (status == 5) reasons.CRASH_FDEBUG_CRASH++;
-      if (status == 6) reasons.CRASH_FATAL_EXCEPTION++;
-      if (status == 7) reasons.NEEDS_PRICE++;
-      if (status == 8) reasons.INVALID++;
-      if (status == 9) reasons.DID_NOT_OPEN++;
+      if (status == -13) reasons.PLAYSTORE_FAIL++;
+      if (status == -12) reasons.CRASH_WIN_DEATH++;
+      if (status == -11) reasons.CRASH_FORCE_RM_ACT_RECORD++;
+      if (status == -10) reasons.CRASH_ANR++;
+      if (status == -9) reasons.CRASH_FDEBUG_CRASH++;
+      if (status == -8) reasons.CRASH_FATAL_EXCEPTION++;
+      if (status == -7) reasons.FAILED_TO_LAUNCH++;
+      if (status == -6) reasons.FAILED_TO_INSTALL++;
+      if (status == -5) reasons.NEEDS_PRICE++;
+      if (status == -4) reasons.DEVICE_NONCOMPAT++;
+      if (status == -3) reasons.INVALID++;
+      if (status == -2) reasons.APP_OLD++;
+      if (status == -1) reasons.COUNTRY_NA++;
+      if (status == 0) reasons.FAIL++;
+      if (status == 1) reasons.PASS++;
+      if (status == 2) reasons.LOGGED_IN_GOOGLE++;
+      if (status == 3) reasons.LOGGED_IN_FB++;
+      if (status == 4) reasons.LOGGED_IN_EMAIL++;
+      if (status == 13) reasons.INIT++;
     }
 
     // Update all stats here with useState()
@@ -212,7 +218,7 @@ const ARCPage: React.FC = () => {
         uv: reasons[key as keyof AppStatus],
       } as BarLineChartDataPoint;
     });
-
+    console.log(reasonGraphData);
     setAppReasonResults(reasonGraphData);
   };
 
