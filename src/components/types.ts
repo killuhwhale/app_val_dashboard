@@ -16,9 +16,6 @@ type AppResult = {
   run_ts: FirebaseDate;
   build: string;
   timestamp: FirebaseDate;
-  reason: string;
-  new_name: string;
-  invalid: string;
   history: string;
   logs: string;
 };
@@ -32,9 +29,6 @@ type RawAppResult = {
   run_ts: number;
   build: string;
   timestamp: number;
-  reason: string;
-  new_name: string;
-  invalid: string;
   history: string;
   logs: string;
 };
@@ -60,19 +54,25 @@ interface BarChartPassFailTotalsProps {
 }
 
 type AppStatus = {
-  LOGGED_IN_FACEBOOK: number;
-  LOGGED_IN_GOOLE: number;
-  LOGGED_IN_EMAIL: number;
-  PASS: number;
-  FAIL: number;
-  CRASH_WIN_DEATH: number;
-  CRASH_FORCE_RM_ACT_RECORD: number;
-  CRASH_ANR: number;
-  CRASH_FDEBUG_CRASH: number;
-  CRASH_FATAL_EXCEPTION: number;
-  NEEDS_PRICE: number;
-  INVALID: number;
-  DID_NOT_OPEN: number;
+  PLAYSTORE_FAIL: number; // Playstore crashed -13
+  CRASH_WIN_DEATH: number; // App crashed on launch -12
+  CRASH_FORCE_RM_ACT_RECORD: number; // App crashed on launch -11
+  CRASH_ANR: number; // App crashed on launch -10
+  CRASH_FDEBUG_CRASH: number; // App crashed on launch -9
+  CRASH_FATAL_EXCEPTION: number; // App crashed on launch -8
+  FAILED_TO_LAUNCH: number; // Fail to launch - should also capture logs for this. -7
+  FAILED_TO_INSTALL: number; // Genral install error -6
+  NEEDS_PRICE: number; // App needs to be purchased -5
+  DEVICE_NONCOMPAT: number; // Device missing feature -4
+  INVALID: number; // App not on playstore anymore -3
+  APP_OLD: number; // App targets old SDK -2
+  COUNTRY_NA: number; // Country NA -1
+  FAIL: number; // General failure with testing  0
+  PASS: number; // App launched w/out errors detected.  1
+  LOGGED_IN_GOOGLE: number; // Logged in via google account  2
+  LOGGED_IN_FB: number; // Logged in via facebook account  3
+  LOGGED_IN_EMAIL: number; // Logged in via email/password  4
+  INIT: number; //  1337
 };
 
 // From firebase to UI

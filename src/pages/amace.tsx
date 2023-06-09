@@ -11,12 +11,15 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 import AmaceResultTable from "~/components/AmaceResultTable";
 import AmaceRuns from "~/components/AmaceRuns";
 import DatePicker from "~/components/AppValDatePicker";
+import ResultLink from "~/components/ResultLink";
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
+
 import { getAmaceReasonStatObj } from "~/utils/chartUtils";
 import {
   formatFirebaseDate,
@@ -35,11 +38,23 @@ const AMACEPage: React.FC = () => {
     useState<QueryDocumentSnapshot<DocumentData>>();
 
   const days = 4;
+
+  const router = useRouter();
+  const { query: _query } = router;
+  // Access individual query parameters
+  const qStartDate = _query.s_d as string;
+  const qEndDate = _query.e_d as string;
+  const qSelectedDocID = _query.id as string;
+
   const [startDate, setStartDate] = useState(
-    new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000)
+    qStartDate
+      ? new Date(parseInt(qStartDate))
+      : new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000)
   );
   const [endDate, setEndDate] = useState(
-    new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000)
+    qEndDate
+      ? new Date(parseInt(qEndDate))
+      : new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000)
   );
   const [lastStartDate, setLastStartDate] = useState("");
   const [lastEndDate, setLastEndDate] = useState("");
@@ -47,13 +62,13 @@ const AMACEPage: React.FC = () => {
   const sesh = useFirebaseSession();
 
   useEffect(() => {
-    console.log("UseEffect first ", lastStartDate);
     if (
       startDate.toString() === lastStartDate &&
       endDate.toString() === lastEndDate
     )
       return console.log("Early return due to date", lastStartDate);
 
+    // TODO() probably can remove casting to date?
     const q = query(
       collection(frontFirestore, "AmaceRuns"),
       where("date", ">=", formatFirebaseDate(new Date(startDate.getTime()))),
@@ -68,16 +83,24 @@ const AMACEPage: React.FC = () => {
 
     const unsub = onSnapshot(q, (querySnapshot) => {
       const appRuns: QueryDocumentSnapshot<DocumentData>[] = [];
+      let selDocIdx = 0;
+      let idx = 0;
       querySnapshot.forEach((doc) => {
+        // TODO detect doc id and set
+        console.log("Doc id", doc.id);
+        if (doc.id === qSelectedDocID) {
+          selDocIdx = idx;
+        }
         appRuns.push(doc);
+        idx++;
       });
       setAppRunResults(appRuns);
       console.log("AppRuns: ", appRuns);
       // Set a default doc
       console.log("AppRuns: ", selectedDoc);
       if (!selectedDoc) {
-        console.log("Setting Selected Doc: ", appRuns[0]);
-        setSelectedDoc(appRuns[0]);
+        console.log("Setting Selected Doc: ", appRuns[selDocIdx]);
+        setSelectedDoc(appRuns[selDocIdx]);
       }
     });
     if (unSubRangeResultsRef.current) unSubRangeResultsRef.current();
@@ -93,7 +116,7 @@ const AMACEPage: React.FC = () => {
   useEffect(() => {
     // const _appResults: AmaceDBResult[] = [];
     if (!selectedDoc) return;
-    console.log("Getting sub collection", selectedDoc);
+    // console.log("Getting sub collection", selectedDoc);
     // eslint-disable-next-line
     const getSubCollection = async () => {
       // Get Doc on subcollection once, will not update as new apps are added.
@@ -111,10 +134,10 @@ const AMACEPage: React.FC = () => {
         collection(frontFirestore, `AmaceRuns/${selectedDoc.id}/apps`),
         (colSnap: QuerySnapshot<DocumentData>) => {
           const _appResults: AmaceDBResult[] = [];
-          console.log("Sub collection SS: ", colSnap);
+          // console.log("Sub collection SS: ", colSnap);
 
           colSnap.docs.forEach((appData) => {
-            console.log("Pussing from SS: ", appData.data());
+            // console.log("Pussing from SS: ", appData.data());
             _appResults.push(appData.data() as AmaceDBResult);
           });
           processStats(_appResults);
@@ -135,7 +158,7 @@ const AMACEPage: React.FC = () => {
   );
 
   const processStats = (amaceResults: AmaceDBResult[]) => {
-    console.log("Selected doc appResults: ", amaceResults);
+    // console.log("Selected doc appResults: ", amaceResults);
 
     const reasons = getAmaceReasonStatObj();
 
@@ -155,14 +178,15 @@ const AMACEPage: React.FC = () => {
       if (status == 1) reasons.PRICE++;
       if (status == 2) reasons.OLDVERSION++;
       if (status == 3) reasons.INSTALLFAIL++;
-      if (status == 4) reasons.COUNTRYNA++;
-      if (status == 5) reasons.O4C++;
-      if (status == 6) reasons.O4CFullScreenOnly++;
-      if (status == 7) reasons.IsFSToAmacE++;
-      if (status == 8) reasons.IsLockedPAmacE++;
-      if (status == 9) reasons.IsLockedTAmacE++;
-      if (status == 10) reasons.IsAmacE++;
-      if (status == 11) reasons.PWA++;
+      if (status == 4) reasons.DEVICENOTCOMPAT++;
+      if (status == 5) reasons.COUNTRYNA++;
+      if (status == 6) reasons.O4C++;
+      if (status == 7) reasons.O4CFullScreenOnly++;
+      if (status == 8) reasons.IsFSToAmacE++;
+      if (status == 9) reasons.IsLockedPAmacE++;
+      if (status == 10) reasons.IsLockedTAmacE++;
+      if (status == 11) reasons.IsAmacE++;
+      if (status == 12) reasons.PWA++;
     }
 
     // Update all stats here with useState()
@@ -172,6 +196,10 @@ const AMACEPage: React.FC = () => {
       { name: "PRICE", uv: reasons.PRICE } as BarLineChartDataPoint,
       { name: "OLDVERSION", uv: reasons.OLDVERSION } as BarLineChartDataPoint,
       { name: "INSTALLFAIL", uv: reasons.INSTALLFAIL } as BarLineChartDataPoint,
+      {
+        name: "DEVICENOTCOMPAT",
+        uv: reasons.DEVICENOTCOMPAT,
+      } as BarLineChartDataPoint,
       { name: "COUNTRYNA", uv: reasons.COUNTRYNA } as BarLineChartDataPoint,
       { name: "O4C", uv: reasons.O4C } as BarLineChartDataPoint,
       {
@@ -231,6 +259,10 @@ const AMACEPage: React.FC = () => {
             key={`key__${selectedDoc.id}`}
             parentKey={`key__${selectedDoc.id}`}
             amaceResults={appResults}
+            startDate={startDate.getTime()}
+            endDate={endDate.getTime()}
+            selectedDocID={selectedDoc?.id ?? ""}
+            page="amace"
           />
         ) : (
           <div className="flex h-[400px] flex-1 items-center justify-center">

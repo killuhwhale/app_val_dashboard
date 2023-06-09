@@ -22,7 +22,7 @@ const PageLayout: NextPage<{ children: ReactNode }> = ({ children }) => {
       <Header />
       <NavMenu />
       <div className="p-4 sm:ml-48">
-        <div className="mt-14 rounded-tl-lg border-l border-t border-dashed border-gray-200 p-4 dark:border-gray-700">
+        <div className="mt-14 rounded-tl-lg border-l border-t border-dashed border-gray-200 p-4 dark:border-gray-400">
           {sesh.status === "authenticated" ? children : <p>Need to login</p>}
         </div>
       </div>

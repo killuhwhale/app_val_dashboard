@@ -32,9 +32,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       run_ts, // run_ts
       build,
       timestamp,
-      reason,
-      new_name,
-      invalid,
       history,
       logs,
     } = JSON.parse(JSON.stringify(req.body)) as RawAppResult;
@@ -74,9 +71,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       run_ts: parseInt(run_ts.toString()),
       build,
       timestamp: parseInt(timestamp.toString()),
-      reason,
-      new_name,
-      invalid,
       history,
       logs,
     });
@@ -118,9 +112,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           name,
           report_title,
           timestamp,
-          reason,
-          new_name,
-          invalid,
           history,
           logs,
         },

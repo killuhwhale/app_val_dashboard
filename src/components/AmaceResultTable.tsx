@@ -4,13 +4,15 @@ import React, {
   useLayoutEffect,
   useState,
 } from "react";
-import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
+import { MdArrowDownward, MdArrowUpward, MdContentCopy } from "react-icons/md";
 import { debounce, filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
 import ViewLogsModal from "./modals/ViewLogsModal";
 import { get } from "http";
 import { colors } from "~/utils/dateUtils";
-
+import { Tooltip } from "react-tooltip";
+import ResultLink from "./ResultLink";
+import TableToClipBoard from "./TableToClipBoard";
 const displayDateWithTime = (date: Date): string => {
   return (
     date.toLocaleDateString("en-US", {
@@ -36,16 +38,17 @@ const status_reasons = new Map<string, string>();
 // Display String based on status
 status_reasons.set("0", "Fail");
 status_reasons.set("1", "Needs purchase");
-status_reasons.set("2", "Device is old");
+status_reasons.set("2", "App is old");
 status_reasons.set("3", "Failed to install");
-status_reasons.set("4", "Country NA");
-status_reasons.set("5", "O4C");
-status_reasons.set("6", "O4C FS only");
-status_reasons.set("7", "FS -> Amace");
-status_reasons.set("8", "Phone only");
-status_reasons.set("9", "Tablet only");
-status_reasons.set("10", "Amace");
-status_reasons.set("11", "PWA");
+status_reasons.set("4", "Device not compatible");
+status_reasons.set("5", "Country NA");
+status_reasons.set("6", "O4C");
+status_reasons.set("7", "O4C FS only");
+status_reasons.set("8", "FS -> Amace");
+status_reasons.set("9", "Phone only");
+status_reasons.set("10", "Tablet only");
+status_reasons.set("11", "Amace");
+status_reasons.set("12", "PWA");
 
 interface AmaceResultRowProps {
   amaceResult: AmaceDBResult;
@@ -143,11 +146,51 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   return result;
 };
 
+const genText = (rows: AmaceDBResult[]) => {
+  return rows
+    .map((row: AmaceDBResult) => {
+      const {
+        appName,
+        appTS,
+        buildInfo,
+        deviceInfo,
+        isGame,
+        pkgName,
+        runID,
+        runTS,
+        status,
+      } = row;
+
+      // TODO remove replaceALl, amace.go is updated to strip the \n now...
+      return `${pkgName}\t${appName}\t${
+        status_reasons.get(status.toString()) ?? "failedtogetkey"
+      }\t${isGame ? "Game" : "App"}\t${displayDateWithTime(
+        new Date(appTS)
+      )}\t${runID}\t${displayDate(new Date(runTS))}\t${deviceInfo.replaceAll(
+        "\n",
+        ""
+      )}\t${buildInfo}\n`;
+    })
+    .join("");
+};
+
 const AmaceResultTable: React.FC<{
   amaceResults: AmaceDBResult[];
   height: number;
   parentKey: string;
-}> = ({ amaceResults, height, parentKey }) => {
+  startDate: number;
+  endDate: number;
+  selectedDocID: string;
+  page: string;
+}> = ({
+  amaceResults,
+  height,
+  parentKey,
+  startDate,
+  endDate,
+  selectedDocID,
+  page,
+}) => {
   const [filteredPackageNames, setFilteredPackageNames] = useState<number[]>(
     []
   );
@@ -238,9 +281,7 @@ const AmaceResultTable: React.FC<{
 
     if (key === sortKey) {
       // If key is already selected, toggle direction
-      console.log("Setting sort Dirs: ", sortDirs);
       sortDirs[idx] *= -1;
-      console.log("Setting sort Dirs: ", sortDirs);
       setSortDirs([...sortDirs]);
     }
     setSortKey(key as keyof AmaceDBResult);
@@ -248,20 +289,49 @@ const AmaceResultTable: React.FC<{
 
   const debFilterText = debounce(filterText, 350);
 
+  const resultState = amaceResults
+    .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
+    .sort((amaceResult: AmaceDBResult, amaceResultB: AmaceDBResult) => {
+      const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
+      const sortDir = sortDirs[sortDirIdx] ?? 0;
+      return amaceResult[sortKey as keyof AmaceDBResult] <
+        amaceResultB[sortKey as keyof AmaceDBResult]
+        ? sortDir
+        : -sortDir;
+    });
+
   return (
     <div className={`min-w-full flex-1 bg-slate-900`}>
       <div className="mt-6 flex w-full items-center justify-around">
-        <div className="w-1/2">
-          <p className="ml-6 text-white">
-            App results {`(${amaceResults.length}) `}
-            {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
-              splitDateStringWithColor(
-                displayDateWithTime(new Date(amaceResults[0].runTS))
-              ).map((spanEl: React.ReactNode) => spanEl)
-            ) : (
-              <p>No date</p>
-            )}
-          </p>
+        <div className="flex w-1/2">
+          <div className="w-2/3">
+            <p className="ml-6 text-white">
+              App results {`(${amaceResults.length}) `}
+              {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
+                splitDateStringWithColor(
+                  displayDateWithTime(new Date(amaceResults[0].runTS))
+                ).map((spanEl: React.ReactNode) => spanEl)
+              ) : (
+                <p>No date</p>
+              )}
+            </p>
+          </div>
+          <div className="flex w-1/3">
+            <TableToClipBoard
+              generateText={() => genText(resultState)}
+              tootlTipText="Copy Table"
+              key={"AmaceTable"}
+            />
+            <div className="ml-12 flex">
+              <ResultLink
+                startDate={startDate}
+                endDate={endDate}
+                selectedDocID={selectedDocID}
+                page={page}
+                key={selectedDocID}
+              />
+            </div>
+          </div>
         </div>
         <div className="flex w-1/2 items-center p-1">
           <p className="mr-6 text-white">Filter</p>
@@ -432,35 +502,20 @@ const AmaceResultTable: React.FC<{
               className="ml-5 overflow-y-auto bg-slate-900"
               key={parentKey}
             >
-              {amaceResults
-                .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
-                .sort(
-                  (amaceResult: AmaceDBResult, amaceResultB: AmaceDBResult) => {
-                    const sortDirIdx =
-                      keysToIdx[sortKey as keyof typeof keysToIdx];
-                    const sortDir = sortDirs[sortDirIdx] ?? 0;
-                    return amaceResult[sortKey as keyof AmaceDBResult] <
-                      amaceResultB[sortKey as keyof AmaceDBResult]
-                      ? sortDir
-                      : -sortDir;
-                  }
-                )
-                .map((amaceResult: AmaceDBResult, idx: number) => {
-                  const curFilteredPackageNamesDecoratedStings =
-                    filteredPackageNamesDecoratedStings?.get(
-                      amaceResult.pkgName
-                    );
-                  return (
-                    <AmaceResultRow
-                      key={`${amaceResult.runTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
-                      amaceResult={amaceResult}
-                      onSelectAppName={(text: string) => onSelectAppName(text)}
-                      decoratedPackageName={
-                        curFilteredPackageNamesDecoratedStings
-                      }
-                    />
-                  );
-                })}
+              {resultState.map((amaceResult: AmaceDBResult, idx: number) => {
+                const curFilteredPackageNamesDecoratedStings =
+                  filteredPackageNamesDecoratedStings?.get(amaceResult.pkgName);
+                return (
+                  <AmaceResultRow
+                    key={`${amaceResult.runTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
+                    amaceResult={amaceResult}
+                    onSelectAppName={(text: string) => onSelectAppName(text)}
+                    decoratedPackageName={
+                      curFilteredPackageNamesDecoratedStings
+                    }
+                  />
+                );
+              })}
             </tbody>
           </table>
         ) : (

@@ -34,6 +34,7 @@ const getAmaceReasonStatObj = () => {
     PRICE: 0,
     OLDVERSION: 0,
     INSTALLFAIL: 0,
+    DEVICENOTCOMPAT: 0,
     COUNTRYNA: 0,
     O4C: 0,
     O4CFullScreenOnly: 0,

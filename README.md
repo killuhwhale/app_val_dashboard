@@ -44,3 +44,12 @@ ssh samus@92.23.642.127 "source appium/bin/activate; python3 appium/src/main.py 
 
    - A set of graphs for all the app runs selected
     - Show Totals compared in each run
+
+
+
+# Errors:
+
+ERROR
+ERROR: build step 0 "us.gcr.io/gae-runtimes/utilities/gcs-fetcher:base_20230430_18_04_RC00" failed: step exited with non-zero status: 1
+
+there was a file mentioned where the SHA mismatch, it was under .next/cache, so i just deleted it. Fixed issue.

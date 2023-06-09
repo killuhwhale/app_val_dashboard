@@ -11,6 +11,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 import AppRuns from "~/components/AppRuns";
 import DatePicker from "~/components/AppValDatePicker";
@@ -37,11 +38,23 @@ const ARCPage: React.FC = () => {
     useState<QueryDocumentSnapshot<DocumentData>>();
 
   const days = 4;
+  const router = useRouter();
+  const { query: _query } = router;
+  // Access individual query parameters
+  const qStartDate = _query.s_d as string;
+  const qEndDate = _query.e_d as string;
+  const qSelectedDocID = _query.id as string;
+
+  console.log("Qparams: ", qStartDate, typeof qStartDate, parseInt(qStartDate));
   const [startDate, setStartDate] = useState(
-    new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000)
+    qStartDate
+      ? new Date(parseInt(qStartDate))
+      : new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000)
   );
   const [endDate, setEndDate] = useState(
-    new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000)
+    qEndDate
+      ? new Date(parseInt(qEndDate))
+      : new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000)
   );
   const [lastStartDate, setLastStartDate] = useState("");
   const [lastEndDate, setLastEndDate] = useState("");
@@ -69,14 +82,21 @@ const ARCPage: React.FC = () => {
 
     const unsub = onSnapshot(q, (querySnapshot) => {
       const appRuns: QueryDocumentSnapshot<DocumentData>[] = [];
+      let selDocIdx = 0;
+      let idx = 0;
       querySnapshot.forEach((doc) => {
+        if (doc.id === qSelectedDocID) {
+          selDocIdx = idx;
+        }
         appRuns.push(doc);
+        idx++;
       });
+
       setAppRunResults(appRuns);
 
       // Set a default doc
-      if (init && appRuns[0]) {
-        setSelectedDoc(appRuns[0]);
+      if (init && appRuns[selDocIdx]) {
+        setSelectedDoc(appRuns[selDocIdx]);
       }
     });
     if (unSubRangeResultsRef.current) unSubRangeResultsRef.current();
@@ -151,9 +171,6 @@ const ARCPage: React.FC = () => {
         run_ts,
         build,
         timestamp,
-        reason,
-        new_name,
-        invalid,
         history,
         logs,
       } = appResults[i]!;
@@ -238,6 +255,10 @@ const ARCPage: React.FC = () => {
             key={`key__${selectedDoc.id}`}
             parentKey={`key__${selectedDoc.id}`}
             appResults={appResults}
+            startDate={startDate.getTime()}
+            endDate={endDate.getTime()}
+            selectedDocID={selectedDoc?.id ?? ""}
+            page="arc"
           />
         ) : (
           <div className="flex h-[400px] flex-1 items-center justify-center">

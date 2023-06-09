@@ -4,12 +4,15 @@ import React, {
   useLayoutEffect,
   useState,
 } from "react";
-import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
+import { MdArrowDownward, MdArrowUpward, MdContentCopy } from "react-icons/md";
 import { debounce, filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "./modals/ViewHistoryModal";
 import ViewLogsModal from "./modals/ViewLogsModal";
 import { get } from "http";
 import { colors } from "~/utils/dateUtils";
+import { Tooltip } from "react-tooltip";
+import ResultLink from "./ResultLink";
+import TableToClipBoard from "./TableToClipBoard";
 
 const displayDateWithTime = (date: Date): string => {
   return (
@@ -33,19 +36,25 @@ export const displayDate = (date: Date): string => {
 
 const status_reasons = new Map<string, string>();
 
-status_reasons.set("-3", "LOGGED_IN_FACEBOOK");
-status_reasons.set("-2", "LOGGED_IN_GOOLE");
-status_reasons.set("-1", "LOGGED_IN_EMAIL");
-status_reasons.set("0", "PASS");
-status_reasons.set("1", "FAIL");
-status_reasons.set("2", "CRASH_WIN_DEATH");
-status_reasons.set("3", "CRASH_FORCE_RM_ACT_RECORD");
-status_reasons.set("4", "CRASH_ANR");
-status_reasons.set("5", "CRASH_FDEBUG_CRASH");
-status_reasons.set("6", "CRASH_FATAL_EXCEPTION");
-status_reasons.set("7", "NEEDS_PRICE");
-status_reasons.set("8", "INVALID");
-status_reasons.set("9", "DID_NOT_OPEN");
+status_reasons.set("-13", "PLAYSTORE_FAIL");
+status_reasons.set("-12", "CRASH_WIN_DEATH");
+status_reasons.set("-11", "CRASH_FORCE_RM_ACT_RECORD");
+status_reasons.set("-10", "CRASH_ANR");
+status_reasons.set("-9", "CRASH_FDEBUG_CRASH");
+status_reasons.set("-8", "CRASH_FATAL_EXCEPTION");
+status_reasons.set("-7", "FAILED_TO_LAUNCH");
+status_reasons.set("-6", "FAILED_TO_INSTALL");
+status_reasons.set("-5", "NEEDS_PRICE");
+status_reasons.set("-4", "DEVICE_NONCOMPAT");
+status_reasons.set("-3", "INVALID");
+status_reasons.set("-2", "APP_OLD");
+status_reasons.set("-1", "COUNTRY_NA");
+status_reasons.set("0", "FAIL");
+status_reasons.set("1", "PASS");
+status_reasons.set("2", "LOGGED_IN_GOOGLE");
+status_reasons.set("3", "LOGGED_IN_FB");
+status_reasons.set("4", "LOGGED_IN_EMAIL");
+status_reasons.set("1337", "INIT");
 
 const AppResultRow: React.FC<AppResultRowProps> = ({
   appResult,
@@ -65,9 +74,6 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
     run_ts,
     build,
     timestamp,
-    reason,
-    new_name,
-    invalid,
     history,
     logs,
   } = appResult;
@@ -77,7 +83,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
     <>
       <tr
         className={`${
-          parseInt(status) <= 0
+          parseInt(status) > 0
             ? "border border-slate-600 bg-slate-900"
             : "border border-rose-600 bg-rose-900"
         }  text-white`}
@@ -85,7 +91,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
       >
         <td
           className={`sticky left-0   ${
-            parseInt(status) <= 0
+            parseInt(status) > 0
               ? "bg-gradient-to-r from-slate-900 via-slate-900 to-slate-700"
               : "bg-gradient-to-r from-rose-900 via-rose-900 to-rose-700"
           }  px-6 py-4 text-xs font-medium`}
@@ -98,7 +104,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
         ></td>
 
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {status_reasons.get(status)}
+          {status_reasons.get(status)}({status})
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {name}
@@ -117,15 +123,6 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {displayDateWithTime(new Date(timestamp))}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {reason}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {new_name}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {invalid}
         </td>
         <td
           onClick={() => {
@@ -182,11 +179,49 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   return result;
 };
 
+const genText = (rows: RawAppResult[]) => {
+  return rows
+    .map((row: RawAppResult) => {
+      const {
+        package_name,
+        status,
+        name,
+        report_title,
+        run_ts,
+        build,
+        timestamp,
+        history,
+        logs,
+        run_id,
+      } = row;
+      return `${package_name}\t${
+        status_reasons.get(status) ?? "failedtogetkey"
+      }\t${name}\t${report_title}\t${displayDate(
+        new Date(run_ts)
+      )}\t${build}\t${displayDateWithTime(
+        new Date(timestamp)
+      )}\t${history}\t${logs}\n`;
+    })
+    .join("");
+};
+
 const ResultTable: React.FC<{
   appResults: RawAppResult[];
   height: number;
   parentKey: string;
-}> = ({ appResults, height, parentKey }) => {
+  startDate: number;
+  endDate: number;
+  selectedDocID: string;
+  page: string;
+}> = ({
+  appResults,
+  height,
+  parentKey,
+  startDate,
+  endDate,
+  selectedDocID,
+  page,
+}) => {
   const [filteredPackageNames, setFilteredPackageNames] = useState<number[]>(
     []
   );
@@ -284,21 +319,62 @@ const ResultTable: React.FC<{
 
   const debFilterText = debounce(filterText, 350);
 
+  const resultState = appResults
+    .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
+    .sort((appResult: RawAppResult, appResultB: RawAppResult) => {
+      const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
+      const sortDir = sortDirs[sortDirIdx] ?? 0;
+      // If sortKey == status, sort by statsu title instead of value
+      if (sortKey === "status") {
+        return (status_reasons.get(
+          appResult[sortKey as keyof RawAppResult].toString()
+        ) ?? "") <
+          (status_reasons.get(
+            appResultB[sortKey as keyof RawAppResult].toString()
+          ) ?? "")
+          ? sortDir
+          : -sortDir;
+      }
+
+      return appResult[sortKey as keyof RawAppResult] <
+        appResultB[sortKey as keyof RawAppResult]
+        ? sortDir
+        : -sortDir;
+    });
   return (
     <div className={`min-w-full flex-1 bg-slate-900`}>
       <div className="mt-6 flex w-full items-center justify-around">
-        <div className="w-1/2">
-          <p className="ml-6 text-white">
-            App results {`(${appResults.length}) `}
-            {appResults && appResults[0] && appResults[0]?.run_ts ? (
-              splitDateStringWithColor(
-                displayDateWithTime(new Date(appResults[0].run_ts))
-              ).map((spanEl: React.ReactNode) => spanEl)
-            ) : (
-              <p>No date</p>
-            )}
-          </p>
+        <div className="flex w-1/2">
+          <div className="w-2/3">
+            <p className="ml-6 text-white">
+              App results {`(${appResults.length}) `}
+              {appResults && appResults[0] && appResults[0]?.run_ts ? (
+                splitDateStringWithColor(
+                  displayDateWithTime(new Date(appResults[0].run_ts))
+                ).map((spanEl: React.ReactNode) => spanEl)
+              ) : (
+                <p>No date</p>
+              )}
+            </p>
+          </div>
+          <div className="flex w-1/3">
+            <TableToClipBoard
+              generateText={() => genText(resultState)}
+              tootlTipText="Copy Table"
+              key={"ArcTable"}
+            />
+            <div className="ml-12 flex">
+              <ResultLink
+                startDate={startDate}
+                endDate={endDate}
+                selectedDocID={selectedDocID}
+                page={page}
+                key={selectedDocID}
+              />
+            </div>
+          </div>
         </div>
+
         <div className="flex w-1/2 items-center p-1">
           <p className="mr-6 text-white">Filter</p>
           <input
@@ -433,28 +509,7 @@ const ResultTable: React.FC<{
                     )}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("reason", 7);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Reason{" "}
-                    {sortDirs[7] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th scope="col" className="px-6 py-4">
-                  New_name
-                </th>
-                <th scope="col" className="px-6 py-4">
-                  Invalid
-                </th>
+
                 <th scope="col" className="px-6 py-4">
                   History
                 </th>
@@ -467,37 +522,26 @@ const ResultTable: React.FC<{
               className="ml-5 overflow-y-auto bg-slate-900"
               key={parentKey}
             >
-              {appResults
-                .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
-                .sort((appResult: RawAppResult, appResultB: RawAppResult) => {
-                  const sortDirIdx =
-                    keysToIdx[sortKey as keyof typeof keysToIdx];
-                  const sortDir = sortDirs[sortDirIdx] ?? 0;
-                  return appResult[sortKey as keyof RawAppResult] <
-                    appResultB[sortKey as keyof RawAppResult]
-                    ? sortDir
-                    : -sortDir;
-                })
-                .map((appResult: RawAppResult, idx: number) => {
-                  const curFilteredPackageNamesDecoratedStings =
-                    filteredPackageNamesDecoratedStings?.get(
-                      appResult.package_name
-                    );
-                  return (
-                    <AppResultRow
-                      key={`${appResult.run_id}_${appResult.report_title}_${appResult.package_name}`}
-                      appResult={appResult}
-                      setShowHistory={(show: boolean) => setShowHistory(show)}
-                      setShowLogs={(show: boolean) => setShowLogs(show)}
-                      onSelectHistory={(text: string) => onSelectHistory(text)}
-                      onSelectLogs={(text: string) => onSelectLogs(text)}
-                      onSelectAppName={(text: string) => onSelectAppName(text)}
-                      decoratedPackageName={
-                        curFilteredPackageNamesDecoratedStings
-                      }
-                    />
+              {resultState.map((appResult: RawAppResult, idx: number) => {
+                const curFilteredPackageNamesDecoratedStings =
+                  filteredPackageNamesDecoratedStings?.get(
+                    appResult.package_name
                   );
-                })}
+                return (
+                  <AppResultRow
+                    key={`${appResult.run_id}_${appResult.report_title}_${appResult.package_name}`}
+                    appResult={appResult}
+                    setShowHistory={(show: boolean) => setShowHistory(show)}
+                    setShowLogs={(show: boolean) => setShowLogs(show)}
+                    onSelectHistory={(text: string) => onSelectHistory(text)}
+                    onSelectLogs={(text: string) => onSelectLogs(text)}
+                    onSelectAppName={(text: string) => onSelectAppName(text)}
+                    decoratedPackageName={
+                      curFilteredPackageNamesDecoratedStings
+                    }
+                  />
+                );
+              })}
             </tbody>
           </table>
         ) : (
