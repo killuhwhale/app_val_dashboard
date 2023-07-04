@@ -11,6 +11,8 @@ type AppResult = {
   status: string;
   package_name: string;
   name: string;
+  app_type: string;
+  app_version: string;
   report_title: string;
   run_id: string;
   run_ts: FirebaseDate;
@@ -24,6 +26,8 @@ type RawAppResult = {
   status: string;
   package_name: string;
   name: string;
+  app_type: string;
+  app_version: string;
   report_title: string;
   run_id: string;
   run_ts: number;
@@ -31,6 +35,7 @@ type RawAppResult = {
   timestamp: number;
   history: string;
   logs: string;
+  addr: string;
 };
 
 interface AppResultRowProps {
@@ -83,9 +88,24 @@ type AmaceDBResult = {
   runTS: number;
   appTS: number;
   status: number;
+  brokenStatus: number;
   buildInfo: string;
   deviceInfo: string;
-  isGame: boolean;
+  appType: string;
+  appVersion: string;
+  history: string;
+  logs: string;
+};
+
+enum AppType {
+  APP = "App",
+  Game = "Game",
+  PWA = "PWA",
+}
+
+type HistoryStep = {
+  msg: string;
+  url: string;
 };
 
 // From client program into API/DB
@@ -96,9 +116,13 @@ type AmaceResult = {
   runTS: string;
   appTS: string;
   status: number;
+  brokenStatus: number;
   buildInfo: string;
   deviceInfo: string;
-  isGame: boolean;
+  appType: AppType;
+  appVersion: string;
+  history: HistoryStep[];
+  logs: string;
 };
 
 // From client, not used. Just a reference.

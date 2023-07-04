@@ -27,6 +27,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       status,
       package_name,
       name,
+      app_type,
+      app_version,
       report_title,
       run_id,
       run_ts, // run_ts
@@ -34,6 +36,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       timestamp,
       history,
       logs,
+      addr,
     } = JSON.parse(JSON.stringify(req.body)) as RawAppResult;
 
     console.log(
@@ -56,6 +59,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const parentRes = await docRefParent.set({
       date: new Date(parseInt(run_ts.toString())),
+      addr: addr,
     });
 
     const docRefSub = docRefParent
@@ -66,6 +70,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       status,
       package_name,
       name,
+      app_type,
+      app_version,
       report_title,
       run_id,
       run_ts: parseInt(run_ts.toString()),
@@ -110,6 +116,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           status,
           package_name,
           name,
+          app_type,
+          app_version,
           report_title,
           timestamp,
           history,

@@ -34,47 +34,82 @@ export const displayDate = (date: Date): string => {
 };
 
 const status_reasons = new Map<string, string>();
+const brokenStatus_reasons = new Map<string, string>();
 
 // Display String based on status
 status_reasons.set("0", "Fail");
-status_reasons.set("1", "Needs purchase");
-status_reasons.set("2", "App is old");
-status_reasons.set("3", "Failed to install");
-status_reasons.set("4", "Device not compatible");
-status_reasons.set("5", "Country NA");
-status_reasons.set("6", "O4C");
-status_reasons.set("7", "O4C FS only");
-status_reasons.set("8", "FS -> Amace");
-status_reasons.set("9", "Phone only");
-status_reasons.set("10", "Tablet only");
-status_reasons.set("11", "Amace");
-status_reasons.set("12", "PWA");
+status_reasons.set("1", "Launch Fail");
+status_reasons.set("2", "Crashed");
+status_reasons.set("10", "Needs purchase");
+status_reasons.set("20", "App is old");
+status_reasons.set("30", "Failed to install");
+status_reasons.set("40", "Device not compatible");
+status_reasons.set("50", "Country NA");
+status_reasons.set("60", "O4C");
+status_reasons.set("70", "O4C FS only");
+status_reasons.set("80", "FS -> Amace");
+status_reasons.set("90", "Phone only");
+status_reasons.set("100", "Tablet only");
+status_reasons.set("110", "Amace");
+status_reasons.set("120", "PWA");
+
+brokenStatus_reasons.set("0", "LoggedinGoogle");
+brokenStatus_reasons.set("10", "LoggedinFacebook");
+brokenStatus_reasons.set("20", "LoggedinEmail");
+brokenStatus_reasons.set("30", "Pass");
+brokenStatus_reasons.set("40", "WinDeath");
+brokenStatus_reasons.set("50", "ForceRemoved");
+brokenStatus_reasons.set("60", "FDebugCrash");
+brokenStatus_reasons.set("70", "FatalException");
+brokenStatus_reasons.set("80", "ProceDied");
+brokenStatus_reasons.set("90", "ANR");
+brokenStatus_reasons.set("100", "Failed");
+brokenStatus_reasons.set("101", "FailedInstall");
+brokenStatus_reasons.set("102", "FailedLaunch");
+brokenStatus_reasons.set("103", "FailedAmaceCheck");
 
 interface AmaceResultRowProps {
   amaceResult: AmaceDBResult;
   decoratedPackageName?: string;
 
+  setShowHistory(show: boolean): void;
+  setShowLogs(show: boolean): void;
+  onSelectHistory(text: string): void;
+  onSelectLogs(text: string): void;
   onSelectAppName(text: string): void;
 }
 
 const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
   amaceResult,
   decoratedPackageName,
+  setShowLogs,
+  setShowHistory,
+  onSelectHistory,
+  onSelectLogs,
   onSelectAppName,
 }) => {
   const {
     pkgName,
     appName,
     status,
+    brokenStatus,
     appTS,
     runID,
     runTS,
     deviceInfo,
     buildInfo,
-    isGame,
+    appType,
+    appVersion,
+    history,
+    logs,
   } = amaceResult;
+  console.log(
+    "Result row:::: ",
 
+    runTS
+  );
   // console.log("decoratedPackageNames", decoratedPackageName);
+  const hasLogs = logs?.length > 0 ?? false;
   return (
     <>
       <tr
@@ -106,7 +141,13 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
           {status_reasons.get(status.toString())}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {isGame ? "Game" : "App"}
+          {brokenStatus_reasons.get(brokenStatus.toString())}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {appType}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {appVersion}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {displayDateWithTime(new Date(appTS))}
@@ -122,6 +163,38 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {buildInfo}
+        </td>
+        <td
+          onClick={() => {
+            if (history) {
+              onSelectAppName(appName);
+              onSelectHistory(history);
+              setShowHistory(true);
+            } else {
+              console.log("No history to show");
+            }
+          }}
+          className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
+            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+          }`}
+        >
+          Click to view history
+        </td>
+        <td
+          onClick={() => {
+            if (hasLogs) {
+              onSelectAppName(appName);
+              onSelectLogs(logs);
+              setShowLogs(true);
+            } else {
+              console.log("No logs to show");
+            }
+          }}
+          className={`whitespace-nowrap px-6 py-4 text-xs font-medium  ${
+            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+          }`}
+        >
+          {hasLogs ? "Click to view logs" : "No Logs"}
         </td>
       </tr>
     </>
@@ -156,23 +229,29 @@ const genText = (rows: AmaceDBResult[]) => {
       appTS,
       buildInfo,
       deviceInfo,
-      isGame,
       pkgName,
       runID,
       runTS,
       status,
+      brokenStatus,
+      appType,
+      appVersion,
+      history,
+      logs,
     } = row;
 
     // TODO remove replaceALl, amace.go is updated to strip the \n now...
     data.push(
       `${pkgName}\t${appName}\t${
         status_reasons.get(status.toString()) ?? "failedtogetkey"
-      }\t${isGame ? "Game" : "App"}\t${displayDateWithTime(
+      }\t${
+        brokenStatus_reasons.get(brokenStatus.toString()) ?? "failedtogetkey2"
+      }\t${appType}\t${appVersion}\t${displayDateWithTime(
         new Date(appTS)
       )}\t${runID}\t${displayDate(new Date(runTS))}\t${deviceInfo.replaceAll(
         "\n",
         ""
-      )}\t${buildInfo}\n`
+      )}\t${buildInfo}\t${history}\t${logs}\n`
     );
   });
   return data.join("");
@@ -209,10 +288,10 @@ const AmaceResultTable: React.FC<{
   const [selLogs, onSelectLogs] = useState("");
   const [selAppName, onSelectAppName] = useState("");
 
-  const [sortKey, setSortKey] = useState("package_name");
+  const [sortKey, setSortKey] = useState("pkgName");
   //  Package Name, Name, Status, App TS, Run ID, device, Build               => Change this Headers and keysToIdx when adding new items to sort by
   const [sortDirs, setSortDirs] = useState([
-    -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
   ]); // toggle between 1 and -1 by multiplying by -1
 
   // Sort by keys
@@ -220,12 +299,16 @@ const AmaceResultTable: React.FC<{
     pkgName: 0,
     appName: 1,
     status: 2,
-    isGame: 3,
-    appTS: 4,
-    runID: 5,
-    runTS: 6,
-    deviceInfo: 7,
-    buildInfo: 8,
+    brokenStatus: 3,
+    appType: 4,
+    appVersion: 5,
+    appTS: 6,
+    runID: 7,
+    runTS: 8,
+    deviceInfo: 9,
+    buildInfo: 10,
+    history: 11,
+    logs: 12,
   };
 
   useLayoutEffect(() => {
@@ -364,8 +447,8 @@ const AmaceResultTable: React.FC<{
                   className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Package Name{" "}
-                    {sortDirs[1] === -1 ? (
+                    Package NameZ{" "}
+                    {sortDirs[0] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />
@@ -382,7 +465,7 @@ const AmaceResultTable: React.FC<{
                 >
                   <div className="flex items-center justify-center">
                     Name{" "}
-                    {sortDirs[0] === -1 ? (
+                    {sortDirs[1] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />
@@ -406,29 +489,13 @@ const AmaceResultTable: React.FC<{
                 </th>
                 <th
                   onClick={() => {
-                    onHeaderClick("isGame", 3);
+                    onHeaderClick("brokenStatus", 3);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Game{" "}
+                    Broken Status{" "}
                     {sortDirs[3] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("appTS", 4);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    App TS{" "}
-                    {sortDirs[4] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />
@@ -437,14 +504,28 @@ const AmaceResultTable: React.FC<{
                 </th>
 
                 <th
-                  scope="col"
                   onClick={() => {
-                    onHeaderClick("runID", 5);
+                    onHeaderClick("appType", 4);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Run ID{" "}
+                    App Type{" "}
+                    {sortDirs[4] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => {
+                    onHeaderClick("appVersion", 5);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    App Version{" "}
                     {sortDirs[5] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
@@ -455,12 +536,12 @@ const AmaceResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("runTS", 6);
+                    onHeaderClick("appTS", 6);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Run TS{" "}
+                    App TS{" "}
                     {sortDirs[6] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
@@ -468,15 +549,16 @@ const AmaceResultTable: React.FC<{
                     )}
                   </div>
                 </th>
+
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("deviceInfo", 7);
+                    onHeaderClick("runID", 7);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
-                    Device Info{" "}
+                    Run ID{" "}
                     {sortDirs[7] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
@@ -487,13 +569,77 @@ const AmaceResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("buildInfo", 8);
+                    onHeaderClick("runTS", 8);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Run TS{" "}
+                    {sortDirs[8] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("deviceInfo", 9);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Device Info{" "}
+                    {sortDirs[9] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("buildInfo", 10);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
                   <div className="flex items-center justify-center">
                     Build Info{" "}
-                    {sortDirs[8] === -1 ? (
+                    {sortDirs[10] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("history", 11);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    History{" "}
+                    {sortDirs[11] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("logs", 12);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Logs{" "}
+                    {sortDirs[12] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />
@@ -511,8 +657,12 @@ const AmaceResultTable: React.FC<{
                   filteredPackageNamesDecoratedStings?.get(amaceResult.pkgName);
                 return (
                   <AmaceResultRow
-                    key={`${amaceResult.runTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
+                    key={`${amaceResult.appTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
                     amaceResult={amaceResult}
+                    setShowHistory={(show: boolean) => setShowHistory(show)}
+                    setShowLogs={(show: boolean) => setShowLogs(show)}
+                    onSelectHistory={(text: string) => onSelectHistory(text)}
+                    onSelectLogs={(text: string) => onSelectLogs(text)}
                     onSelectAppName={(text: string) => onSelectAppName(text)}
                     decoratedPackageName={
                       curFilteredPackageNamesDecoratedStings

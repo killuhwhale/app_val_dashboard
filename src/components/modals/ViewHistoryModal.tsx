@@ -12,7 +12,7 @@ interface ViewHistoryModalProps {
 
 type HistoryStep = {
   msg: string;
-  img: string;
+  url: string;
 };
 
 const getUrl = async (gsPath: string) => {
@@ -38,7 +38,7 @@ const ViewHistoryStep: React.FC<ViewHistoryStepProps> = ({ appName, step }) => {
 
   useEffect(() => {
     const _ = async () => {
-      const step_url = await getUrl(step.img);
+      const step_url = await getUrl(step.url);
       console.log("Got url", step_url);
       setUrl(step_url);
       window.addEventListener("load", () => {
@@ -74,6 +74,8 @@ const ViewHistoryModal: React.FC<ViewHistoryModalProps> = ({
   const hist = history
     ? (JSON.parse(history.replaceAll("'", '"')) as HistoryStep[])
     : ([] as HistoryStep[]);
+
+  console.log("App history: ", hist);
   return (
     <>
       {isOpen && (

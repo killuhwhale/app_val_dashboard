@@ -61,14 +61,16 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
   decoratedPackageName,
   setShowLogs,
   setShowHistory,
-  onSelectAppName,
   onSelectHistory,
   onSelectLogs,
+  onSelectAppName,
 }) => {
   const {
     status,
     package_name,
     name,
+    app_type,
+    app_version,
     report_title,
     run_id,
     run_ts,
@@ -108,6 +110,12 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {name}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {app_type}
+        </td>
+        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {app_version}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {report_title}
@@ -182,13 +190,15 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
 
 const genText = (rows: RawAppResult[]) => {
   const header =
-    "Package Name\tStatus\tName\tReport Title\tTimestamp of app\tBuild\tRun TS\tHistory\tLogs\n";
+    "Package Name\tStatus\tName\tApp Type\tApp Version\tReport Title\tTimestamp of app\tBuild\tRun TS\tHistory\tLogs\n";
   const data = [header];
   rows.forEach((row: RawAppResult) => {
     const {
       package_name,
       status,
       name,
+      app_type,
+      app_version,
       report_title,
       run_ts,
       build,
@@ -200,7 +210,7 @@ const genText = (rows: RawAppResult[]) => {
     data.push(
       `${package_name}\t${
         status_reasons.get(status) ?? "failedtogetkey"
-      }\t${name}\t${report_title}\t${displayDateWithTime(
+      }\t${name}\t${app_type}\t${app_version}\t${report_title}\t${displayDateWithTime(
         new Date(timestamp)
       )}\t${build}\t${displayDate(new Date(run_ts))}\t${history}\t${logs}\n`
     );
@@ -242,18 +252,21 @@ const ResultTable: React.FC<{
 
   const [sortKey, setSortKey] = useState("package_name");
   // Status, Package Name, Name, Report Title, Run Ts, Build,	Timestamp of app,	Reason, => Change this Headers and keysToIdx when adding new items to sort by
-  const [sortDirs, setSortDirs] = useState([-1, -1, -1, -1, -1, -1, -1, -1]); // toggle between 1 and -1 by multiplying by -1
+  const [sortDirs, setSortDirs] = useState([
+    -1, -1, -1, -1, -1, -1, -1, -1, -1,
+  ]); // toggle between 1 and -1 by multiplying by -1
 
   // Sort by keys
   const keysToIdx = {
-    status: 0,
-    package_name: 1,
+    package_name: 0,
+    status: 1,
     name: 2,
-    report_title: 3,
-    run_ts: 4,
-    build: 5,
+    app_type: 3,
+    app_version: 4,
+    report_title: 5,
     timestamp: 6,
-    reason: 7,
+    build: 7,
+    run_ts: 8,
   };
 
   useLayoutEffect(() => {
@@ -401,7 +414,7 @@ const ResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("package_name", 1);
+                    onHeaderClick("package_name", 0);
                   }}
                   className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
                 >
@@ -418,7 +431,7 @@ const ResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("status", 0);
+                    onHeaderClick("status", 1);
                   }}
                   className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
                 >
@@ -447,9 +460,39 @@ const ResultTable: React.FC<{
                   </div>
                 </th>
                 <th
+                  onClick={() => {
+                    onHeaderClick("app_type", 3);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Type{" "}
+                    {sortDirs[2] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
+                  onClick={() => {
+                    onHeaderClick("app_version", 4);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Version{" "}
+                    {sortDirs[2] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+                <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("report_title", 3);
+                    onHeaderClick("report_title", 5);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
@@ -485,7 +528,7 @@ const ResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("build", 5);
+                    onHeaderClick("build", 7);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
@@ -502,7 +545,7 @@ const ResultTable: React.FC<{
                 <th
                   scope="col"
                   onClick={() => {
-                    onHeaderClick("run_ts", 4);
+                    onHeaderClick("run_ts", 8);
                   }}
                   className="px-6 py-4 hover:bg-slate-700"
                 >
