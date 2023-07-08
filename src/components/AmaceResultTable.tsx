@@ -221,7 +221,7 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
 
 const genText = (rows: AmaceDBResult[]) => {
   const header =
-    "Package Name\tName\tStatus\tGame\tApp TS\tRun ID\tRun TS\tDevice Info\tBuild Info\n";
+    "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
   const data = [header];
   rows.forEach((row: AmaceDBResult) => {
     const {

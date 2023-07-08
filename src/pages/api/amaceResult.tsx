@@ -42,6 +42,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     console.log("New data to post: ", appType, appVersion, history, logs);
 
+    // Update Global List
+    const globalDocRefParent = db
+      .collection(`GlobalAMACEStatus`)
+      .doc(`${pkgName}`);
+
+    const globalDocRefParentRes = await globalDocRefParent.set({
+      name: appName,
+      packageName: pkgName,
+      status: status,
+      date: new Date(),
+    });
+
+    //  Update Run
     const docRefParent = db.collection(`AmaceRuns`).doc(`${runID}`);
 
     const parentRes = await docRefParent.set({
