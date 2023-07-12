@@ -175,47 +175,48 @@ const AMACEPage: React.FC = () => {
       } = amaceResults[i]!;
 
       if (status == 0) reasons.Fail++;
-      if (status == 1) reasons.PRICE++;
-      if (status == 2) reasons.OLDVERSION++;
-      if (status == 3) reasons.INSTALLFAIL++;
-      if (status == 4) reasons.DEVICENOTCOMPAT++;
-      if (status == 5) reasons.COUNTRYNA++;
-      if (status == 6) reasons.O4C++;
-      if (status == 7) reasons.O4CFullScreenOnly++;
-      if (status == 8) reasons.IsFSToAmacE++;
-      if (status == 9) reasons.IsLockedPAmacE++;
-      if (status == 10) reasons.IsLockedTAmacE++;
-      if (status == 11) reasons.IsAmacE++;
-      if (status == 12) reasons.PWA++;
+      if (status == 1) reasons.LaunchFail++;
+      if (status == 2) reasons.Crashed++;
+      if (status == 10) reasons.Needspurchase++;
+      if (status == 20) reasons.Appisold++;
+      if (status == 30) reasons.Failedtoinstall++;
+      if (status == 40) reasons.Devicenotcompatible++;
+      if (status == 50) reasons.CountryNA++;
+      if (status == 60) reasons.O4C++;
+      if (status == 70) reasons.O4CFSonly++;
+      if (status == 80) reasons.FSAmace++;
+      if (status == 90) reasons.Phoneonly++;
+      if (status == 100) reasons.Tabletonly++;
+      if (status == 110) reasons.Amace++;
+      if (status == 120) reasons.PWA++;
     }
 
     // Update all stats here with useState()
     setAppResults(amaceResults);
     setTotalByStatus([
       { name: "Fail", uv: reasons.Fail } as BarLineChartDataPoint,
-      { name: "PRICE", uv: reasons.PRICE } as BarLineChartDataPoint,
-      { name: "OLDVERSION", uv: reasons.OLDVERSION } as BarLineChartDataPoint,
-      { name: "INSTALLFAIL", uv: reasons.INSTALLFAIL } as BarLineChartDataPoint,
+      { name: "LaunchFail", uv: reasons.LaunchFail } as BarLineChartDataPoint,
+      { name: "Crashed", uv: reasons.Crashed } as BarLineChartDataPoint,
       {
-        name: "DEVICENOTCOMPAT",
-        uv: reasons.DEVICENOTCOMPAT,
+        name: "Needspurchase",
+        uv: reasons.Needspurchase,
       } as BarLineChartDataPoint,
-      { name: "COUNTRYNA", uv: reasons.COUNTRYNA } as BarLineChartDataPoint,
+      { name: "Appisold", uv: reasons.Appisold } as BarLineChartDataPoint,
+      {
+        name: "Failedtoinstall",
+        uv: reasons.Failedtoinstall,
+      } as BarLineChartDataPoint,
+      {
+        name: "Devicenotcompatible",
+        uv: reasons.Devicenotcompatible,
+      } as BarLineChartDataPoint,
+      { name: "CountryNA", uv: reasons.CountryNA } as BarLineChartDataPoint,
       { name: "O4C", uv: reasons.O4C } as BarLineChartDataPoint,
-      {
-        name: "O4CFullScreenOnly",
-        uv: reasons.O4CFullScreenOnly,
-      } as BarLineChartDataPoint,
-      { name: "IsFSToAmacE", uv: reasons.IsFSToAmacE } as BarLineChartDataPoint,
-      {
-        name: "IsLockedPAmacE",
-        uv: reasons.IsLockedPAmacE,
-      } as BarLineChartDataPoint,
-      {
-        name: "IsLockedTAmacE",
-        uv: reasons.IsLockedTAmacE,
-      } as BarLineChartDataPoint,
-      { name: "IsAmacE", uv: reasons.IsAmacE } as BarLineChartDataPoint,
+      { name: "O4CFSonly", uv: reasons.O4CFSonly } as BarLineChartDataPoint,
+      { name: "FSAmace", uv: reasons.FSAmace } as BarLineChartDataPoint,
+      { name: "Phoneonly", uv: reasons.Phoneonly } as BarLineChartDataPoint,
+      { name: "Tabletonly", uv: reasons.Tabletonly } as BarLineChartDataPoint,
+      { name: "Amace", uv: reasons.Amace } as BarLineChartDataPoint,
       { name: "PWA", uv: reasons.PWA } as BarLineChartDataPoint,
     ]);
   };

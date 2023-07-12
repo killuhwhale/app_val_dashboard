@@ -1,16 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { status_reasons, brokenStatus_reasons } from "~/components/shared";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
 
 const db = firestore;
-
-type FireStoreGlobalStatus = {
-  name: string;
-  packageName: string;
-  status: string;
-  date: Date;
-};
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
@@ -26,24 +18,26 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(403).json({ text: "Hello unauth guy" });
 
   try {
-    const globalDocRefParent = await db.collection(`GlobalAMACEStatus`).get();
-
-    const data: FireStoreGlobalStatus[] = [];
-
-    globalDocRefParent.forEach((doc) => {
-      const d = doc.data() as FireStoreGlobalStatus;
-      d.status = status_reasons.get(d.status) ?? "No Status Found;API err";
-      data.push(d);
-    });
+    const docRefParent = db.collection(`AppLists`).doc("live");
+    const result = await docRefParent.get();
+    console.log("Apps: ", result.data());
 
     res.status(200).json({
-      data: data,
+      data: {
+        success: true,
+        data: {
+          apps: result.data(),
+        },
+      },
       error: null,
     });
   } catch (err: any) {
     console.log("Caught error: ", err);
     res.status(500).json({
-      data: null,
+      data: {
+        success: false,
+        data: null,
+      },
       error: `Err posting: ${String(err)}`,
     });
   }

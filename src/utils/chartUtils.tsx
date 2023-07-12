@@ -31,17 +31,19 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 const getAmaceReasonStatObj = () => {
   return {
     Fail: 0,
-    PRICE: 0,
-    OLDVERSION: 0,
-    INSTALLFAIL: 0,
-    DEVICENOTCOMPAT: 0,
-    COUNTRYNA: 0,
+    LaunchFail: 0,
+    Crashed: 0,
+    Needspurchase: 0,
+    Appisold: 0,
+    Failedtoinstall: 0,
+    Devicenotcompatible: 0,
+    CountryNA: 0,
     O4C: 0,
-    O4CFullScreenOnly: 0,
-    IsFSToAmacE: 0,
-    IsLockedPAmacE: 0,
-    IsLockedTAmacE: 0,
-    IsAmacE: 0,
+    O4CFSonly: 0,
+    FSAmace: 0,
+    Phoneonly: 0,
+    Tabletonly: 0,
+    Amace: 0,
     PWA: 0,
   };
 };
@@ -71,4 +73,4 @@ const getReasonStatObj = () => {
   } as AppStatus;
 };
 
-export { CustomTooltip, getReasonStatObj, getAmaceReasonStatObj };
+export { CustomTooltip, getAmaceReasonStatObj, getReasonStatObj };

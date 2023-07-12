@@ -8,6 +8,10 @@ import { env } from "~/env.mjs";
 //   credential: applicationDefault(),
 // });
 
+//  ######################
+//  Deprecated, endpoint to post results from Appium Python Automation
+//  ######################
+
 const db = firestore;
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
