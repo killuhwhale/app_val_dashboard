@@ -32,7 +32,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     globalDocRefParent.forEach((doc) => {
       const d = doc.data() as FireStoreGlobalStatus;
-      d.status = status_reasons.get(d.status) ?? "No Status Found;API err";
+      d.status =
+        status_reasons.get(d.status.toString()) ?? "No Status Found;API err";
       data.push(d);
     });
 

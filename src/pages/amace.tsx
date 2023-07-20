@@ -180,7 +180,9 @@ const AMACEPage: React.FC = () => {
       if (status == 10) reasons.Needspurchase++;
       if (status == 20) reasons.Appisold++;
       if (status == 30) reasons.Failedtoinstall++;
+      if (status == 31) reasons.TooManyAttempts++;
       if (status == 40) reasons.Devicenotcompatible++;
+      if (status == 41) reasons.Chromebooknotcompatible++;
       if (status == 50) reasons.CountryNA++;
       if (status == 60) reasons.O4C++;
       if (status == 70) reasons.O4CFSonly++;
@@ -207,8 +209,16 @@ const AMACEPage: React.FC = () => {
         uv: reasons.Failedtoinstall,
       } as BarLineChartDataPoint,
       {
+        name: "TooManyAttempts",
+        uv: reasons.TooManyAttempts,
+      } as BarLineChartDataPoint,
+      {
         name: "Devicenotcompatible",
         uv: reasons.Devicenotcompatible,
+      } as BarLineChartDataPoint,
+      {
+        name: "Chromebooknotcompatible",
+        uv: reasons.Chromebooknotcompatible,
       } as BarLineChartDataPoint,
       { name: "CountryNA", uv: reasons.CountryNA } as BarLineChartDataPoint,
       { name: "O4C", uv: reasons.O4C } as BarLineChartDataPoint,
