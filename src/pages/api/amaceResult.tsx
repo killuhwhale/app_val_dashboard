@@ -1,11 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
-
-// initializeApp({
-//   credential: applicationDefault(),
-// });
-
 const db = firestore;
 
 type GlobalAppResult = {
@@ -46,6 +41,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       appVersion,
       history,
       logs,
+      loginResults,
     } = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
 
     //Update Global list.
@@ -60,17 +56,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const doc = await globalDocRefParent.get();
       const parentData = doc.data() as GlobalAppResult;
       // If recorded version is older than the verison just tested, update...
-      if (
-        (parentData && parentData.version == undefined) ||
-        parentData.version < appVersion
-      ) {
-        const globalDocRefParentRes = await globalDocRefParent.set({
-          name: appName,
-          packageName: pkgName,
-          status: status,
-          version: appVersion,
-          date: new Date(),
-        });
+      if (parentData !== undefined) {
+        if (
+          parentData.version == undefined ||
+          parentData.version < appVersion
+        ) {
+          const globalDocRefParentRes = await globalDocRefParent.set({
+            name: appName,
+            packageName: pkgName,
+            status: status,
+            version: appVersion,
+            date: new Date(),
+          });
+        }
       }
     }
 
@@ -99,6 +97,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       appVersion,
       history: JSON.stringify(history),
       logs,
+      loginResults,
     });
 
     console.log("Doc res", docRes);
@@ -120,6 +119,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           appVersion,
           history,
           logs,
+          loginResults,
         },
       },
       error: null,

@@ -14,6 +14,7 @@ import { Tooltip } from "react-tooltip";
 import ResultLink from "./ResultLink";
 import TableToClipBoard from "./TableToClipBoard";
 import { brokenStatus_reasons, status_reasons } from "./shared";
+import { number } from "zod";
 const displayDateWithTime = (date: Date): string => {
   return (
     date.toLocaleDateString("en-US", {
@@ -34,6 +35,58 @@ export const displayDate = (date: Date): string => {
   });
 };
 
+const GoogleIcon = () => {
+  return (
+    <img className="mr-2 h-[20px]" src="images/search.png" alt="Google Icon" />
+  );
+};
+const FacebookIcon = () => {
+  return (
+    <img
+      className="mr-2 h-[20px]"
+      src="images/facebook.png"
+      alt="Facebook Icon"
+    />
+  );
+};
+const EmailIcon = () => {
+  return (
+    <img className="mr-2 h-[20px]" src="images/gmail.png" alt="Email Icon" />
+  );
+};
+
+const PlaceholderIcon = () => {
+  return (
+    <img className="mr-2 h-[20px]" src="images/tilde.png" alt="Email Icon" />
+  );
+};
+
+function decodeLoginResults(lr: number): number[] {
+  // login results = [0001] => 4 bit number where bits 1-3 represent if the app logged in via Google, Facebook or Email successfully
+
+  if (!lr) {
+    return [];
+  }
+  console.log(`LR:  ${lr} - ${lr.toString(2)}`);
+
+  const labels = lr
+    .toString(2) // binary string
+    .split("") // separate bits
+    .reverse() // Reverse order
+    .slice(0, -1) // Remove highest bit since this acts as a placeholder to capture 0's
+    .map((num) => parseInt(num)); // Turn bit to int
+  return labels;
+}
+
+const sortLoginResult = (lr: number) => {
+  if (!lr) {
+    return "";
+  }
+
+  console.log(`LR:  ${lr} - ${lr.toString(2)}`);
+
+  return lr.toString(2);
+};
 interface AmaceResultRowProps {
   amaceResult: AmaceDBResult;
   decoratedPackageName?: string;
@@ -68,14 +121,12 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
     appVersion,
     history,
     logs,
+    loginResults,
   } = amaceResult;
-  console.log(
-    "Result row:::: ",
 
-    runTS
-  );
   // console.log("decoratedPackageNames", decoratedPackageName);
   const hasLogs = logs?.length > 0 ?? false;
+  const loginLabels = [GoogleIcon, FacebookIcon, EmailIcon];
   return (
     <>
       <tr
@@ -117,6 +168,15 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {displayDateWithTime(new Date(appTS))}
+        </td>
+        <td className="flex flex-row justify-center whitespace-nowrap px-6 py-4 text-xs font-medium">
+          {decodeLoginResults(loginResults).map((num, idx) => {
+            return loginLabels[idx] && num > 0 ? (
+              loginLabels[idx]!()
+            ) : (
+              <PlaceholderIcon />
+            );
+          })}
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {runID}
@@ -187,7 +247,7 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
 
 const genText = (rows: AmaceDBResult[]) => {
   const header =
-    "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
+    "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tLogin Results\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
   const data = [header];
   rows.forEach((row: AmaceDBResult) => {
     const {
@@ -204,6 +264,7 @@ const genText = (rows: AmaceDBResult[]) => {
       appVersion,
       history,
       logs,
+      loginResults,
     } = row;
 
     // TODO remove replaceALl, amace.go is updated to strip the \n now...
@@ -214,7 +275,9 @@ const genText = (rows: AmaceDBResult[]) => {
         brokenStatus_reasons.get(brokenStatus.toString()) ?? "failedtogetkey2"
       }\t${appType}\t${appVersion}\t${displayDateWithTime(
         new Date(appTS)
-      )}\t${runID}\t${displayDate(new Date(runTS))}\t${deviceInfo.replaceAll(
+      )}\t${loginResults}\t${runID}\t${displayDate(
+        new Date(runTS)
+      )}\t${deviceInfo.replaceAll(
         "\n",
         ""
       )}\t${buildInfo}\t${history}\t${logs}\n`
@@ -257,7 +320,7 @@ const AmaceResultTable: React.FC<{
   const [sortKey, setSortKey] = useState("pkgName");
   //  Package Name, Name, Status, App TS, Run ID, device, Build               => Change this Headers and keysToIdx when adding new items to sort by
   const [sortDirs, setSortDirs] = useState([
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
   ]); // toggle between 1 and -1 by multiplying by -1
 
   // Sort by keys
@@ -275,6 +338,7 @@ const AmaceResultTable: React.FC<{
     buildInfo: 10,
     history: 11,
     logs: 12,
+    loginResults: 13,
   };
 
   useLayoutEffect(() => {
@@ -347,6 +411,17 @@ const AmaceResultTable: React.FC<{
     .sort((amaceResult: AmaceDBResult, amaceResultB: AmaceDBResult) => {
       const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
       const sortDir = sortDirs[sortDirIdx] ?? 0;
+      if (sortKey === "loginResults") {
+        return sortLoginResult(
+          amaceResult[sortKey as keyof AmaceDBResult] as number
+        ) <
+          sortLoginResult(
+            amaceResultB[sortKey as keyof AmaceDBResult] as number
+          )
+          ? sortDir
+          : -sortDir;
+      }
+
       return amaceResult[sortKey as keyof AmaceDBResult] <
         amaceResultB[sortKey as keyof AmaceDBResult]
         ? sortDir
@@ -509,6 +584,23 @@ const AmaceResultTable: React.FC<{
                   <div className="flex items-center justify-center">
                     App TS{" "}
                     {sortDirs[6] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("loginResults", 13);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Login Results{" "}
+                    {sortDirs[13] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />

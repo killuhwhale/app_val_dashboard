@@ -53,3 +53,8 @@ ERROR
 ERROR: build step 0 "us.gcr.io/gae-runtimes/utilities/gcs-fetcher:base_20230430_18_04_RC00" failed: step exited with non-zero status: 1
 
 there was a file mentioned where the SHA mismatch, it was under .next/cache, so i just deleted it. Fixed issue.
+
+
+
+Image Attribution:
+<a href="https://www.flaticon.com/free-icons/google" title="google icons">Google icons created by Freepik - Flaticon</a>
