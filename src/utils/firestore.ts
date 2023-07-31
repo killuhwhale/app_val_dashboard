@@ -21,6 +21,7 @@ const backEndApp =
   );
 
 const firestore = getFirestore(backEndApp);
+
 const auth = getAuth(backEndApp);
 
 export { firestore, auth, backEndApp };

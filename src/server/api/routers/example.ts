@@ -9,6 +9,46 @@ import {
 import { sheets, auth } from "@googleapis/sheets";
 import { getSession } from "next-auth/react";
 
+import { firestore } from "~/utils/firestore";
+const db = firestore;
+
+async function deleteFBCollection(collectionPath: string, batchSize = 0) {
+  const collectionRef = db.collection(collectionPath);
+  // const query = collectionRef.orderBy('__name__').limit(batchSize); // want to skip ordering...
+
+  const query = collectionRef.limit(batchSize === 0 ? 1000 : batchSize);
+  return new Promise((resolve, reject) => {
+    deleteQueryBatch(query, resolve).catch(reject);
+  });
+}
+
+async function deleteQueryBatch(
+  query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>,
+  resolve: (value: unknown) => void
+) {
+  const snapshot = await query.get();
+
+  const batchSize = snapshot.size;
+  if (batchSize === 0) {
+    // When there are no documents left, we are done
+    resolve("");
+    return;
+  }
+
+  // Delete documents in a batch
+  const batch = db.batch();
+  snapshot.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+  await batch.commit();
+
+  // Recurse on the next process tick, to avoid
+  // exploding the stack.
+  process.nextTick(async () => {
+    await deleteQueryBatch(query, resolve);
+  });
+}
+
 export const exampleRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
@@ -60,6 +100,27 @@ export const exampleRouter = createTRPCRouter({
     return ctx.prisma.example.findMany();
   }),
 
+  deleteCollection: protectedProcedure
+    .input(z.object({ docID: z.string() }))
+    .mutation(async ({ input }) => {
+      // Deletes Doc and sub collection from Firestore - AmaceRuns
+      console.log("Deleting docID: ", input.docID);
+
+      try {
+        const doc = db.doc(`AmaceRuns/${input.docID}`);
+        const res = await firestore.recursiveDelete(doc);
+        console.log("Done deleting: ", res);
+
+        return {
+          deleted: input.docID,
+        };
+      } catch (err) {
+        console.log("Error deleting Collection: ", input.docID, " - ", err);
+        return {
+          deleted: "",
+        };
+      }
+    }),
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message!";
   }),

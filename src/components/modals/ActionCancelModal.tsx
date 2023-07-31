@@ -27,8 +27,8 @@ const ActionCancelModal: React.FC<ActionCancelProps> = ({
             <h2 className="mb-2 justify-center text-center  text-lg font-bold">
               FitForm
             </h2>
-            <p className="p-4 text-center text-lg">{message}</p>
-            <p className="p-4 text-center text-base">{note}</p>
+            <p className="p-4 text-center text-lg text-black">{message}</p>
+            <p className="p-4 text-center text-base text-black">Note: {note}</p>
             <div className="flex w-full justify-around">
               <button
                 onClick={onClose}

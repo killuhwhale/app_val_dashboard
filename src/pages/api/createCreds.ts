@@ -26,24 +26,23 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       `${process.cwd()}/src/pages/api/appcreds.json`,
       "utf-8"
     );
-    const appCreds: { [key: string]: string[] } = JSON.parse(fileData);
-    // const appCreds: { [key: string]: string[] } = {
-    //   "com.roblox.client": ["testminnie000", "testminnie123"],
-    // };
+    const appCreds: RawAppCreds = JSON.parse(fileData) as RawAppCreds;
 
-    Object.keys(appCreds).map((pkgName: string) => {
-      const creds = appCreds[pkgName]!;
-      const doc = docRefParent.doc(pkgName);
-      doc.set({
-        l: creds[0],
-        p: creds[1],
-      });
-    });
+    await Promise.all(
+      Object.keys(appCreds).map(async (pkgName: string) => {
+        const creds = appCreds[pkgName]!;
+        const doc = docRefParent.doc(pkgName);
+        await doc.set({
+          l: creds[0],
+          p: creds[1],
+        });
+      })
+    );
 
     res.status(200).json({
       data: {
         success: true,
-        data: null,
+        data: true,
       },
       error: null,
     });
@@ -58,5 +57,4 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     });
   }
 };
-
 export default handler;

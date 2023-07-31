@@ -80,6 +80,8 @@ type AppStatus = {
   INIT: number; //  1337
 };
 
+type RawAppCreds = { [key: string]: string[] };
+
 // From firebase to UI
 type AmaceDBResult = {
   appName: string;

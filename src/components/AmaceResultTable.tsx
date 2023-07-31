@@ -15,6 +15,8 @@ import ResultLink from "./ResultLink";
 import TableToClipBoard from "./TableToClipBoard";
 import { brokenStatus_reasons, status_reasons } from "./shared";
 import { number } from "zod";
+import ActionCancelModal from "./modals/ActionCancelModal";
+import DeleteAmaceRun from "./DeleteAmaceRun";
 const displayDateWithTime = (date: Date): string => {
   return (
     date.toLocaleDateString("en-US", {
@@ -461,8 +463,8 @@ const AmaceResultTable: React.FC<{
             </div>
           </div>
         </div>
-        <div className="flex w-1/2 items-center p-1">
-          <p className="mr-6 text-white">Filter</p>
+        <div className="flex w-1/3 items-center p-1">
+          <p className="text-white lg:mr-6">Filter</p>
           <input
             placeholder="Package name"
             className=" block h-[35px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
@@ -470,6 +472,9 @@ const AmaceResultTable: React.FC<{
               debFilterText(ev.target.value)
             }
           />
+        </div>
+        <div className="flex w-1/4 items-center justify-end p-1 lg:pr-12">
+          <DeleteAmaceRun docID={selectedDocID} key="DeleteDocFromFirebase" />
         </div>
       </div>
       <div className={`block max-h-[465px] overflow-y-auto bg-slate-900`}>
