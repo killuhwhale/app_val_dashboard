@@ -47,28 +47,34 @@ const DeleteAmaceRun: React.FC<DeleteDocProps> = ({ docID }) => {
   // Ran when mutation results changes, aka when user clicks delete and backend returns after deleteing collection which then deletes media
   useEffect(() => {
     const res = delCol.data?.deleted;
-    if (!res) return;
+    if (res === undefined) return;
+
+    if (res) {
+      setShowDeleteModal(false);
+    } else {
+      alert("Failed to remove data from AmaceRun");
+    }
 
     // Mutation will trigger backend to delete all data from collection then deleteCrawl will de
-    const doDeleteMedia = async () => {
-      try {
-        console.log("Delete res: ", res);
-        if (res !== "") {
-          // Remove media....
-          const storageRef = ref(frontStorage, `/amaceRuns/${docID}`);
-          await deleteCrawl(storageRef);
-          setShowDeleteModal(false);
-        } else {
-          alert(`Failed to delete media for: ${docID}`);
-        }
-      } catch (err) {
-        alert(err);
-      }
-    };
+    // const doDeleteMedia = async () => {
+    //   try {
+    //     console.log("Delete res: ", res);
+    //     if (res !== "") {
+    //       // Remove media....
+    //       const storageRef = ref(frontStorage, `/amaceRuns/${docID}`);
+    //       await deleteCrawl(storageRef);
 
-    doDeleteMedia()
-      .then((res) => console.log(res))
-      .catch((err) => console.log(err));
+    //     } else {
+    //       alert(`Failed to delete media for: ${docID}`);
+    //     }
+    //   } catch (err) {
+    //     alert(err);
+    //   }
+    // };
+
+    // doDeleteMedia()
+    //   .then((res) => console.log(res))
+    //   .catch((err) => console.log(err));
   }, [delCol.data?.deleted]);
 
   const TTID = "DeleteTooltipID";
@@ -80,9 +86,6 @@ const DeleteAmaceRun: React.FC<DeleteDocProps> = ({ docID }) => {
     try {
       // Remove data to delete with subcollection.
       delCol.mutate({ docID: docID });
-
-      // Doesnt delete sub collection "apps"
-      // await deleteDoc(doc(frontFirestore, `AmaceRuns/${docID}`));
     } catch (err: any) {
       console.log("Error deleteing doc from firebase", err);
       alert(`Error deleteing doc from firebase`);
