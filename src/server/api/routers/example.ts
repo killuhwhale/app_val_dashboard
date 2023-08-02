@@ -8,6 +8,65 @@ import {
 
 import { sheets, auth } from "@googleapis/sheets";
 import { getSession } from "next-auth/react";
+import { getStorage } from "firebase-admin/storage";
+import { backStorage, firestore } from "~/utils/firestore";
+const db = firestore;
+
+const bucket = backStorage.bucket();
+// Example code from Google Doc..
+// async function deleteFBCollection(collectionPath: string, batchSize = 0) {
+//   const collectionRef = db.collection(collectionPath);
+//   // const query = collectionRef.orderBy('__name__').limit(batchSize); // want to skip ordering...
+
+//   const query = collectionRef.limit(batchSize === 0 ? 1000 : batchSize);
+//   return new Promise((resolve, reject) => {
+//     deleteQueryBatch(query, resolve).catch(reject);
+//   });
+// }
+
+// // Example code from Google Doc..
+// async function deleteQueryBatch(
+//   query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>,
+//   resolve: (value: unknown) => void
+// ) {
+//   const snapshot = await query.get();
+
+//   const batchSize = snapshot.size;
+//   if (batchSize === 0) {
+//     // When there are no documents left, we are done
+//     resolve("");
+//     return;
+//   }
+
+//   // Delete documents in a batch
+//   const batch = db.batch();
+//   snapshot.docs.forEach((doc) => {
+//     batch.delete(doc.ref);
+//   });
+//   await batch.commit();
+
+//   // Recurse on the next process tick, to avoid
+//   // exploding the stack.
+//   process.nextTick(async () => {
+//     await deleteQueryBatch(query, resolve);
+//   });
+// }
+
+async function deleteMedia(docID: string) {
+  /* Deletes media from storage */
+
+  const res = await bucket.getFiles({ prefix: `amaceRuns/${docID}` });
+  const promises: Promise<any>[] = [];
+  console.log("Get files res: ", res);
+  const files = res[0];
+  console.log("Files:");
+  files.forEach((file) => {
+    console.log(file.name);
+    promises.push(bucket.file(file.name).delete());
+  });
+
+  await Promise.all(promises);
+}
 
 export const exampleRouter = createTRPCRouter({
   hello: publicProcedure
@@ -60,6 +119,29 @@ export const exampleRouter = createTRPCRouter({
     return ctx.prisma.example.findMany();
   }),
 
+  deleteCollection: protectedProcedure
+    .input(z.object({ docID: z.string() }))
+    .mutation(async ({ input }) => {
+      // Deletes Doc and sub collection from Firestore - AmaceRuns
+      console.log("Deleting docID: ", input.docID);
+
+      try {
+        const doc = db.doc(`AmaceRuns/${input.docID}`);
+        const res = await firestore.recursiveDelete(doc);
+        console.log("Done deleting: ", res);
+
+        await deleteMedia(input.docID);
+
+        return {
+          deleted: input.docID,
+        };
+      } catch (err) {
+        console.log("Error deleting Collection: ", input.docID, " - ", err);
+        return {
+          deleted: "",
+        };
+      }
+    }),
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message!";
   }),

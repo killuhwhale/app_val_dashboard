@@ -80,6 +80,8 @@ type AppStatus = {
   INIT: number; //  1337
 };
 
+type RawAppCreds = { [key: string]: string[] };
+
 // From firebase to UI
 type AmaceDBResult = {
   appName: string;
@@ -95,6 +97,7 @@ type AmaceDBResult = {
   appVersion: string;
   history: string;
   logs: string;
+  loginResults: number;
 };
 
 enum AppType {
@@ -123,6 +126,7 @@ type AmaceResult = {
   appVersion: string;
   history: HistoryStep[];
   logs: string;
+  loginResults: number;
 };
 
 // From client, not used. Just a reference.

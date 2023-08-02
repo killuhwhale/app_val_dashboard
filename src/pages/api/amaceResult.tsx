@@ -1,12 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
-
-// initializeApp({
-//   credential: applicationDefault(),
-// });
-
 const db = firestore;
+
+type GlobalAppResult = {
+  name: string;
+  packageName: string;
+  status: string;
+  version: string;
+  date: Date;
+};
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
@@ -38,23 +41,38 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       appVersion,
       history,
       logs,
+      loginResults,
     } = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
 
+    //Update Global list.
     console.log("New data to post: ", appType, appVersion, history, logs);
+    if (status >= 60) {
+      //  we need to make sure that the appversion we tested is newer than what is currently recorded before overwriting it....
+      // Update Global List
+      const globalDocRefParent = db
+        .collection(`GlobalAMACEStatus`)
+        .doc(`${pkgName}`);
 
-    // Update Global List
-    const globalDocRefParent = db
-      .collection(`GlobalAMACEStatus`)
-      .doc(`${pkgName}`);
+      const doc = await globalDocRefParent.get();
+      const parentData = doc.data() as GlobalAppResult;
+      // If recorded version is older than the verison just tested, update...
+      if (parentData !== undefined) {
+        if (
+          parentData.version == undefined ||
+          parentData.version < appVersion
+        ) {
+          const globalDocRefParentRes = await globalDocRefParent.set({
+            name: appName,
+            packageName: pkgName,
+            status: status,
+            version: appVersion,
+            date: new Date(),
+          });
+        }
+      }
+    }
 
-    const globalDocRefParentRes = await globalDocRefParent.set({
-      name: appName,
-      packageName: pkgName,
-      status: status,
-      date: new Date(),
-    });
-
-    //  Update Run
+    //  Update Run results
     const docRefParent = db.collection(`AmaceRuns`).doc(`${runID}`);
 
     const parentRes = await docRefParent.set({
@@ -79,6 +97,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       appVersion,
       history: JSON.stringify(history),
       logs,
+      loginResults,
     });
 
     console.log("Doc res", docRes);
@@ -100,6 +119,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           appVersion,
           history,
           logs,
+          loginResults,
         },
       },
       error: null,
