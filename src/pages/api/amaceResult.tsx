@@ -72,6 +72,32 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
     }
 
+    // Get the device name
+    const device = deviceInfo.split(" - ")[0];
+    console.log("Device name", device);
+    console.log("Device info", deviceInfo);
+    // Update App results
+    const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`).collection(`${device || ''}`).doc(`${runID}`);
+
+    const appResultRes = await appResultParentRef.set({
+      appName,
+      pkgName,
+      runID,
+      runTS: parseInt(runTS.toString()),
+      appTS: parseInt(appTS.toString()),
+      status,
+      brokenStatus,
+      buildInfo,
+      deviceInfo,
+      appType,
+      appVersion,
+      history: JSON.stringify(history),
+      logs,
+      loginResults,
+    });
+
+    console.log("Doc res", appResultRes);
+
     //  Update Run results
     const docRefParent = db.collection(`AmaceRuns`).doc(`${runID}`);
 

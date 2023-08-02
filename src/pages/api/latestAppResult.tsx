@@ -1,10 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
+//import AppRequest from "~/pages/api/latestAppResult"
 
 // initializeApp({
 //   credential: applicationDefault(),
 // });
+
+type AppRequest = {
+  pkgName: string;
+  deviceInfo: string;
+};
 
 const db = firestore;
 
@@ -21,78 +27,36 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(403).json({ text: "Hello unauth guy" });
 
   try {
-    const body = req.body as AmaceResult;
+    console.log("latestAppResult");
+    const body = req.body as AppRequest;
     console.log("Incoming body: ", req.body, body);
 
     const {
-      appName,
-      appTS,
-      status,
-      brokenStatus,
       pkgName,
-      runID,
-      runTS,
-      buildInfo,
       deviceInfo,
-      appType,
-      appVersion,
-      history,
-      logs,
-    } = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
-
-    console.log("New data to post: ", appType, appVersion, history, logs);
+    } = JSON.parse(JSON.stringify(req.body)) as AppRequest;
 
     // Get the device name
     const device = deviceInfo.split(" - ")[0];
     console.log("Device name", device);
     console.log("Device info", deviceInfo);
-    // Update App results
-    const appResultDocRefParent = db.collection(`AppResults`).doc(`${pkgName}`);
-
-    /*const appResultParentRes = await appResultDocRefParent.set({
-      date: new Date(parseInt(runTS.toString())),
+    
+    // Get latest app result on device
+    let entry, id = "";
+    const querySnapshot = await db.collection(`AppResults`).doc(`${pkgName}`).collection(`${device || ''}`).orderBy("runTS", "desc").limit(1).get();
+    const snapshotResult = querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        console.log(doc.id, " => ", doc.data());
+        entry = doc.data();
+        id = doc.id
     });
 
-    console.log("App result", appResultParentRes);*/
-
-    const appResultSubRef = appResultDocRefParent.collection(`${device || ''}`).doc(`${runID}`);
-
-    const appResultRes = await appResultSubRef.set({
-      appName,
-      pkgName,
-      runID,
-      runTS: parseInt(runTS.toString()),
-      appTS: parseInt(appTS.toString()),
-      status,
-      brokenStatus,
-      buildInfo,
-      deviceInfo,
-      appType,
-      appVersion,
-      history: JSON.stringify(history),
-      logs,
-    });
-
-    console.log("Doc res", appResultRes);
+    console.log("Entry result", entry);
 
     res.status(200).json({
       data: {
         success: true,
-        data: {
-          appName,
-          appTS,
-          status,
-          brokenStatus,
-          pkgName,
-          runID,
-          runTS,
-          buildInfo,
-          deviceInfo,
-          appType,
-          appVersion,
-          history,
-          logs,
-        },
+        data: entry,
       },
       error: null,
     });
