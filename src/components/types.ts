@@ -129,6 +129,15 @@ type AmaceResult = {
   loginResults: number;
 };
 
+type AppRequest = {
+  pkgName: string;
+  deviceInfo: string;
+};
+
+interface AllApps {
+  data: AmaceResult[];
+}
+
 // From client, not used. Just a reference.
 // const AmaceStatus = new Map<number, string>();
 // AmaceStatus.set(0, "Fail");

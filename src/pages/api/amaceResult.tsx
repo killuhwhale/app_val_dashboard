@@ -77,9 +77,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     console.log("Device name", device);
     console.log("Device info", deviceInfo);
     // Update App results
-    const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`).collection(`${device || ''}`).doc(`${runID}`);
-
-    const appResultRes = await appResultParentRef.set({
+    const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`)
+    await appResultParentRef.set({});
+        
+    const appResultSubRef = appResultParentRef.collection(`${device || ''}`).doc(`${runID}`);
+    const appResultRes = await appResultSubRef.set({
       appName,
       pkgName,
       runID,
