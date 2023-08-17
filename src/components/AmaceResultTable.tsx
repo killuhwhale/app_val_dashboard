@@ -37,29 +37,45 @@ export const displayDate = (date: Date): string => {
   });
 };
 
-const GoogleIcon = () => {
-  return (
-    <img className="mr-2 h-[20px]" src="images/search.png" alt="Google Icon" />
-  );
-};
-const FacebookIcon = () => {
+const GoogleIcon = (key: string) => {
   return (
     <img
+      key={key}
+      className="mr-2 h-[20px]"
+      src="images/search.png"
+      alt="Google Icon"
+    />
+  );
+};
+const FacebookIcon = (key: string) => {
+  return (
+    <img
+      key={key}
       className="mr-2 h-[20px]"
       src="images/facebook.png"
       alt="Facebook Icon"
     />
   );
 };
-const EmailIcon = () => {
+const EmailIcon = (key: string) => {
   return (
-    <img className="mr-2 h-[20px]" src="images/gmail.png" alt="Email Icon" />
+    <img
+      key={key}
+      className="mr-2 h-[20px]"
+      src="images/gmail.png"
+      alt="Email Icon"
+    />
   );
 };
 
-const PlaceholderIcon = () => {
+const PlaceholderIcon = (key: string) => {
   return (
-    <img className="mr-2 h-[20px]" src="images/tilde.png" alt="Email Icon" />
+    <img
+      key={key}
+      className="mr-2 h-[20px]"
+      src="images/tilde.png"
+      alt="Email Icon"
+    />
   );
 };
 
@@ -69,7 +85,7 @@ function decodeLoginResults(lr: number): number[] {
   if (!lr) {
     return [];
   }
-  console.log(`LR:  ${lr} - ${lr.toString(2)}`);
+  // console.log(`LR:  ${lr} - ${lr.toString(2)}`);
 
   const labels = lr
     .toString(2) // binary string
@@ -85,7 +101,7 @@ const sortLoginResult = (lr: number) => {
     return "";
   }
 
-  console.log(`LR:  ${lr} - ${lr.toString(2)}`);
+  // console.log(`LR:  ${lr} - ${lr.toString(2)}`);
 
   return lr.toString(2);
 };
@@ -130,102 +146,98 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
   const hasLogs = logs?.length > 0 ?? false;
   const loginLabels = [GoogleIcon, FacebookIcon, EmailIcon];
   return (
-    <>
-      <tr
-        className={`${
+    <tr
+      className={`${
+        status > 59
+          ? "border border-slate-600 bg-slate-900"
+          : "border border-rose-600 bg-rose-900"
+      }  text-white`}
+      key={runTS.toString() + pkgName}
+    >
+      <td
+        className={`sticky left-0   ${
           status > 59
-            ? "border border-slate-600 bg-slate-900"
-            : "border border-rose-600 bg-rose-900"
-        }  text-white`}
-        key={runTS.toString()}
-      >
-        <td
-          className={`sticky left-0   ${
-            status > 59
-              ? "bg-gradient-to-r from-slate-900 via-slate-900 to-slate-700"
-              : "bg-gradient-to-r from-rose-900 via-rose-900 to-rose-700"
-          }  px-6 py-4 text-xs font-medium`}
-          dangerouslySetInnerHTML={{
-            __html:
-              decoratedPackageName && decoratedPackageName.length > 0
-                ? decoratedPackageName
-                : pkgName,
-          }}
-        ></td>
+            ? "bg-gradient-to-r from-slate-900 via-slate-900 to-slate-700"
+            : "bg-gradient-to-r from-rose-900 via-rose-900 to-rose-700"
+        }  px-6 py-4 text-xs font-medium`}
+        dangerouslySetInnerHTML={{
+          __html:
+            decoratedPackageName && decoratedPackageName.length > 0
+              ? decoratedPackageName
+              : pkgName,
+        }}
+      ></td>
 
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {appName}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {status_reasons.get(status.toString())}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {brokenStatus_reasons.get(brokenStatus.toString())}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {appType}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {appVersion}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {displayDateWithTime(new Date(appTS))}
-        </td>
-        <td className="flex flex-row justify-center whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {decodeLoginResults(loginResults).map((num, idx) => {
-            return loginLabels[idx] && num > 0 ? (
-              loginLabels[idx]!()
-            ) : (
-              <PlaceholderIcon />
-            );
-          })}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {runID}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {displayDate(new Date(runTS))}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {deviceInfo}
-        </td>
-        <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {buildInfo}
-        </td>
-        <td
-          onClick={() => {
-            if (history) {
-              onSelectAppName(appName);
-              onSelectHistory(history);
-              setShowHistory(true);
-            } else {
-              console.log("No history to show");
-            }
-          }}
-          className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
-            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
-          }`}
-        >
-          Click to view history
-        </td>
-        <td
-          onClick={() => {
-            if (hasLogs) {
-              onSelectAppName(appName);
-              onSelectLogs(logs);
-              setShowLogs(true);
-            } else {
-              console.log("No logs to show");
-            }
-          }}
-          className={`whitespace-nowrap px-6 py-4 text-xs font-medium  ${
-            status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
-          }`}
-        >
-          {hasLogs ? "Click to view logs" : "No Logs"}
-        </td>
-      </tr>
-    </>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {appName}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {status_reasons.get(status.toString())}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {brokenStatus_reasons.get(brokenStatus.toString())}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {appType}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {appVersion}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {displayDateWithTime(new Date(appTS))}
+      </td>
+      <td className="flex flex-row justify-center whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {decodeLoginResults(loginResults).map((num, idx) => {
+          return loginLabels[idx] && num > 0
+            ? loginLabels[idx]!(`llk${idx}_${pkgName}`)
+            : PlaceholderIcon(`llk${idx}_${pkgName}`);
+        })}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {runID}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {displayDate(new Date(runTS))}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {deviceInfo}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {buildInfo}
+      </td>
+      <td
+        onClick={() => {
+          if (history) {
+            onSelectAppName(appName);
+            onSelectHistory(history);
+            setShowHistory(true);
+          } else {
+            console.log("No history to show");
+          }
+        }}
+        className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
+          status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+        }`}
+      >
+        Click to view history
+      </td>
+      <td
+        onClick={() => {
+          if (hasLogs) {
+            onSelectAppName(appName);
+            onSelectLogs(logs);
+            setShowLogs(true);
+          } else {
+            console.log("No logs to show");
+          }
+        }}
+        className={`whitespace-nowrap px-6 py-4 text-xs font-medium  ${
+          status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
+        }`}
+      >
+        {hasLogs ? "Click to view logs" : "No Logs"}
+      </td>
+    </tr>
   );
 };
 

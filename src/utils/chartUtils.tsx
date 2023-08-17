@@ -75,4 +75,76 @@ const getReasonStatObj = () => {
   } as AppStatus;
 };
 
-export { CustomTooltip, getAmaceReasonStatObj, getReasonStatObj };
+const processStats = (amaceResults: AmaceDBResult[]) => {
+  // console.log("Selected doc appResults: ", amaceResults);
+
+  const reasons = getAmaceReasonStatObj();
+
+  for (let i = 0; i < amaceResults.length; i++) {
+    const {
+      appName,
+      appTS,
+      buildInfo,
+      deviceInfo,
+      pkgName,
+      runID,
+      runTS,
+      status,
+    } = amaceResults[i]!;
+
+    if (status == 0) reasons.Fail++;
+    if (status == 1) reasons.LaunchFail++;
+    if (status == 2) reasons.Crashed++;
+    if (status == 10) reasons.Needspurchase++;
+    if (status == 20) reasons.Appisold++;
+    if (status == 30) reasons.Failedtoinstall++;
+    if (status == 31) reasons.TooManyAttempts++;
+    if (status == 40) reasons.Devicenotcompatible++;
+    if (status == 41) reasons.Chromebooknotcompatible++;
+    if (status == 50) reasons.CountryNA++;
+    if (status == 60) reasons.O4C++;
+    if (status == 70) reasons.O4CFSonly++;
+    if (status == 80) reasons.FSAmace++;
+    if (status == 90) reasons.Phoneonly++;
+    if (status == 100) reasons.Tabletonly++;
+    if (status == 110) reasons.Amace++;
+    if (status == 120) reasons.PWA++;
+  }
+
+  return [
+    { name: "Fail", uv: reasons.Fail } as BarLineChartDataPoint,
+    { name: "LaunchFail", uv: reasons.LaunchFail } as BarLineChartDataPoint,
+    { name: "Crashed", uv: reasons.Crashed } as BarLineChartDataPoint,
+    {
+      name: "Needspurchase",
+      uv: reasons.Needspurchase,
+    } as BarLineChartDataPoint,
+    { name: "Appisold", uv: reasons.Appisold } as BarLineChartDataPoint,
+    {
+      name: "Failedtoinstall",
+      uv: reasons.Failedtoinstall,
+    } as BarLineChartDataPoint,
+    {
+      name: "TooManyAttempts",
+      uv: reasons.TooManyAttempts,
+    } as BarLineChartDataPoint,
+    {
+      name: "Devicenotcompatible",
+      uv: reasons.Devicenotcompatible,
+    } as BarLineChartDataPoint,
+    {
+      name: "Chromebooknotcompatible",
+      uv: reasons.Chromebooknotcompatible,
+    } as BarLineChartDataPoint,
+    { name: "CountryNA", uv: reasons.CountryNA } as BarLineChartDataPoint,
+    { name: "O4C", uv: reasons.O4C } as BarLineChartDataPoint,
+    { name: "O4CFSonly", uv: reasons.O4CFSonly } as BarLineChartDataPoint,
+    { name: "FSAmace", uv: reasons.FSAmace } as BarLineChartDataPoint,
+    { name: "Phoneonly", uv: reasons.Phoneonly } as BarLineChartDataPoint,
+    { name: "Tabletonly", uv: reasons.Tabletonly } as BarLineChartDataPoint,
+    { name: "Amace", uv: reasons.Amace } as BarLineChartDataPoint,
+    { name: "PWA", uv: reasons.PWA } as BarLineChartDataPoint,
+  ];
+};
+
+export { CustomTooltip, getAmaceReasonStatObj, getReasonStatObj, processStats };

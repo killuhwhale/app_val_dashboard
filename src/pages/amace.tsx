@@ -20,7 +20,7 @@ import ResultLink from "~/components/ResultLink";
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
 
-import { getAmaceReasonStatObj } from "~/utils/chartUtils";
+import { processStats } from "~/utils/chartUtils";
 import {
   formatFirebaseDate,
   formatFromDatepickerToFirebase,
@@ -58,6 +58,9 @@ const AMACEPage: React.FC = () => {
   );
   const [lastStartDate, setLastStartDate] = useState("");
   const [lastEndDate, setLastEndDate] = useState("");
+  const [totalByStatus, setTotalByStatus] = useState<BarLineChartDataPoint[]>(
+    []
+  );
 
   const sesh = useFirebaseSession();
 
@@ -140,8 +143,9 @@ const AMACEPage: React.FC = () => {
             // console.log("Pussing from SS: ", appData.data());
             _appResults.push(appData.data() as AmaceDBResult);
           });
-          processStats(_appResults);
-          //   setAppResults(_appResults);
+          const stats = processStats(_appResults);
+          setAppResults(_appResults);
+          setTotalByStatus(stats);
         }
       );
       if (unSubRef.current) unSubRef.current();
@@ -152,84 +156,6 @@ const AMACEPage: React.FC = () => {
       console.log("Error getting subcolelction.", err);
     });
   }, [selectedDoc]);
-
-  const [totalByStatus, setTotalByStatus] = useState<BarLineChartDataPoint[]>(
-    []
-  );
-
-  const processStats = (amaceResults: AmaceDBResult[]) => {
-    // console.log("Selected doc appResults: ", amaceResults);
-
-    const reasons = getAmaceReasonStatObj();
-
-    for (let i = 0; i < amaceResults.length; i++) {
-      const {
-        appName,
-        appTS,
-        buildInfo,
-        deviceInfo,
-        pkgName,
-        runID,
-        runTS,
-        status,
-      } = amaceResults[i]!;
-
-      if (status == 0) reasons.Fail++;
-      if (status == 1) reasons.LaunchFail++;
-      if (status == 2) reasons.Crashed++;
-      if (status == 10) reasons.Needspurchase++;
-      if (status == 20) reasons.Appisold++;
-      if (status == 30) reasons.Failedtoinstall++;
-      if (status == 31) reasons.TooManyAttempts++;
-      if (status == 40) reasons.Devicenotcompatible++;
-      if (status == 41) reasons.Chromebooknotcompatible++;
-      if (status == 50) reasons.CountryNA++;
-      if (status == 60) reasons.O4C++;
-      if (status == 70) reasons.O4CFSonly++;
-      if (status == 80) reasons.FSAmace++;
-      if (status == 90) reasons.Phoneonly++;
-      if (status == 100) reasons.Tabletonly++;
-      if (status == 110) reasons.Amace++;
-      if (status == 120) reasons.PWA++;
-    }
-
-    // Update all stats here with useState()
-    setAppResults(amaceResults);
-    setTotalByStatus([
-      { name: "Fail", uv: reasons.Fail } as BarLineChartDataPoint,
-      { name: "LaunchFail", uv: reasons.LaunchFail } as BarLineChartDataPoint,
-      { name: "Crashed", uv: reasons.Crashed } as BarLineChartDataPoint,
-      {
-        name: "Needspurchase",
-        uv: reasons.Needspurchase,
-      } as BarLineChartDataPoint,
-      { name: "Appisold", uv: reasons.Appisold } as BarLineChartDataPoint,
-      {
-        name: "Failedtoinstall",
-        uv: reasons.Failedtoinstall,
-      } as BarLineChartDataPoint,
-      {
-        name: "TooManyAttempts",
-        uv: reasons.TooManyAttempts,
-      } as BarLineChartDataPoint,
-      {
-        name: "Devicenotcompatible",
-        uv: reasons.Devicenotcompatible,
-      } as BarLineChartDataPoint,
-      {
-        name: "Chromebooknotcompatible",
-        uv: reasons.Chromebooknotcompatible,
-      } as BarLineChartDataPoint,
-      { name: "CountryNA", uv: reasons.CountryNA } as BarLineChartDataPoint,
-      { name: "O4C", uv: reasons.O4C } as BarLineChartDataPoint,
-      { name: "O4CFSonly", uv: reasons.O4CFSonly } as BarLineChartDataPoint,
-      { name: "FSAmace", uv: reasons.FSAmace } as BarLineChartDataPoint,
-      { name: "Phoneonly", uv: reasons.Phoneonly } as BarLineChartDataPoint,
-      { name: "Tabletonly", uv: reasons.Tabletonly } as BarLineChartDataPoint,
-      { name: "Amace", uv: reasons.Amace } as BarLineChartDataPoint,
-      { name: "PWA", uv: reasons.PWA } as BarLineChartDataPoint,
-    ]);
-  };
 
   return (
     <>
@@ -282,11 +208,11 @@ const AMACEPage: React.FC = () => {
         )}
       </FullColumn>
 
-      <FullColumn height="h-[450px]">
+      <FullColumn height="h-[500px]">
         <div>
           <h2 className="pl-10 text-center">Totals Bar Chart</h2>
 
-          <div className="h-[400px]">
+          <div className="h-[420px]">
             {appResults.length > 0 ? (
               <BarChartPassFailTotals data={totalByStatus} />
             ) : (

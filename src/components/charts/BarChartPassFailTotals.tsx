@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { CustomTooltip } from "~/utils/chartUtils";
+import TableToClipBoard from "../TableToClipBoard";
 
 const colors = [
   "#b91c1c",
@@ -46,34 +47,61 @@ const TriangleBar = (props: TriangleBarData) => {
   return <path d={getPath(x, y, width, height)} stroke="none" fill={fill} />;
 };
 
+export function genChartTotalsText(data: BarLineChartDataPoint[]): string {
+  const header: string[] = [];
+  const row: string[] = [];
+  data.forEach((dp: BarLineChartDataPoint, idx: number) => {
+    console.log("Dp: ", dp);
+    header.push(dp.name);
+    row.push(dp.uv.toString());
+  });
+
+  return header.join("\t") + "\n" + row.join("\t");
+}
+
 const BarChartPassFailTotals: React.FC<BarChartPassFailTotalsProps> = ({
   data,
 }) => {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        width={600}
-        height={300}
-        data={data}
-        margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-      >
-        <Bar
-          type="monotone"
-          dataKey="uv"
-          stroke="#8884d8"
-          fill="#3b82f6"
-          shape={<TriangleBar />}
+    <div className="h-full w-full">
+      <div className="m-4 ml-8">
+        <TableToClipBoard
+          generateText={() => genChartTotalsText(data)}
+          tootlTipText="Copy Table"
+          key={"AmaceTotalTable"}
+        />
+      </div>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          width={600}
+          height={300}
+          data={data}
+          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
         >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-          ))}
-        </Bar>
-        <CartesianGrid stroke="#cccccc55" strokeDasharray="5 5" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
-      </BarChart>
-    </ResponsiveContainer>
+          <Bar
+            type="monotone"
+            dataKey="uv"
+            stroke="#8884d8"
+            fill="#3b82f6"
+            shape={<TriangleBar />}
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={colors[index % colors.length]}
+              />
+            ))}
+          </Bar>
+          <CartesianGrid stroke="#cccccc55" strokeDasharray="5 5" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: "transparent" }}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 

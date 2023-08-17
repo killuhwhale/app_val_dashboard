@@ -11,6 +11,19 @@ type GlobalAppResult = {
   date: Date;
 };
 
+/**  Endpoint to post a single app run.
+ *
+ *
+ * Updates FireStore Collections:
+ *    GlobalAMACEStatus
+ *      - Updates list of latest app results provided as an endpoint.
+ *    AppResults
+ *      - @ecox using to process latest runs to enable effiecient runs in the future
+ *    AmaceRuns
+ *      - Main results for ea runID shown in table on the dashboard
+ *
+ */
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
   console.log(req.headers["content-type"]);
@@ -44,7 +57,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       loginResults,
     } = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
 
-    //Update Global list.
+    //Update Global list if the status is successful
     console.log("New data to post: ", appType, appVersion, history, logs);
     if (status >= 60) {
       //  we need to make sure that the appversion we tested is newer than what is currently recorded before overwriting it....
@@ -77,10 +90,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     console.log("Device name", device);
     console.log("Device info", deviceInfo);
     // Update App results
-    const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`)
+    const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`);
     await appResultParentRef.set({});
-        
-    const appResultSubRef = appResultParentRef.collection(`${device || ''}`).doc(`${runID}`);
+
+    const appResultSubRef = appResultParentRef
+      .collection(`${device || ""}`)
+      .doc(`${runID}`);
     const appResultRes = await appResultSubRef.set({
       appName,
       pkgName,

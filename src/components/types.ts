@@ -137,17 +137,3 @@ type AppRequest = {
 interface AllApps {
   data: AmaceResult[];
 }
-
-// From client, not used. Just a reference.
-// const AmaceStatus = new Map<number, string>();
-// AmaceStatus.set(0, "Fail");
-// AmaceStatus.set(1, "PRICE");
-// AmaceStatus.set(2, "OLDVERSION");
-// AmaceStatus.set(3, "INSTALLFAIL");
-// AmaceStatus.set(4, "COUNTRYNA");
-// AmaceStatus.set(5, "O4C");
-// AmaceStatus.set(6, "O4CFullScreenOnly");
-// AmaceStatus.set(7, "IsFSToAmacE");
-// AmaceStatus.set(8, "IsLockedPAmacE");
-// AmaceStatus.set(9, "IsLockedTAmacE");
-// AmaceStatus.set(10, "IsAmacE");

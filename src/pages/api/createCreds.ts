@@ -22,10 +22,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     //      p: "Password",
     // }
     const docRefParent = db.collection(`AppCreds`);
-    const fileData = fs.readFileSync(
-      `${process.cwd()}/src/pages/api/appcreds.json`,
-      "utf-8"
-    );
+    const fileData = fs.readFileSync(`${process.cwd()}/appcreds.json`, "utf-8");
     const appCreds: RawAppCreds = JSON.parse(fileData) as RawAppCreds;
 
     await Promise.all(
