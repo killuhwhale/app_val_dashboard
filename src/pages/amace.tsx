@@ -206,7 +206,7 @@ const AMACEPage: React.FC = () => {
       // We will
       console.log("Opening new websocket...");
       // const ws = new WebSocket("ws://localhost:3001/wss"); // dev
-      const ws = new WebSocket("wss://appval-387223.wl.r.appspot.com:3001/wss"); // prod
+      const ws = new WebSocket("wss://appvaldashboard.com/wss"); // prod
 
       ws.onopen = function () {
         // Web Socket is connected, send data using send()
