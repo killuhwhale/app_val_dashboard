@@ -91,7 +91,7 @@ app.prepare().then(() => {
   })
   // Setup the WebSocket Server
   // const wss = new WebSocket.Server({ server });
-  const wss = new WebSocket.Server({  host: hostname , port:port });
+  const wss = new WebSocket.Server({port:3001 });
 
   wss.on('connection', (ws) => {
     console.log('Client connected');
