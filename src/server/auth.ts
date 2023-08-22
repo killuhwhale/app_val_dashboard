@@ -24,6 +24,7 @@ declare module "next-auth" {
     user: {
       id: string;
       custom_token: string;
+
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -36,10 +37,19 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  secret: env.NEXTAUTH_SECRET,
   callbacks: {
-    session: async ({ session, user }) => {
-      let customToken = "";
+    jwt: ({ account, token, user, profile, session, trigger }) => {
+      console.log("JWT callback: ", token, user, account);
 
+      if (account?.accessToken) {
+        token.accessToken = account.accessToken;
+      }
+      return token;
+    },
+    session: async ({ session, user, token }) => {
+      let customToken = "";
+      // console.log("Session callback: check for access token: ", session, token);
       const isDevAct =
         [
           "andayac@gmail.com",
@@ -64,6 +74,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           custom_token: customToken,
         },
+        strategy: "jwt",
       };
     },
     signIn: ({ account, profile, user, credentials }) => {
@@ -77,7 +88,6 @@ export const authOptions: NextAuthOptions = {
         const isDevAct =
           [
             "andayac@gmail.com",
-            ,
             "ethancox16@gmail.com",
             "testminnie001@gmail.com",
           ].indexOf(profile.email) >= 0;

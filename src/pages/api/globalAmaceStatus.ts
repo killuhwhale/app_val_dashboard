@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { status_reasons, brokenStatus_reasons } from "~/components/shared";
+import { statusReasons, brokenStatusReasons } from "~/components/shared";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
 
@@ -33,7 +33,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     globalDocRefParent.forEach((doc) => {
       const d = doc.data() as FireStoreGlobalStatus;
       d.status =
-        status_reasons.get(d.status.toString()) ?? "No Status Found;API err";
+        statusReasons.get(d.status.toString()) ?? "No Status Found;API err";
       data.push(d);
     });
 

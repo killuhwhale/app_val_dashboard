@@ -34,27 +34,27 @@ export const displayDate = (date: Date): string => {
   });
 };
 
-const status_reasons = new Map<string, string>();
+const statusReasons = new Map<string, string>();
 
-status_reasons.set("-13", "PLAYSTORE_FAIL");
-status_reasons.set("-12", "CRASH_WIN_DEATH");
-status_reasons.set("-11", "CRASH_FORCE_RM_ACT_RECORD");
-status_reasons.set("-10", "CRASH_ANR");
-status_reasons.set("-9", "CRASH_FDEBUG_CRASH");
-status_reasons.set("-8", "CRASH_FATAL_EXCEPTION");
-status_reasons.set("-7", "FAILED_TO_LAUNCH");
-status_reasons.set("-6", "FAILED_TO_INSTALL");
-status_reasons.set("-5", "NEEDS_PRICE");
-status_reasons.set("-4", "DEVICE_NONCOMPAT");
-status_reasons.set("-3", "INVALID");
-status_reasons.set("-2", "APP_OLD");
-status_reasons.set("-1", "COUNTRY_NA");
-status_reasons.set("0", "FAIL");
-status_reasons.set("1", "PASS");
-status_reasons.set("2", "LOGGED_IN_GOOGLE");
-status_reasons.set("3", "LOGGED_IN_FB");
-status_reasons.set("4", "LOGGED_IN_EMAIL");
-status_reasons.set("1337", "INIT");
+statusReasons.set("-13", "PLAYSTORE_FAIL");
+statusReasons.set("-12", "CRASH_WIN_DEATH");
+statusReasons.set("-11", "CRASH_FORCE_RM_ACT_RECORD");
+statusReasons.set("-10", "CRASH_ANR");
+statusReasons.set("-9", "CRASH_FDEBUG_CRASH");
+statusReasons.set("-8", "CRASH_FATAL_EXCEPTION");
+statusReasons.set("-7", "FAILED_TO_LAUNCH");
+statusReasons.set("-6", "FAILED_TO_INSTALL");
+statusReasons.set("-5", "NEEDS_PRICE");
+statusReasons.set("-4", "DEVICE_NONCOMPAT");
+statusReasons.set("-3", "INVALID");
+statusReasons.set("-2", "APP_OLD");
+statusReasons.set("-1", "COUNTRY_NA");
+statusReasons.set("0", "FAIL");
+statusReasons.set("1", "PASS");
+statusReasons.set("2", "LOGGED_IN_GOOGLE");
+statusReasons.set("3", "LOGGED_IN_FB");
+statusReasons.set("4", "LOGGED_IN_EMAIL");
+statusReasons.set("1337", "INIT");
 
 const AppResultRow: React.FC<AppResultRowProps> = ({
   appResult,
@@ -106,7 +106,7 @@ const AppResultRow: React.FC<AppResultRowProps> = ({
         ></td>
 
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-          {status_reasons.get(status)}({status})
+          {statusReasons.get(status)}({status})
         </td>
         <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
           {name}
@@ -209,7 +209,7 @@ const genText = (rows: RawAppResult[]) => {
     } = row;
     data.push(
       `${package_name}\t${
-        status_reasons.get(status) ?? "failedtogetkey"
+        statusReasons.get(status) ?? "failedtogetkey"
       }\t${name}\t${app_type}\t${app_version}\t${report_title}\t${displayDateWithTime(
         new Date(timestamp)
       )}\t${build}\t${displayDate(new Date(run_ts))}\t${history}\t${logs}\n`
@@ -343,10 +343,10 @@ const ResultTable: React.FC<{
       const sortDir = sortDirs[sortDirIdx] ?? 0;
       // If sortKey == status, sort by statsu title instead of value
       if (sortKey === "status") {
-        return (status_reasons.get(
+        return (statusReasons.get(
           appResult[sortKey as keyof RawAppResult].toString()
         ) ?? "") <
-          (status_reasons.get(
+          (statusReasons.get(
             appResultB[sortKey as keyof RawAppResult].toString()
           ) ?? "")
           ? sortDir

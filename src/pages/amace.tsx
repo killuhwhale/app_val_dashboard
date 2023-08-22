@@ -6,13 +6,17 @@ import {
   QueryDocumentSnapshot,
   QuerySnapshot,
   collection,
+  doc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
   where,
 } from "firebase/firestore";
 import { useRouter } from "next/router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { MdViewModule } from "react-icons/md";
+import { Tooltip } from "react-tooltip";
 import AmaceResultTable from "~/components/AmaceResultTable";
 import AmaceRuns from "~/components/AmaceRuns";
 import DatePicker from "~/components/AppValDatePicker";
@@ -27,6 +31,10 @@ import {
 } from "~/utils/dateUtils";
 import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
 
+type AppsScriptUrlFB = {
+  url: string;
+};
+export const isBrowser = typeof window !== "undefined";
 const AMACEPage: React.FC = () => {
   const [init, setInit] = useState(true);
   const unSubRangeResultsRef = useRef<Unsubscribe>();
@@ -98,11 +106,11 @@ const AMACEPage: React.FC = () => {
         idx++;
       });
       setAppRunResults(appRuns);
-      console.log("AppRuns: ", appRuns);
+      // console.log("AppRuns: ", appRuns);
       // Set a default doc
-      console.log("AppRuns: ", selectedDoc);
+      // console.log("AppRuns: ", selectedDoc);
       if (!selectedDoc) {
-        console.log("Setting Selected Doc: ", appRuns[selDocIdx]);
+        // console.log("Setting Selected Doc: ", appRuns[selDocIdx]);
         setSelectedDoc(appRuns[selDocIdx]);
       }
     });
@@ -156,20 +164,106 @@ const AMACEPage: React.FC = () => {
       console.log("Error getting subcolelction.", err);
     });
   }, [selectedDoc]);
+  const TTID = "appsSript";
+
+  const [appsScriptUrl, setAppsScriptUrl] = useState("");
+  useEffect(() => {
+    // "https://script.google.com/a/macros/google.com/s/AKfycbz78jkgL5avOwjzqUTfNLUY6k-ubfO5P7wpvRHFEvLfZIQfu1eAb7_LSxySoL1nDAkLIg/exec"
+
+    if (appsScriptUrl === "") {
+      getDoc(doc(frontFirestore, `AppsScript/url`))
+        .then((doc) => {
+          const urlData = doc.data() as AppsScriptUrlFB;
+          console.log("Url from FB: ", urlData.url);
+          setAppsScriptUrl(urlData.url);
+        })
+        .catch((err) =>
+          console.log("Error getting Apps Script URL from Firebase: ", err)
+        );
+    }
+  });
+
+  const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
+
+  // Call when updating the ws connection
+  const updateWs = useCallback(
+    (url: string) => {
+      if (!isBrowser) return setWsInstance(null);
+
+      // Close the old connection
+      if (wsInstance && wsInstance?.readyState !== 3) wsInstance.close();
+
+      // Create a new connection
+      const newWs = new WebSocket(url);
+      setWsInstance(newWs);
+    },
+    [wsInstance]
+  );
+
+  // (Optional) Open a connection on mount
+  useEffect(() => {
+    if (isBrowser) {
+      // We will
+      console.log("Opening new websocket...");
+      // const ws = new WebSocket("ws://localhost:3001/wss"); // dev
+      const ws = new WebSocket("wss://appval-387223.wl.r.appspot.com:3001/wss"); // prod
+
+      ws.onopen = function () {
+        // Web Socket is connected, send data using send()
+        ws.send("On open");
+        console.log("Message is sent...");
+      };
+
+      ws.onmessage = function (evt) {
+        const received_msg = evt.data as string;
+        console.log("Message is received...", received_msg);
+      };
+
+      setWsInstance(ws);
+
+      return () => {
+        // Cleanup on unmount if ws wasn't closed already
+        if (ws?.readyState !== 3) ws.close();
+      };
+    }
+  }, []);
 
   return (
     <>
       <FullColumn height="h-[60px]">
-        <DatePicker
-          onStartSelect={(date) =>
-            setStartDate(formatFromDatepickerToFirebase(date))
-          }
-          onEndSelect={(date) =>
-            setEndDate(formatFromDatepickerToFirebase(date))
-          }
-          startDay={startDate}
-          endDay={endDate}
-        />
+        <div className="flex h-[60px] flex-row items-center justify-center">
+          <p
+            onClick={() => {
+              console.log("starting run");
+              wsInstance?.send("startrun");
+            }}
+            className=" cursor-crosshair border border-emerald-500 pb-2 pl-4 pr-4 pt-2 hover:bg-emerald-400  focus:bg-rose-400"
+          >
+            Start Run
+          </p>
+        </div>
+      </FullColumn>
+      <FullColumn height="h-[60px]">
+        <div className="flex h-[60px] flex-row items-center justify-center">
+          <DatePicker
+            onStartSelect={(date) =>
+              setStartDate(formatFromDatepickerToFirebase(date))
+            }
+            onEndSelect={(date) =>
+              setEndDate(formatFromDatepickerToFirebase(date))
+            }
+            startDay={startDate}
+            endDay={endDate}
+          />
+          <Tooltip variant="dark" id={TTID} />
+          <MdViewModule
+            data-tooltip-id={TTID}
+            data-tooltip-content="Create Google Sheet"
+            className="h-[100%] cursor-pointer hover:bg-emerald-500"
+            size={24}
+            onClick={() => window.open(appsScriptUrl)}
+          />
+        </div>
       </FullColumn>
 
       <FullColumn height="h-[120px]">

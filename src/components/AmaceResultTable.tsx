@@ -13,7 +13,7 @@ import { colors } from "~/utils/dateUtils";
 import { Tooltip } from "react-tooltip";
 import ResultLink from "./ResultLink";
 import TableToClipBoard from "./TableToClipBoard";
-import { brokenStatus_reasons, status_reasons } from "./shared";
+import { brokenStatusReasons, statusReasons } from "./shared";
 import { number } from "zod";
 import ActionCancelModal from "./modals/ActionCancelModal";
 import DeleteAmaceRun from "./DeleteAmaceRun";
@@ -172,10 +172,10 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
         {appName}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {status_reasons.get(status.toString())}
+        {statusReasons.get(status.toString())}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {brokenStatus_reasons.get(brokenStatus.toString())}
+        {brokenStatusReasons.get(brokenStatus.toString())}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
         {appType}
@@ -284,9 +284,9 @@ const genText = (rows: AmaceDBResult[]) => {
     // TODO remove replaceALl, amace.go is updated to strip the \n now...
     data.push(
       `${pkgName}\t${appName}\t${
-        status_reasons.get(status.toString()) ?? "failedtogetkey"
+        statusReasons.get(status.toString()) ?? "failedtogetkey"
       }\t${
-        brokenStatus_reasons.get(brokenStatus.toString()) ?? "failedtogetkey2"
+        brokenStatusReasons.get(brokenStatus.toString()) ?? "failedtogetkey2"
       }\t${appType}\t${appVersion}\t${displayDateWithTime(
         new Date(appTS)
       )}\t${loginResults}\t${runID}\t${displayDate(

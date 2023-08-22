@@ -3,6 +3,7 @@ import { genChartTotalsText } from "~/components/charts/BarChartPassFailTotals";
 import { env } from "~/env.mjs";
 import { processStats } from "~/utils/chartUtils";
 import { firestore } from "~/utils/firestore";
+import { getToken } from "next-auth/jwt";
 
 const db = firestore;
 
@@ -18,6 +19,9 @@ type AppCreds = {
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
   console.log(req.headers["content-type"]);
+  const secret = env.NEXTAUTH_SECRET;
+  const t = await getToken({ req });
+  console.log("Looking up token: ", t);
 
   if (req.method === "POST") res.status(200).json({ text: "Hello post" });
   else if (req.method !== "GET")
@@ -43,7 +47,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const app = apps.docs[i];
       if (app) results.push(app.data() as AmaceDBResult);
     }
-    console.log("Results: ", apps);
 
     const stats = processStats(results);
     //stats =  [{
@@ -54,7 +57,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     res.status(200).json({
       data: {
         success: true,
-        data: stats,
+        stats,
+        results,
       },
       error: null,
     });
@@ -69,4 +73,5 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     });
   }
 };
+
 export default handler;

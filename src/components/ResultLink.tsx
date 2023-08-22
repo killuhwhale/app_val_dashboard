@@ -31,7 +31,6 @@ const ResultLink: React.FC<ResultLink> = ({
   const cbID = "cbID";
 
   useEffect(() => {
-    console.log("Link init: ", init);
     if (init) {
       setInit(false);
       return;

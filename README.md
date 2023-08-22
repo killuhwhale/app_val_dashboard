@@ -12,6 +12,36 @@
     - runs off app.yaml
 
 
+
+#Possible Chrome Ext:
+
+Change color of apps script since itsawful to look at white screen
+    Paste in console.
+
+    (function() {
+      document.body.style.backgroundColor = "black";  // Change to your desired color
+
+      var headers = document.querySelectorAll("header");
+      for(var i = 0; i < headers.length; i++) {
+        headers[i].style.backgroundColor = "black";  // Change to your desired color
+      }
+
+      var elements = document.querySelectorAll('[aria-label="Apps Script project pages"]');
+      elements.forEach(function(element) {
+        element.style.backgroundColor = "black";
+      });
+      var elements = document.querySelectorAll('[class="margin"]');
+      elements.forEach(function(element) {
+        element.style.backgroundColor = "#b9acac";
+        element.style.color = "black";
+      });
+      var elements = document.querySelectorAll('[class="lines-content monaco-editor-background"]');
+      elements.forEach(function(element) {
+        element.style.backgroundColor = "#b9acac";
+      });
+  })();
+
+
 # GCP is setup to execute commands on Host Linux Machine
 ## Linux Machine
     - Edit .bashrc to allow non-interactive sessions, comment out lines at top of file.

@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "NODE_ENV=development node server.js",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@google-cloud/firestore": "^6.5.0",
@@ -24,11 +24,13 @@
     "@types/is-plain-object": "^2.0.4",
     "@types/kind-of": "^6.0.0",
     "@types/shallow-clone": "^3.0.0",
+    "@types/ws": "^8.5.5",
+    "express": "^4.18.2",
     "firebase": "^9.21.0",
     "firebase-admin": "^11.8.0",
     "is-plain-object": "^5.0.0",
     "kind-of": "^6.0.3",
-    "next": "^13.4.1",
+    "next": "^13.4.19",
     "next-auth": "^4.21.0",
     "react": "18.2.0",
     "react-calendar": "^4.2.1",
@@ -37,7 +39,9 @@
     "react-tooltip": "^5.13.1",
     "recharts": "^2.6.2",
     "shallow-clone": "^3.0.1",
+    "socket.io": "^4.7.2",
     "superjson": "1.12.2",
+    "ws": "^8.13.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {

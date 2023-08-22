@@ -1,3 +1,4 @@
+"use client";
 import { NextPage } from "next";
 import Header from "./Header";
 import NavMenu from "./NavMenu";
