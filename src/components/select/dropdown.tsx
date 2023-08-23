@@ -15,14 +15,6 @@ const Dropdown: FunctionComponent<{
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(() => {
-    document.addEventListener("mousedown", () => {});
-
-    return () => {
-      document.removeEventListener("mousedown", () => {});
-    };
-  }, []);
-
   return (
     <div ref={dropdownRef} className="absolute inline-block text-left">
       <div>
