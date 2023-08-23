@@ -15,7 +15,7 @@ const frontEndApp = frontInitializeApp(
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
-  "frontend"
+  "frontendv2"
 );
 const frontEndAuth = getAuth(frontEndApp);
 const frontStorage = getStorage(frontEndApp);

@@ -23,6 +23,7 @@ import DatePicker from "~/components/AppValDatePicker";
 import ResultLink from "~/components/ResultLink";
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
+import Dropdown from "~/components/select/dropdown";
 
 import { processStats } from "~/utils/chartUtils";
 import {
@@ -184,40 +185,50 @@ const AMACEPage: React.FC = () => {
   });
 
   const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
+  const [devices, setDevices] = useState<string[]>([]);
+  const [lastMsg, setLastMsg] = useState("");
+  const [currentDevice, setCurrentDevice] = useState("");
 
-  // Call when updating the ws connection
-  const updateWs = useCallback(
-    (url: string) => {
-      if (!isBrowser) return setWsInstance(null);
+  useEffect(() => {
+    if (!wsInstance) return;
 
-      // Close the old connection
-      if (wsInstance && wsInstance?.readyState !== 3) wsInstance.close();
+    wsInstance.onopen = () => {
+      // Web Socket is connected, send data using send()
+      wsInstance.send("getdevicename");
+      // startTimer();
+    };
 
-      // Create a new connection
-      const newWs = new WebSocket(url);
-      setWsInstance(newWs);
-    },
-    [wsInstance]
-  );
+    wsInstance.onerror = (err) => {
+      console.log("Error: ", err);
+      wsInstance.close();
+      setWsInstance(null);
+    };
+
+    wsInstance.onmessage = (evt) => {
+      const received_msg = evt.data as string;
+      console.log("Message is received...", received_msg);
+
+      if (received_msg.toString().startsWith("status:")) {
+        cancelTimer();
+      } else if (received_msg.toString().startsWith("getdevicename:")) {
+        const dname = received_msg.toString().split(":")[1];
+        if (dname) {
+          setDevices((prevDevices) => [...prevDevices, dname]);
+        }
+      }
+
+      setLastMsg(received_msg.toString());
+    };
+  }, [wsInstance]);
 
   // (Optional) Open a connection on mount
   useEffect(() => {
-    if (isBrowser) {
+    if (isBrowser && wsInstance === null) {
       // We will
+
       console.log("Opening new websocket...");
-      // const ws = new WebSocket("ws://localhost:3001/wss"); // dev
-      const ws = new WebSocket("wss://appvaldashboard.com/wss"); // prod
-
-      ws.onopen = function () {
-        // Web Socket is connected, send data using send()
-        ws.send("On open");
-        console.log("Message is sent...");
-      };
-
-      ws.onmessage = function (evt) {
-        const received_msg = evt.data as string;
-        console.log("Message is received...", received_msg);
-      };
+      const ws = new WebSocket("ws://localhost:3001/wss"); // dev
+      // const ws = new WebSocket("wss://appvaldashboard.com/wss"); // prod
 
       setWsInstance(ws);
 
@@ -228,19 +239,78 @@ const AMACEPage: React.FC = () => {
     }
   }, []);
 
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimer = () => {
+    // Set a timer for 5 seconds (or any desired duration)
+    timerRef.current = setTimeout(() => {
+      console.log("Timer expired because it was not canceled in time.");
+      setLastMsg(
+        "Make sure device in lab is turned on and program is listening..."
+      );
+    }, 5000);
+    console.log("Timer started.");
+  };
+  const cancelTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      console.log("Timer canceled.");
+    }
+  };
+
+  console.log("Devices: ", devices);
   return (
     <>
-      <FullColumn height="h-[60px]">
-        <div className="flex h-[60px] flex-row items-center justify-center">
-          <p
-            onClick={() => {
-              console.log("starting run");
-              wsInstance?.send("startrun");
+      <FullColumn height="h-[120px]">
+        <div className=" flex h-[30px] justify-center">
+          <Dropdown
+            items={devices}
+            onSelect={(item: string) => {
+              console.log("Device selected: ", item);
+              setCurrentDevice(item);
             }}
-            className=" cursor-crosshair border border-emerald-500 pb-2 pl-4 pr-4 pt-2 hover:bg-emerald-400  focus:bg-rose-400"
-          >
-            Start Run
-          </p>
+            currentItem={currentDevice}
+          />
+        </div>
+        <div className="mt-[35px] flex flex-row items-center justify-center">
+          {currentDevice.length > 0 ? (
+            <>
+              <p
+                onClick={() => {
+                  console.log("Starting run");
+                  wsInstance?.send(`startrun_${currentDevice}`);
+                }}
+                className=" cursor-crosshair border border-emerald-500 pb-2 pl-4 pr-4 pt-2 hover:bg-emerald-400  focus:bg-rose-400"
+              >
+                Start Run
+              </p>
+
+              <p
+                onClick={() => {
+                  console.log("Querying status");
+                  wsInstance?.send(`querystatus_${currentDevice}`);
+                  startTimer();
+                }}
+                className=" cursor-crosshair border border-amber-300 pb-2 pl-4 pr-4 pt-2 hover:bg-amber-500  focus:bg-blue-400"
+              >
+                Query Status
+              </p>
+
+              <p
+                onClick={() => {
+                  console.log("Stopping run");
+                  wsInstance?.send(`stoprun_${currentDevice}`);
+                }}
+                className=" cursor-crosshair border border-rose-500 pb-2 pl-4 pr-4 pt-2 hover:bg-rose-400  focus:bg-blue-400"
+              >
+                Stop Run
+              </p>
+              <p className=" border border-violet-500 pb-2 pl-4 pr-4 pt-2">
+                last message: {lastMsg}
+              </p>
+            </>
+          ) : (
+            <></>
+          )}
         </div>
       </FullColumn>
       <FullColumn height="h-[60px]">

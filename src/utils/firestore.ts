@@ -18,7 +18,7 @@ const backEndApp =
       projectId: serviceAccount.projectId,
       storageBucket: serviceAccount.storageBucket,
     },
-    "backend"
+    "backendv2"
   );
 
 const firestore = getFirestore(backEndApp);
