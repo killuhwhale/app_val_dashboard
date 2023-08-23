@@ -227,8 +227,8 @@ const AMACEPage: React.FC = () => {
       // We will
 
       console.log("Opening new websocket...");
-      const ws = new WebSocket("ws://localhost:3001/wss"); // dev
-      // const ws = new WebSocket("wss://appvaldashboard.com/wss"); // prod
+      // const ws = new WebSocket("ws://localhost:3001/wss"); // dev
+      const ws = new WebSocket("wss://appvaldashboard.com/wss"); // prod
 
       setWsInstance(ws);
 
