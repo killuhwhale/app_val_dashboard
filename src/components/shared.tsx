@@ -35,4 +35,19 @@ brokenStatusReasons.set("101", "FailedInstall");
 brokenStatusReasons.set("102", "FailedLaunch");
 brokenStatusReasons.set("103", "FailedAmaceCheck");
 
-export { statusReasons, brokenStatusReasons };
+// When updating GCP project these need new names.
+const frontendFirestoreName = "frontendv2";
+const backendFirestoreName = "backendv2";
+
+const wssURL =
+  process.env.NODE_ENV === "development"
+    ? "ws://localhost:3001/wss"
+    : "wss://appvaldashboard.com/wss";
+
+export {
+  statusReasons,
+  brokenStatusReasons,
+  wssURL,
+  frontendFirestoreName,
+  backendFirestoreName,
+};

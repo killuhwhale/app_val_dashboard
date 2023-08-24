@@ -24,6 +24,7 @@ import ResultLink from "~/components/ResultLink";
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
 import Dropdown from "~/components/select/dropdown";
+import { wssURL } from "~/components/shared";
 
 import { processStats } from "~/utils/chartUtils";
 import {
@@ -227,8 +228,7 @@ const AMACEPage: React.FC = () => {
       // We will
 
       console.log("Opening new websocket...");
-      // const ws = new WebSocket("ws://localhost:3001/wss"); // dev
-      const ws = new WebSocket("wss://appvaldashboard.com/wss"); // prod
+      const ws = new WebSocket(wssURL);
 
       setWsInstance(ws);
 

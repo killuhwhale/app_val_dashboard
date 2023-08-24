@@ -7,6 +7,7 @@ import admin from "firebase-admin";
 import serviceAccount from "../utils/serviceAccountKey.json";
 import firebaseServiceAccount from "../utils/firebaseServiceAccount.json";
 import * as firebase from "firebase-admin/app";
+import { backendFirestoreName } from "~/components/shared";
 
 const backEndApp =
   firebase.getApps()[0] ??
@@ -18,7 +19,7 @@ const backEndApp =
       projectId: serviceAccount.projectId,
       storageBucket: serviceAccount.storageBucket,
     },
-    "backendv2"
+    backendFirestoreName
   );
 
 const firestore = getFirestore(backEndApp);

@@ -5,6 +5,7 @@ import { getStorage } from "firebase/storage";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { signInWithCustomToken } from "firebase/auth";
+import { frontendFirestoreName } from "~/components/shared";
 
 const frontEndApp = frontInitializeApp(
   {
@@ -15,7 +16,7 @@ const frontEndApp = frontInitializeApp(
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
-  "frontendv2"
+  frontendFirestoreName
 );
 const frontEndAuth = getAuth(frontEndApp);
 const frontStorage = getStorage(frontEndApp);
