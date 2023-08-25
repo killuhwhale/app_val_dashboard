@@ -189,23 +189,25 @@ const AMACEPage: React.FC = () => {
   const [devices, setDevices] = useState<string[]>([]);
   const [lastMsg, setLastMsg] = useState("");
   const [currentDevice, setCurrentDevice] = useState("");
+  const RECONNECT_DELAY = 5000; // 5 seconds
 
-  useEffect(() => {
-    if (!wsInstance) return;
+  const connectToWebSocket = () => {
+    console.log("connectToWebSocket", wsInstance);
+    if (wsInstance) return;
+    const ws = new WebSocket(wssURL);
 
-    wsInstance.onopen = () => {
+    ws.onopen = () => {
       // Web Socket is connected, send data using send()
-      wsInstance.send("getdevicename");
+      console.log("Websocket onopen");
+      ws.send("getdevicename");
       // startTimer();
     };
 
-    wsInstance.onerror = (err) => {
+    ws.onerror = (err) => {
       console.log("Error: ", err);
-      wsInstance.close();
-      setWsInstance(null);
     };
 
-    wsInstance.onmessage = (evt) => {
+    ws.onmessage = (evt) => {
       const received_msg = evt.data as string;
       console.log("Message is received...", received_msg);
 
@@ -213,28 +215,45 @@ const AMACEPage: React.FC = () => {
         cancelTimer();
       } else if (received_msg.toString().startsWith("getdevicename:")) {
         const dname = received_msg.toString().split(":")[1];
+        console.log("Got a device name: ", dname);
         if (dname) {
-          setDevices((prevDevices) => [...prevDevices, dname]);
+          setDevices((prevDevices) => {
+            if (!prevDevices.includes(dname)) {
+              return [...prevDevices, dname];
+            }
+            return prevDevices; // Return previous state to prevent re-render
+          });
         }
       }
 
-      setLastMsg(received_msg.toString());
-    };
-  }, [wsInstance]);
+      ws.onclose = (event) => {
+        if (!event.wasClean) {
+          console.log(
+            `WebSocket connection lost. Reconnecting in ${
+              RECONNECT_DELAY / 1000
+            } seconds...`
+          );
+          setTimeout(connectToWebSocket, RECONNECT_DELAY);
+        }
+      };
 
-  // (Optional) Open a connection on mount
+      setLastMsg(received_msg);
+    };
+
+    setWsInstance(ws);
+  };
+
   useEffect(() => {
     if (isBrowser && wsInstance === null) {
-      // We will
-
-      console.log("Opening new websocket...");
-      const ws = new WebSocket(wssURL);
-
-      setWsInstance(ws);
+      connectToWebSocket();
 
       return () => {
-        // Cleanup on unmount if ws wasn't closed already
-        if (ws?.readyState !== 3) ws.close();
+        if (
+          wsInstance &&
+          (wsInstance as WebSocket).readyState !== WebSocket.CLOSED
+        ) {
+          (wsInstance as WebSocket).close();
+        }
       };
     }
   }, []);
@@ -260,6 +279,7 @@ const AMACEPage: React.FC = () => {
   console.log("Devices: ", devices);
   return (
     <>
+      {/* TODO() move to new component.. */}
       <FullColumn height="h-[120px]">
         <div className=" flex h-[30px] justify-center">
           <Dropdown

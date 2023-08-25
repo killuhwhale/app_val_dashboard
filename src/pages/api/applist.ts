@@ -18,14 +18,35 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(403).json({ text: "Hello unauth guy" });
 
   try {
-    const docRefParent = db.collection(`AppLists`).doc("live");
+    const dsrctype = req.query["dsrctype"];
+    const dsrcpath: string[] = (req.query["dsrcpath"] as string)?.split("/");
+    if (dsrcpath.length !== 2) {
+      const err = "Error, path should be a '/' separated string";
+      console.log(err);
+      return res.status(200).json({
+        data: null,
+        error: err,
+      });
+    }
+
+    console.log("dsrctype, dsrcpath: ", dsrctype, dsrcpath);
+
+    const docRefParent = db.collection(dsrcpath[0]!).doc(dsrcpath[1]!);
     const result = await docRefParent.get();
+
+    const data = result.data()!["apps"];
+    let driveURL = "";
+    if (dsrctype == "pythonstore") {
+      driveURL = result.data()!["driveURL"];
+    }
+
     console.log("Apps: ", result.data());
 
     res.status(200).json({
       data: {
         success: true,
-        data: result.data(),
+        data,
+        driveURL,
       },
       error: null,
     });
