@@ -44,7 +44,10 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
 
   const updateListTRPC = api.example.updateAppList.useMutation();
   const updateList = () => {
-    if (list && list.listname && list.apps) {
+    if (list && list.listname) {
+      if (!list.driveURL && !list.apps) {
+        return alert("Entry must have either Folder ID or List of apps!");
+      }
       try {
         console.log("Creating: ", list);
         updateListTRPC.mutate(list);
