@@ -34,10 +34,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const docRefParent = db.collection(dsrcpath[0]!).doc(dsrcpath[1]!);
     const result = await docRefParent.get();
 
-    const data = result.data()!["apps"];
+    const data = result.data()!["apps"] as string;
     let driveURL = "";
     if (dsrctype == "pythonstore") {
-      driveURL = result.data()!["driveURL"];
+      driveURL = result.data()!["driveURL"] as string;
     }
 
     console.log("Apps: ", result.data());

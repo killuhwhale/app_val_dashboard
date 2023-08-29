@@ -24,7 +24,7 @@ const ActionCancelModal: React.FC<ActionCancelProps> = ({
           ></div>
           <div className="z-50 flex h-[350px] w-[600px] flex-col justify-between rounded-md bg-white p-4">
             <h2 className="mb-2 justify-center text-center  text-lg font-bold">
-              FitForm
+              App Val
             </h2>
             <p className="p-4 text-center text-lg text-black">{message}</p>
             <p className="p-4 text-center text-base text-black">Note: {note}</p>

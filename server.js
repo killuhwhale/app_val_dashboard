@@ -9,6 +9,15 @@ const port = process.env.PORT ?? 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
+const ping = (msg, data) => {
+  return JSON.stringify({ msg, data });
+};
+
+const pj = (s) => {
+  // parseJson
+  return JSON.parse(s);
+};
+
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     try {
@@ -37,42 +46,47 @@ app.prepare().then(() => {
     console.log("Client connected");
 
     // Echo back to clients
-    ws.on("message", (message) => {
-      console.log(`WSServer received message: ${message}`);
+    ws.on("message", (pingBuffer) => {
+      const mping = pj(pingBuffer)
+      const message = mping['msg']
+
+      console.log(`WSServer received message: ${message}`, );
 
       // Broadcast the message to all connected clients - basic sanitize/ routing .toString plus match
       // TODO() Sanitize input and maybe create a router?
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
+
+
           if (message.toString().startsWith("startrun_")) {
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("runstarted:")){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("querystatus_")){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString() == "getdevicename"){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("getdevicename:")){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("status:") ){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("stoprun_")){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("runstopped:")){
-            client.send(message.toString());
+            client.send(pingBuffer.toString());
           }
         }
       });
     });
 
-    ws.send("Hello from WebSocket server bro nextjs!");
+    ws.send(ping("Hello from WebSocket server bro nextjs!", {}));
   });
 
   server.on("upgrade", (req, socket, head) => {

@@ -68,6 +68,13 @@ async function deleteMedia(docID: string) {
   await Promise.all(promises);
 }
 
+const AppListEntrySchema = z.object({
+  apps: z.string(),
+  driveURL: z.string(),
+  listname: z.string(),
+  playstore: z.boolean(),
+});
+
 export const exampleRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
@@ -142,6 +149,66 @@ export const exampleRouter = createTRPCRouter({
         };
       }
     }),
+
+  createAppList: protectedProcedure
+    .input(AppListEntrySchema)
+    .mutation(async ({ input }) => {
+      // Deletes Doc and sub collection from Firestore - AmaceRuns
+      console.log(
+        "Creating list: ",
+        input.listname,
+        input.driveURL,
+        input.apps
+      );
+
+      try {
+        const doc = db.doc(`AppLists/${input.listname}`);
+        const res = await doc.set({
+          ...input,
+          playstore: input.driveURL.length === 0,
+        });
+        console.log("Done creating: ", res);
+
+        return {
+          created: true,
+        };
+      } catch (err) {
+        console.log("Error creating applist: ", input.listname, " - ", err);
+        return {
+          created: false,
+        };
+      }
+    }),
+  updateAppList: protectedProcedure
+    .input(AppListEntrySchema)
+    .mutation(async ({ input }) => {
+      // Deletes Doc and sub collection from Firestore - AmaceRuns
+      console.log(
+        "Updating list: ",
+        input.listname,
+        input.driveURL,
+        input.apps
+      );
+
+      try {
+        const doc = db.doc(`AppLists/${input.listname}`);
+        const res = await doc.update({
+          apps: input.apps,
+        });
+
+        console.log("Done updating: ", res);
+
+        return {
+          updated: true,
+        };
+      } catch (err) {
+        console.log("Error updating applist: ", input.listname, " - ", err);
+        return {
+          updated: false,
+        };
+      }
+    }),
+
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message!";
   }),

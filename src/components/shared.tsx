@@ -39,6 +39,16 @@ brokenStatusReasons.set("103", "FailedAmaceCheck");
 const frontendFirestoreName = "frontendv2";
 const backendFirestoreName = "backendv2";
 
+const ping = (msg: string, data: any) => {
+  return JSON.stringify({ msg, data });
+};
+
+const pj = (s: string): Ping => {
+  // parseJson
+  console.log("Parse JSON: ", s);
+  return JSON.parse(s) as Ping;
+};
+
 const wssURL =
   process.env.NODE_ENV === "development"
     ? "ws://localhost:3001/wss"
@@ -50,4 +60,6 @@ export {
   wssURL,
   frontendFirestoreName,
   backendFirestoreName,
+  ping,
+  pj,
 };

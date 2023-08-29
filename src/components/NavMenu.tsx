@@ -66,6 +66,20 @@ const NavMenu: React.FC = () => {
           </li>
           <li>
             <Link
+              href="/manageRuns"
+              className={`${
+                currentLoc.endsWith("/manageRuns") ? currentPageColor : ""
+              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
+            >
+              <MdCenterFocusWeak />
+              <span className="ml-3 flex-1 whitespace-nowrap">Manage</span>
+              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                Mobile
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/enterprise"
               className={`${
                 currentLoc.endsWith("/enterprise") ? currentPageColor : ""

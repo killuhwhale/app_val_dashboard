@@ -82,6 +82,16 @@ type AppStatus = {
 
 type RawAppCreds = { [key: string]: string[] };
 
+// Entry for AppLists in Firebase.
+type AppListEntry = {
+  apps: string; // List of apps appname\tpackagename\nappname\tpackagename
+  driveURL: string; // Drive FolderID, If APKs are in drive folder
+  listname: string; // List id/ name
+  playstore: boolean; // True if apks should be downloaded from playstore
+};
+
+type Ping = { msg: string; data: any };
+
 // From firebase to UI
 type AmaceDBResult = {
   appName: string;

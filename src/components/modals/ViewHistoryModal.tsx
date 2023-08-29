@@ -20,7 +20,7 @@ const getUrl = async (gsPath: string) => {
     console.log("Getting path: ", gsPath);
     const gsRef = ref(frontStorage, gsPath);
     const url = await getDownloadURL(gsRef);
-    console.log("Got url: ", url);
+    // console.log("Got url: ", url);
     return url;
   } catch (err: any) {
     console.log("Error getting url for path: ", gsPath);
