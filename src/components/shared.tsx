@@ -37,7 +37,7 @@ brokenStatusReasons.set("103", "FailedAmaceCheck");
 
 // When updating GCP project these need new names.
 const frontendFirestoreName = "frontendv2";
-const backendFirestoreName = "backendv2";
+const backendFirestoreName = "backendv3";
 
 const ping = (msg: string, data: unknown) => {
   return JSON.stringify({ msg, data });

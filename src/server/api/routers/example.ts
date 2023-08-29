@@ -52,6 +52,18 @@ const bucket = backStorage.bucket();
 //   });
 // }
 
+// Convert a string that has tabs and newlines and preserve them by escaping them so that firebase doesnt strip them.
+function escapeAppList(appList: string): string {
+  // Don't escape an string that is already formatted.
+  if (appList.includes("\\t")) {
+    console.log("Applist is already escaped....");
+    return appList;
+  }
+  const newAppList = appList.replaceAll("\n", "\\n").replaceAll("\t", "\\t");
+  console.log("Returning app list: ", newAppList);
+  return newAppList;
+}
+
 async function deleteMedia(docID: string) {
   /* Deletes media from storage */
 
@@ -64,8 +76,11 @@ async function deleteMedia(docID: string) {
     console.log(file.name);
     promises.push(bucket.file(file.name).delete());
   });
-
-  await Promise.all(promises);
+  try {
+    await Promise.all(promises);
+  } catch (err) {
+    console.log("Err deleting media from cloud storage via firebase: ", err);
+  }
 }
 
 const AppListEntrySchema = z.object({
@@ -163,8 +178,10 @@ export const exampleRouter = createTRPCRouter({
 
       try {
         const doc = db.doc(`AppLists/${input.listname}`);
+        const rawApps = input.apps;
         const res = await doc.set({
           ...input,
+          apps: escapeAppList(rawApps),
           playstore: input.driveURL.length === 0,
         });
         console.log("Done creating: ", res);
@@ -192,8 +209,11 @@ export const exampleRouter = createTRPCRouter({
 
       try {
         const doc = db.doc(`AppLists/${input.listname}`);
+        const rawApps = input.apps;
+
         const res = await doc.update({
-          apps: input.apps,
+          apps: escapeAppList(rawApps),
+          driveURL: input.driveURL,
         });
 
         console.log("Done updating: ", res);

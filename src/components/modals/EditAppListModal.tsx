@@ -6,6 +6,11 @@ interface EditAppListModalProps {
   onClose(): void;
   listProp: AppListEntry | null;
 }
+
+function unEscapeAppList(escapedList: string): string {
+  return escapedList.replaceAll("\\n", "\n").replaceAll("\\t", "\t");
+}
+
 const EditAppListModal: React.FC<EditAppListModalProps> = ({
   isOpen,
   onClose,
@@ -28,6 +33,12 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
   const onChange = (text: string) => {
     const cList: AppListEntry = { ...list } as AppListEntry;
     cList["apps"] = text;
+    setList(cList);
+  };
+
+  const onChangeDriveURL = (text: string) => {
+    const cList: AppListEntry = { ...list } as AppListEntry;
+    cList["driveURL"] = text;
     setList(cList);
   };
 
@@ -77,7 +88,15 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
                   <></>
                 ) : (
                   <p className="font-medium">
-                    Folder: <span className="font-light">{list.driveURL}</span>
+                    Folder:{" "}
+                    <input
+                      className="w-full  bg-slate-300 font-light"
+                      placeholder="Drive URL"
+                      value={list.driveURL}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                        onChangeDriveURL(event.target.value)
+                      }
+                    />
                   </p>
                 )}
 
@@ -88,7 +107,7 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
                   rows={9}
                   cols={80}
                   placeholder="Apps"
-                  value={list.apps}
+                  value={unEscapeAppList(list.apps)}
                   onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                     onChange(event.target.value)
                   }
