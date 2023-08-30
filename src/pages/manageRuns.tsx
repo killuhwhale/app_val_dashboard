@@ -25,7 +25,10 @@ import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
 import { Tooltip } from "react-tooltip";
 import TwoThirdsColumn from "~/components/columns/TwoThirdsColumn";
 import { AnsiUp } from "ansi_up";
-const ansi = new AnsiUp();
+
+// eslint-disable-next-line
+const ansi: AnsiUp = new AnsiUp();
+
 export const isBrowser = typeof window !== "undefined";
 
 const ReplaceDateTimePattern =
@@ -143,11 +146,12 @@ const ManageRunPage: React.FC = () => {
           .replaceAll("progress:", "")
           .replace(ReplaceDateTimePattern, "")
           .replace(ReplaceDateTimePatternSecond, "");
-
+        // eslint-disable-next-line
         const html = ansi.ansi_to_html(cleanedMsg);
         setLastMsg((prevLogs) => {
-          return prevMsgs.join(" ") + html;
+          return prevMsgs.join(" ") ?? "" + html;
         }); // Update formatted string to display
+        // eslint-disable-next-line
         return [...prevMsgs, `<p>${html}</p>`];
       }); // Update array
     };
