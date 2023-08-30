@@ -149,7 +149,8 @@ const ManageRunPage: React.FC = () => {
         // eslint-disable-next-line
         const html = ansi.ansi_to_html(cleanedMsg);
         setLastMsg((prevLogs) => {
-          return prevMsgs.join(" ") ?? "" + html;
+          prevMsgs.push(html);
+          return prevMsgs.join(" ");
         }); // Update formatted string to display
         // eslint-disable-next-line
         return [...prevMsgs, `<p>${html}</p>`];
