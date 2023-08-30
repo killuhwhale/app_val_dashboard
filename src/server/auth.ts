@@ -10,8 +10,17 @@ import { prisma } from "~/server/db";
 
 import GoogleProvider from "next-auth/providers/google";
 import { FirestoreAdapter } from "@next-auth/firebase-adapter";
-
+import jwt, { Secret } from "jsonwebtoken";
 import { firestore, auth, backEndApp } from "~/utils/firestore";
+import { AdapterUser } from "next-auth/adapters";
+
+type AppValUser = {
+  id: string;
+  custom_token: string;
+  wssToken: string;
+  // ...other properties
+  // role: UserRole;
+} & DefaultSession["user"];
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -21,14 +30,22 @@ import { firestore, auth, backEndApp } from "~/utils/firestore";
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
-    user: {
-      id: string;
-      custom_token: string;
-
-      // ...other properties
-      // role: UserRole;
-    } & DefaultSession["user"];
+    user: AppValUser;
   }
+}
+
+function encodeJWT(user: AppValUser) {
+  const maxAge = 10 * 24 * 60 * 60 * 1000;
+  const jwtClaims = {
+    email: user.email,
+    iat: Date.now() / 1000,
+    exp: Math.floor(Date.now() / 1000) + maxAge,
+  };
+
+  const encodedToken = jwt.sign(jwtClaims, env.NEXTAUTH_SECRET as Secret, {
+    algorithm: "HS512",
+  });
+  return encodedToken;
 }
 
 /**
@@ -39,14 +56,14 @@ declare module "next-auth" {
 export const authOptions: NextAuthOptions = {
   secret: env.NEXTAUTH_SECRET,
   callbacks: {
-    jwt: ({ account, token, user, profile, session, trigger }) => {
-      console.log("JWT callback: ", token, user, account);
+    // jwt: ({ account, token, user, profile, session, trigger }) => {
+    //   console.log("JWT callback: ", token, user, account);
 
-      if (account?.accessToken) {
-        token.accessToken = account.accessToken;
-      }
-      return token;
-    },
+    //   if (account?.accessToken) {
+    //     token.accessToken = account.accessToken;
+    //   }
+    //   return token;
+    // },
     session: async ({ session, user, token }) => {
       let customToken = "";
       // console.log("Session callback: check for access token: ", session, token);
@@ -57,27 +74,30 @@ export const authOptions: NextAuthOptions = {
           "testminnie001@gmail.com",
         ].indexOf(user.email) >= 0;
       const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
-
+      let wssToken;
       if (isDevAct || isGoogler) {
         try {
           customToken = await auth.createCustomToken(user.email ?? "");
-          // console.log("Custom token:", customToken);
+          // eslint-disable-next-line
+          wssToken = encodeJWT(user as AdapterUser as unknown as AppValUser);
+          // console.log("Custom token:", wssToken);
         } catch (err) {
           console.log("Error auth.createCustomToken(): ", err);
         }
       }
-
+      // console.log("Session auth: ", wssToken);
       return {
         ...session,
         user: {
           ...session.user,
           id: user.id,
           custom_token: customToken,
+          wssToken: wssToken,
         },
-        strategy: "jwt",
       };
     },
     signIn: ({ account, profile, user, credentials }) => {
+      // Basic filtering of emails after a user signs in via Google
       console.log("Sign in called with ", account?.expires_at, profile);
       if (
         account &&

@@ -39,8 +39,13 @@ brokenStatusReasons.set("103", "FailedAmaceCheck");
 const frontendFirestoreName = "frontendv2";
 const backendFirestoreName = "backendv3";
 
-const ping = (msg: string, data: unknown) => {
-  return JSON.stringify({ msg, data });
+const ping = (
+  msg: string,
+  // eslint-disable-next-line
+  data: Exclude<object, any[] | Function>,
+  wssToken: string
+) => {
+  return JSON.stringify({ msg, data: { ...data, wssToken } });
 };
 
 const pj = (s: string): Ping => {

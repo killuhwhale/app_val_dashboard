@@ -1,7 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
 
-import { signInWithCustomToken } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 
 import FullColumn from "~/components/columns/FullColumn";

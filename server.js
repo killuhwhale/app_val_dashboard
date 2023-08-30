@@ -2,6 +2,8 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const WebSocket = require("ws");
+const { env } = require("process");
+const jwt = require('jsonwebtoken');
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -42,6 +44,7 @@ app.prepare().then(() => {
   // Setup the WebSocket Server
   const wss = new WebSocket.Server({ port: 3001 });
 
+
   wss.on("connection", (ws) => {
     console.log("Client connected");
 
@@ -49,9 +52,17 @@ app.prepare().then(() => {
     ws.on("message", (pingBuffer) => {
       const mping = pj(pingBuffer)
       const message = mping['msg']
+      const wssToken = mping['data']['wssToken']
 
-      console.log(`WSServer received message: ${message}`, );
+      console.log(`>>>> WSServer received message: w/ key ${wssToken}`, );
 
+      // Verify wssToken and reject if fails....
+      try {
+        jwt.verify(wssToken, env.NEXTAUTH_SECRET, { algorithms: ['HS512'] });
+        // Token is valid
+      } catch (error) {
+        return console.error('Token verification failed:', error.message);
+      }
       // Broadcast the message to all connected clients - basic sanitize/ routing .toString plus match
       // TODO() Sanitize input and maybe create a router?
       wss.clients.forEach((client) => {
@@ -59,6 +70,9 @@ app.prepare().then(() => {
 
 
           if (message.toString().startsWith("startrun_")) {
+            client.send(pingBuffer.toString());
+          }
+          else if(message.toString().startsWith("progress:")){
             client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("runstarted:")){
