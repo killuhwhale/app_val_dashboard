@@ -141,6 +141,30 @@ export const exampleRouter = createTRPCRouter({
     return ctx.prisma.example.findMany();
   }),
 
+  deleteBrokenAppsCollection: protectedProcedure
+    .input(z.object({ document: z.string() }))
+    .mutation(async ({ input }) => {
+      // Deletes Doc and sub collection from Firestore - AmaceRuns
+      console.log(
+        "Deleting deleteBrokenAppsCollection docID: ",
+        input.document
+      );
+
+      try {
+        const doc = db.doc(input.document);
+        const res = await firestore.recursiveDelete(doc);
+        console.log("Done deleting: ", res);
+
+        return {
+          deleted: input.document,
+        };
+      } catch (err) {
+        console.log("Error deleting Collection: ", input.document, " - ", err);
+        return {
+          deleted: "",
+        };
+      }
+    }),
   deleteCollection: protectedProcedure
     .input(z.object({ docID: z.string() }))
     .mutation(async ({ input }) => {

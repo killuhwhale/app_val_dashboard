@@ -1,112 +1,28 @@
-import React, {
-  ChangeEvent,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
+import React, { ChangeEvent, useLayoutEffect, useState } from "react";
 import { MdArrowDownward, MdArrowUpward, MdContentCopy } from "react-icons/md";
 import { debounce, filter, filterOptions } from "~/utils/algos";
-import ViewHistoryModal from "./modals/ViewHistoryModal";
-import ViewLogsModal from "./modals/ViewLogsModal";
-import { get } from "http";
+import ViewHistoryModal from "../modals/ViewHistoryModal";
+import ViewLogsModal from "../modals/ViewLogsModal";
 import { colors } from "~/utils/dateUtils";
-import { Tooltip } from "react-tooltip";
-import ResultLink from "./ResultLink";
-import TableToClipBoard from "./TableToClipBoard";
-import { brokenStatusReasons, statusReasons } from "./shared";
-import { number } from "zod";
-import ActionCancelModal from "./modals/ActionCancelModal";
-import DeleteAmaceRun from "./DeleteAmaceRun";
-const displayDateWithTime = (date: Date): string => {
-  return (
-    date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    }) +
-    " " +
-    date.toLocaleTimeString("en-US")
-  );
-};
+import ResultLink from "../ResultLink";
+import TableToClipBoard from "../TableToClipBoard";
+import {
+  brokenStatusReasons,
+  displayDate,
+  displayDateWithTime,
+  statusReasons,
+} from "../shared";
+import DeleteBrokenAppRuns from "../delete/DeleteBrokenAppRuns";
+import {
+  EmailIcon,
+  FacebookIcon,
+  GoogleIcon,
+  PlaceholderIcon,
+  decodeLoginResults,
+} from "./sharedTables";
 
-export const displayDate = (date: Date): string => {
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
-const GoogleIcon = (key: string) => {
-  return (
-    <img
-      key={key}
-      className="mr-2 h-[20px]"
-      src="images/search.png"
-      alt="Google Icon"
-    />
-  );
-};
-const FacebookIcon = (key: string) => {
-  return (
-    <img
-      key={key}
-      className="mr-2 h-[20px]"
-      src="images/facebook.png"
-      alt="Facebook Icon"
-    />
-  );
-};
-const EmailIcon = (key: string) => {
-  return (
-    <img
-      key={key}
-      className="mr-2 h-[20px]"
-      src="images/gmail.png"
-      alt="Email Icon"
-    />
-  );
-};
-
-const PlaceholderIcon = (key: string) => {
-  return (
-    <img
-      key={key}
-      className="mr-2 h-[20px]"
-      src="images/tilde.png"
-      alt="Email Icon"
-    />
-  );
-};
-
-function decodeLoginResults(lr: number): number[] {
-  // login results = [0001] => 4 bit number where bits 1-3 represent if the app logged in via Google, Facebook or Email successfully
-
-  if (!lr) {
-    return [];
-  }
-  // console.log(`LR:  ${lr} - ${lr.toString(2)}`);
-
-  const labels = lr
-    .toString(2) // binary string
-    .split("") // separate bits
-    .reverse() // Reverse order
-    .slice(0, -1) // Remove highest bit since this acts as a placeholder to capture 0's
-    .map((num) => parseInt(num)); // Turn bit to int
-  return labels;
-}
-
-const sortLoginResult = (lr: number) => {
-  if (!lr) {
-    return "";
-  }
-
-  // console.log(`LR:  ${lr} - ${lr.toString(2)}`);
-
-  return lr.toString(2);
-};
 interface AmaceResultRowProps {
-  amaceResult: AmaceDBResult;
+  amaceResult: BrokenAppDBResult;
   decoratedPackageName?: string;
 
   setShowHistory(show: boolean): void;
@@ -136,10 +52,11 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
     deviceInfo,
     buildInfo,
     appType,
-    appVersion,
+    appVersions,
     history,
     logs,
     loginResults,
+    testedOndevices,
   } = amaceResult;
 
   // console.log("decoratedPackageNames", decoratedPackageName);
@@ -181,10 +98,13 @@ const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
         {appType}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {appVersion}
+        {appVersions}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
         {displayDateWithTime(new Date(appTS))}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
+        {testedOndevices}
       </td>
       <td className="flex flex-row justify-center whitespace-nowrap px-6 py-4 text-xs font-medium">
         {decodeLoginResults(loginResults).map((num, idx) => {
@@ -259,11 +179,11 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   return result;
 };
 
-const genText = (rows: AmaceDBResult[]) => {
+const genText = (rows: BrokenAppDBResult[]) => {
   const header =
-    "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tLogin Results\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
+    "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tTested On\tLogin Results\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
   const data = [header];
-  rows.forEach((row: AmaceDBResult) => {
+  rows.forEach((row: BrokenAppDBResult) => {
     const {
       appName,
       appTS,
@@ -275,10 +195,11 @@ const genText = (rows: AmaceDBResult[]) => {
       status,
       brokenStatus,
       appType,
-      appVersion,
+      appVersions,
       history,
       logs,
       loginResults,
+      testedOndevices,
     } = row;
 
     // TODO remove replaceALl, amace.go is updated to strip the \n now...
@@ -287,9 +208,9 @@ const genText = (rows: AmaceDBResult[]) => {
         statusReasons.get(status.toString()) ?? "failedtogetkey"
       }\t${
         brokenStatusReasons.get(brokenStatus.toString()) ?? "failedtogetkey2"
-      }\t${appType}\t${appVersion}\t${displayDateWithTime(
+      }\t${appType}\t${appVersions}\t${displayDateWithTime(
         new Date(appTS)
-      )}\t${loginResults}\t${runID}\t${displayDate(
+      )}\t${testedOndevices}\t${loginResults}\t${runID}\t${displayDate(
         new Date(runTS)
       )}\t${deviceInfo.replaceAll(
         "\n",
@@ -300,22 +221,22 @@ const genText = (rows: AmaceDBResult[]) => {
   return data.join("");
 };
 
-const AmaceResultTable: React.FC<{
-  amaceResults: AmaceDBResult[];
+const BrokenAppsTable: React.FC<{
+  //   monthlyDoc: QueryDocumentSnapshot<DocumentData>;
+  amaceResults: BrokenAppDBResult[];
   height: number;
   parentKey: string;
-  startDate: number;
-  endDate: number;
+  path: string;
   selectedDocID: string;
   page: string;
 }> = ({
-  amaceResults,
+  //   monthlyDoc,
   height,
   parentKey,
-  startDate,
-  endDate,
+  amaceResults,
   selectedDocID,
   page,
+  path,
 }) => {
   const [filteredPackageNames, setFilteredPackageNames] = useState<number[]>(
     []
@@ -334,7 +255,7 @@ const AmaceResultTable: React.FC<{
   const [sortKey, setSortKey] = useState("pkgName");
   //  Package Name, Name, Status, App TS, Run ID, device, Build               => Change this Headers and keysToIdx when adding new items to sort by
   const [sortDirs, setSortDirs] = useState([
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
   ]); // toggle between 1 and -1 by multiplying by -1
 
   // Sort by keys
@@ -353,6 +274,7 @@ const AmaceResultTable: React.FC<{
     history: 11,
     logs: 12,
     loginResults: 13,
+    testedOndevices: 14,
   };
 
   useLayoutEffect(() => {
@@ -361,7 +283,7 @@ const AmaceResultTable: React.FC<{
     );
 
     const packageNameMarks = new Map<string, string>();
-    amaceResults.forEach((amaceResult: AmaceDBResult) => {
+    amaceResults.forEach((amaceResult: BrokenAppDBResult) => {
       packageNameMarks.set(
         amaceResult.pkgName ?? "",
         amaceResult.pkgName ?? ""
@@ -422,7 +344,7 @@ const AmaceResultTable: React.FC<{
 
   const resultState = amaceResults
     .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
-    .sort((amaceResult: AmaceDBResult, amaceResultB: AmaceDBResult) => {
+    .sort((amaceResult: BrokenAppDBResult, amaceResultB: BrokenAppDBResult) => {
       const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
       const sortDir = sortDirs[sortDirIdx] ?? 0;
       if (sortKey === "loginResults") {
@@ -466,9 +388,7 @@ const AmaceResultTable: React.FC<{
             />
             <div className="ml-12 flex">
               <ResultLink
-                startDate={startDate}
-                endDate={endDate}
-                selectedDocID={selectedDocID}
+                query={`id=${selectedDocID}`}
                 page={page}
                 key={selectedDocID}
               />
@@ -486,7 +406,11 @@ const AmaceResultTable: React.FC<{
           />
         </div>
         <div className="flex w-1/4 items-center justify-end p-1 lg:pr-12">
-          <DeleteAmaceRun docID={selectedDocID} key="DeleteDocFromFirebase" />
+          <DeleteBrokenAppRuns
+            docID={selectedDocID}
+            path={path}
+            key="DeleteDocsFromFirebase"
+          />
         </div>
       </div>
       <div className={`block max-h-[465px] overflow-y-auto bg-slate-900`}>
@@ -601,6 +525,23 @@ const AmaceResultTable: React.FC<{
                   <div className="flex items-center justify-center">
                     App TS{" "}
                     {sortDirs[6] === -1 ? (
+                      <MdArrowDownward size={24} />
+                    ) : (
+                      <MdArrowUpward size={24} />
+                    )}
+                  </div>
+                </th>
+
+                <th
+                  scope="col"
+                  onClick={() => {
+                    onHeaderClick("testedOndevices", 14);
+                  }}
+                  className="px-6 py-4 hover:bg-slate-700"
+                >
+                  <div className="flex items-center justify-center">
+                    Tested On{" "}
+                    {sortDirs[14] === -1 ? (
                       <MdArrowDownward size={24} />
                     ) : (
                       <MdArrowUpward size={24} />
@@ -727,24 +668,28 @@ const AmaceResultTable: React.FC<{
               className="ml-5 overflow-y-auto bg-slate-900"
               key={parentKey}
             >
-              {resultState.map((amaceResult: AmaceDBResult, idx: number) => {
-                const curFilteredPackageNamesDecoratedStings =
-                  filteredPackageNamesDecoratedStings?.get(amaceResult.pkgName);
-                return (
-                  <AmaceResultRow
-                    key={`${amaceResult.appTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
-                    amaceResult={amaceResult}
-                    setShowHistory={(show: boolean) => setShowHistory(show)}
-                    setShowLogs={(show: boolean) => setShowLogs(show)}
-                    onSelectHistory={(text: string) => onSelectHistory(text)}
-                    onSelectLogs={(text: string) => onSelectLogs(text)}
-                    onSelectAppName={(text: string) => onSelectAppName(text)}
-                    decoratedPackageName={
-                      curFilteredPackageNamesDecoratedStings
-                    }
-                  />
-                );
-              })}
+              {resultState.map(
+                (amaceResult: BrokenAppDBResult, idx: number) => {
+                  const curFilteredPackageNamesDecoratedStings =
+                    filteredPackageNamesDecoratedStings?.get(
+                      amaceResult.pkgName
+                    );
+                  return (
+                    <AmaceResultRow
+                      key={`${amaceResult.appTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
+                      amaceResult={amaceResult}
+                      setShowHistory={(show: boolean) => setShowHistory(show)}
+                      setShowLogs={(show: boolean) => setShowLogs(show)}
+                      onSelectHistory={(text: string) => onSelectHistory(text)}
+                      onSelectLogs={(text: string) => onSelectLogs(text)}
+                      onSelectAppName={(text: string) => onSelectAppName(text)}
+                      decoratedPackageName={
+                        curFilteredPackageNamesDecoratedStings
+                      }
+                    />
+                  );
+                }
+              )}
             </tbody>
           </table>
         ) : (
@@ -769,4 +714,4 @@ const AmaceResultTable: React.FC<{
   );
 };
 
-export default AmaceResultTable;
+export default BrokenAppsTable;

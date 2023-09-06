@@ -1,7 +1,8 @@
 import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { MouseEvent, MouseEventHandler, PointerEvent, useRef } from "react";
-import { displayDate } from "./ResultTable";
+
 import { bcolors, colors } from "~/utils/dateUtils";
+import { displayDate } from "./shared";
 
 const AppRuns: React.FC<{
   docs: QueryDocumentSnapshot<DocumentData>[];

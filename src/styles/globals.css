@@ -50,3 +50,53 @@ table {
   background-color: "#000000";
   }
 
+
+
+.ansi-black-fg {
+    color: #000000;
+}
+
+.ansi-red-fg {
+    color: #f43f5e;
+}
+
+.ansi-green-fg {
+    color: #10b981;
+}
+
+.ansi-yellow-fg {
+    color: #fde047;
+}
+
+.ansi-blue-fg {
+    color: #3b82f6;
+}
+
+.ansi-magenta-fg {
+    color: #AA00AA;
+}
+
+.ansi-cyan-fg {
+    color: #00AAAA;
+}
+
+.ansi-white-fg {
+    color: #AAAAAA;
+}
+
+/* Bright colors */
+.ansi-grey-fg {
+    color: #555555;
+}
+
+.ansi-bright-red-fg {
+    color: #FF5555;
+}
+
+.ansi-bright-green-fg {
+    color: #55FF55;
+}
+
+.ansi-bright-yellow-fg {
+    color: #FFFF55;
+}

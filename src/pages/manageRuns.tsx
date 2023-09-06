@@ -28,6 +28,7 @@ import { AnsiUp } from "ansi_up";
 
 // eslint-disable-next-line
 const ansi: AnsiUp = new AnsiUp();
+ansi.use_classes = true;
 
 export const isBrowser = typeof window !== "undefined";
 
@@ -48,7 +49,6 @@ const ManageRunPage: React.FC = () => {
   const [appLists, setAppLists] = useState<AppListEntry[]>([]);
   const [selectedList, setSelectedList] = useState<AppListEntry | null>(null);
 
-  // Access individual query parameters
   useEffect(() => {
     const unSub = onSnapshot(
       collection(frontFirestore, `AppLists`),
@@ -83,80 +83,6 @@ const ManageRunPage: React.FC = () => {
 
     if (wsInstance) return;
     const ws = new WebSocket(wssURL);
-
-    ws.onopen = () => {
-      // Web Socket is connected, send data using send()
-      console.log("Websocket onopen");
-      const thingToSend = ping("getdevicename", {}, wssToken);
-      console.log("This to send!!! ", thingToSend);
-      ws.send(thingToSend);
-      // startTimer();
-    };
-
-    ws.onerror = (err) => {
-      console.log("Error: ", err);
-    };
-
-    ws.onmessage = (evt) => {
-      console.log("raw message recv'd: ", evt.data);
-      let mping;
-      try {
-        mping = pj(evt.data as string);
-      } catch (err) {
-        return;
-      }
-      const received_msg = mping.msg;
-
-      console.log("Message is received...", received_msg);
-
-      if (received_msg.toString().startsWith("status:")) {
-        cancelTimer();
-      } else if (received_msg.toString().startsWith("getdevicename:")) {
-        const dname = received_msg.toString().split(":")[1];
-        console.log("Got a device name: ", dname);
-        if (dname) {
-          setDevices((prevDevices) => {
-            if (!prevDevices.includes(dname)) {
-              return [...prevDevices, dname];
-            }
-            return prevDevices; // Return previous state to prevent re-render
-          });
-        }
-      }
-
-      ws.onclose = (event) => {
-        if (!event.wasClean) {
-          console.log(
-            `WebSocket connection lost. Reconnecting in ${
-              RECONNECT_DELAY / 1000
-            } seconds...`
-          );
-          setTimeout(connectToWebSocket, RECONNECT_DELAY);
-        }
-      };
-
-      setLastMsgs((prevMsgs) => {
-        if (prevMsgs.length > MSG_LIMIT) prevMsgs.splice(0, 1);
-        const cleanedMsg = received_msg
-          .replaceAll(`b'`, "")
-          .replaceAll(`'`, "")
-          .replaceAll(`b"`, "")
-          .replaceAll(`"`, "")
-          .replaceAll(`\\n`, "")
-          .replaceAll("progress:", "")
-          .replace(ReplaceDateTimePattern, "")
-          .replace(ReplaceDateTimePatternSecond, "");
-        // eslint-disable-next-line
-        const html = ansi.ansi_to_html(cleanedMsg);
-        setLastMsg((prevLogs) => {
-          prevMsgs.push(html);
-          return prevMsgs.join(" ");
-        }); // Update formatted string to display
-        // eslint-disable-next-line
-        return [...prevMsgs, `<p>${html}</p>`];
-      }); // Update array
-    };
-
     setWsInstance(ws);
   };
 
@@ -172,8 +98,80 @@ const ManageRunPage: React.FC = () => {
           (wsInstance as WebSocket).close();
         }
       };
+    } else if (isBrowser && wsInstance) {
+      wsInstance.onopen = () => {
+        // Web Socket is connected, send data using send()
+        console.log("Websocket onopen");
+        const thingToSend = ping("getdevicename", {}, wssToken);
+        console.log("This to send!!! ", thingToSend);
+        wsInstance.send(thingToSend);
+        // startTimer();
+      };
+
+      wsInstance.onerror = (err) => {
+        console.log("Error: ", err);
+      };
+
+      wsInstance.onmessage = (evt) => {
+        console.log("raw message recv'd: ", evt.data);
+        let mping;
+        try {
+          mping = pj(evt.data as string);
+        } catch (err) {
+          return;
+        }
+        const received_msg = mping.msg;
+
+        console.log("Message is received...", received_msg);
+
+        if (received_msg.toString().startsWith("status:")) {
+          cancelTimer();
+        } else if (received_msg.toString().startsWith("getdevicename:")) {
+          const dname = received_msg.toString().split(":")[1];
+          console.log("Got a device name: ", dname);
+          if (dname) {
+            setDevices((prevDevices) => {
+              if (!prevDevices.includes(dname)) {
+                return [...prevDevices, dname];
+              }
+              return prevDevices; // Return previous state to prevent re-render
+            });
+          }
+        }
+
+        setLastMsgs((prevMsgs) => {
+          if (prevMsgs.length > MSG_LIMIT) prevMsgs.splice(0, 1);
+          const cleanedMsg = received_msg
+            .replaceAll(`b'`, "")
+            .replaceAll(`'`, "")
+            .replaceAll(`b"`, "")
+            .replaceAll(`"`, "")
+            .replaceAll(`\\n`, "")
+            .replaceAll("progress:", "")
+            .replace(ReplaceDateTimePattern, "")
+            .replace(ReplaceDateTimePatternSecond, "");
+          // eslint-disable-next-line
+
+          const html = ansi.ansi_to_html(cleanedMsg);
+
+          setLastMsg([...prevMsgs, html].join(" ")); // Update formatted string to display
+          // eslint-disable-next-line
+          return [...prevMsgs, `<p>${html}</p>`];
+        }); // Update array
+      };
+
+      wsInstance.onclose = (event) => {
+        if (!event.wasClean) {
+          console.log(
+            `WebSocket connection lost. Reconnecting in ${
+              RECONNECT_DELAY / 1000
+            } seconds...`
+          );
+          setTimeout(connectToWebSocket, RECONNECT_DELAY);
+        }
+      };
     }
-  }, []);
+  }, [wsInstance]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimer = () => {
@@ -200,6 +198,7 @@ const ManageRunPage: React.FC = () => {
   const progressRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // eslint-disable-next-line
+    console.log("lastMsgs: ", lastMsgs);
     if (progressRef.current) progressRef.current!.innerHTML = lastMsg;
   }, [lastMsg]);
 

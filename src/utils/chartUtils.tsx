@@ -75,7 +75,7 @@ const getReasonStatObj = () => {
   } as AppStatus;
 };
 
-const processStats = (amaceResults: AmaceDBResult[]) => {
+const processStats = (amaceResults: AmaceDBResult[] | BrokenAppDBResult[]) => {
   // console.log("Selected doc appResults: ", amaceResults);
 
   const reasons = getAmaceReasonStatObj();

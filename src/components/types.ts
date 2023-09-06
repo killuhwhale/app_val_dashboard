@@ -109,6 +109,24 @@ type AmaceDBResult = {
   logs: string;
   loginResults: number;
 };
+// From firebase to UI
+type BrokenAppDBResult = {
+  appName: string;
+  pkgName: string;
+  runID: string;
+  runTS: number;
+  appTS: number;
+  status: number;
+  brokenStatus: number;
+  buildInfo: string;
+  deviceInfo: string;
+  appType: string;
+  appVersions: string;
+  history: string;
+  logs: string;
+  loginResults: number;
+  testedOndevices: string;
+};
 
 enum AppType {
   APP = "App",
@@ -137,6 +155,25 @@ type AmaceResult = {
   history: HistoryStep[];
   logs: string;
   loginResults: number;
+  dSrcPath: string;
+};
+// From client program into API/DB
+type BrokenAppResult = {
+  appName: string;
+  pkgName: string;
+  runID: string;
+  runTS: string;
+  appTS: string;
+  status: number;
+  brokenStatus: number;
+  buildInfo: string;
+  deviceInfo: string;
+  appType: AppType;
+  appVersions: string;
+  history: HistoryStep[];
+  logs: string;
+  loginResults: number;
+  testedOndevices: string;
 };
 
 type AppRequest = {

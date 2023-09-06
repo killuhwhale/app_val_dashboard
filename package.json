@@ -10,6 +10,7 @@
     "start": "NODE_ENV=production node server.js"
   },
   "dependencies": {
+    "@google-cloud/bigtable": "^5.0.0",
     "@google-cloud/firestore": "^6.5.0",
     "@googleapis/sheets": "^4.0.2",
     "@next-auth/firebase-adapter": "^2.0.1",

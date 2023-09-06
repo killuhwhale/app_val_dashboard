@@ -17,7 +17,7 @@ import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MdViewModule } from "react-icons/md";
 import { Tooltip } from "react-tooltip";
-import AmaceResultTable from "~/components/AmaceResultTable";
+import AmaceResultTable from "~/components/tables/AmaceResultTable";
 import AmaceRuns from "~/components/AmaceRuns";
 import DatePicker from "~/components/AppValDatePicker";
 import ResultLink from "~/components/ResultLink";

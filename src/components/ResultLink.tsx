@@ -13,19 +13,12 @@ import { colors } from "~/utils/dateUtils";
 import { Tooltip } from "react-tooltip";
 
 // Creates a link and copies to users clipboard.
-interface ResultLink {
-  startDate: number;
-  endDate: number;
-  selectedDocID: string;
+interface ResultLinkProps {
+  query: string;
   page: string;
 }
 
-const ResultLink: React.FC<ResultLink> = ({
-  page,
-  endDate,
-  selectedDocID,
-  startDate,
-}) => {
+const ResultLink: React.FC<ResultLinkProps> = ({ page, query }) => {
   const [init, setInit] = useState(true);
   const [toggle, setToggle] = useState(false);
   const cbID = "cbID";
@@ -35,7 +28,7 @@ const ResultLink: React.FC<ResultLink> = ({
       setInit(false);
       return;
     }
-    console.log("Linking: ", selectedDocID);
+    console.log("Linking: ", query);
 
     const setClip = async (text: string) => {
       try {
@@ -45,9 +38,7 @@ const ResultLink: React.FC<ResultLink> = ({
       }
     };
 
-    setClip(
-      `https://${window.location.hostname}/${page}?s_d=${startDate}&e_d=${endDate}&id=${selectedDocID}`
-    )
+    setClip(`https://${window.location.hostname}/${page}?${query}`)
       .then((res) => console.log(""))
       .catch((err) => console.log("Error result link cb: ", err));
   }, [toggle]);

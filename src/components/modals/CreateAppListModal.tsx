@@ -99,7 +99,7 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
               />
               <p className="pb-1 pt-4 font-light">Apps</p>
               <textarea
-                className="bg-slate-300 font-light"
+                className="bg-slate-300 pl-1  font-light"
                 rows={9}
                 cols={80}
                 placeholder="Apps"

@@ -7,7 +7,7 @@ import React, {
 import { deleteDoc, doc } from "firebase/firestore";
 import { MdDeleteForever } from "react-icons/md";
 import { Tooltip } from "react-tooltip";
-import ActionCancelModal from "./modals/ActionCancelModal";
+import ActionCancelModal from "../modals/ActionCancelModal";
 import { frontFirestore } from "~/utils/frontFirestore";
 import { ref, deleteObject, listAll, StorageReference } from "firebase/storage";
 import { frontStorage } from "~/utils/frontFirestore";

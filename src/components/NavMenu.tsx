@@ -38,16 +38,34 @@ const NavMenu: React.FC = () => {
           </li>
           <li>
             <Link
-              href="/arc"
+              href="/brokenAppsView"
               className={`${
-                currentLoc.endsWith("/arc") ? currentPageColor : ""
+                currentLoc.endsWith("/brokenAppsView") ? currentPageColor : ""
               } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
             >
               <MdPhoneAndroid />
-              <span className="ml-3 flex-1 whitespace-nowrap">ARC</span>
-              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                Mobile
+              <span className="ml-3 max-w-[90px] flex-1 text-ellipsis whitespace-nowrap text-sm">
+                Broken Apps
               </span>
+              {/* <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                Mobile
+              </span> */}
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/top250"
+              className={`${
+                currentLoc.endsWith("/top250") ? currentPageColor : ""
+              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
+            >
+              <MdPhoneAndroid />
+              <span className="ml-3 max-w-[90px] flex-1 text-ellipsis whitespace-nowrap text-sm">
+                Top 250
+              </span>
+              {/* <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                Mobile
+              </span> */}
             </Link>
           </li>
           <li>
@@ -59,7 +77,7 @@ const NavMenu: React.FC = () => {
             >
               <MdCenterFocusWeak />
               <span className="ml-3 flex-1 whitespace-nowrap">Amac-E</span>
-              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 Mobile
               </span>
             </Link>
@@ -73,7 +91,7 @@ const NavMenu: React.FC = () => {
             >
               <MdCenterFocusWeak />
               <span className="ml-3 flex-1 whitespace-nowrap">Manage</span>
-              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 Mobile
               </span>
             </Link>

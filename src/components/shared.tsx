@@ -59,6 +59,91 @@ const wssURL =
     ? "ws://localhost:3001/wss"
     : "wss://appvaldashboard.com/wss";
 
+const MONTHS: string[] = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const displayDateWithTime = (date: Date): string => {
+  return (
+    date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }) +
+    " " +
+    date.toLocaleTimeString("en-US")
+  );
+};
+
+const displayDate = (date: Date): string => {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+class DefaultDict<T, U> {
+  private _data: Map<T, U>;
+  private _defaultFactory: () => U;
+
+  constructor(defaultFactory: () => U) {
+    this._data = new Map();
+    this._defaultFactory = defaultFactory;
+  }
+
+  get(key: T): U {
+    if (!this._data.has(key)) {
+      this._data.set(key, this._defaultFactory());
+    }
+    return this._data.get(key)!;
+  }
+
+  set(key: T, value: U): this {
+    this._data.set(key, value);
+    return this;
+  }
+
+  // Add other Map-like methods as necessary...
+}
+
+function compareStrings(s1: string, s2: string): number {
+  const regex = /(\D*)(\d*)/g;
+
+  let m1 = regex.exec(s1);
+  let m2 = regex.exec(s2)!;
+
+  while (m1 || m2) {
+    // If either match is null, reset it to an empty match
+    if (!m1) m1 = ["", "", ""] as unknown as RegExpExecArray;
+    if (!m2) m2 = ["", "", ""] as unknown as RegExpExecArray;
+
+    // Compare non-numeric segments first
+    if (m1[1]! < m2[1]!) return 1;
+    if (m1[1]! > m2[1]!) return -1;
+
+    // Compare numeric segments
+    if (+m1[2]! < +m2[2]!) return 1;
+    if (+m1[2]! > +m2[2]!) return -1;
+
+    m1 = regex.exec(s1) ?? (["", "", ""] as unknown as RegExpExecArray);
+    m2 = regex.exec(s2) ?? (["", "", ""] as unknown as RegExpExecArray);
+  }
+
+  return 0;
+}
+
 export {
   statusReasons,
   brokenStatusReasons,
@@ -67,4 +152,9 @@ export {
   backendFirestoreName,
   ping,
   pj,
+  DefaultDict,
+  compareStrings,
+  displayDateWithTime,
+  displayDate,
+  MONTHS,
 };

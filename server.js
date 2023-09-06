@@ -46,7 +46,7 @@ app.prepare().then(() => {
 
 
   wss.on("connection", (ws) => {
-    console.log("Client connected");
+    // console.log("Client connected");
 
     // Echo back to clients
     ws.on("message", (pingBuffer) => {
@@ -54,7 +54,7 @@ app.prepare().then(() => {
       const message = mping['msg']
       const wssToken = mping['data']['wssToken']
 
-      console.log(`>>>> WSServer received message: w/ key ${wssToken}`, );
+      // console.log(`>>>> WSServer received message: w/ key ${wssToken}`, );
 
       // Verify wssToken and reject if fails....
       try {

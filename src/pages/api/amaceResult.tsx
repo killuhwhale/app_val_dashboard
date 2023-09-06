@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { MONTHS, compareStrings } from "~/components/shared";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
 const db = firestore;
@@ -15,7 +16,7 @@ type GlobalAppResult = {
  *
  *
  * Updates FireStore Collections:
- *    GlobalAMACEStatus
+ *    GlobalAMACEStatus - deprecated
  *      - Updates list of latest app results provided as an endpoint.
  *    AppResults
  *      - @ecox using to process latest runs to enable effiecient runs in the future
@@ -23,6 +24,262 @@ type GlobalAppResult = {
  *      - Main results for ea runID shown in table on the dashboard
  *
  */
+
+const today = new Date();
+const year = today.getFullYear();
+const month = MONTHS[today.getMonth()];
+
+/**
+ * AppResults
+ *   -  using to process latest runs to enable effiecient runs in the future
+ */
+async function handleAppResults(result: AmaceResult) {
+  const {
+    appName,
+    appTS,
+    status,
+    brokenStatus,
+    pkgName,
+    runID,
+    runTS,
+    buildInfo,
+    deviceInfo,
+    appType,
+    appVersion,
+    history,
+    logs,
+    loginResults,
+  } = result;
+
+  // Get the device name
+  const device = deviceInfo.split(" - ")[0];
+  // Update App results
+  const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`);
+  await appResultParentRef.set({});
+
+  const appResultSubRef = appResultParentRef
+    .collection(`${device || ""}`)
+    .doc(`${runID}`);
+
+  return await appResultSubRef.set({
+    appName,
+    pkgName,
+    runID,
+    runTS: parseInt(runTS.toString()),
+    appTS: parseInt(appTS.toString()),
+    status,
+    brokenStatus,
+    buildInfo,
+    deviceInfo,
+    appType,
+    appVersion,
+    history: JSON.stringify(history),
+    logs,
+    loginResults,
+  });
+}
+
+/**
+ * AmaceRuns
+ *   - Main results for ea runID shown in table on the dashboard
+ */
+async function handleRunResults(result: AmaceResult) {
+  const {
+    appName,
+    appTS,
+    status,
+    brokenStatus,
+    pkgName,
+    runID,
+    runTS,
+    buildInfo,
+    deviceInfo,
+    appType,
+    appVersion,
+    history,
+    logs,
+    loginResults,
+  } = result;
+  //  Update Run results
+  const docRefParent = db.collection(`AmaceRuns`).doc(`${runID}`);
+
+  await docRefParent.set({
+    date: new Date(parseInt(runTS.toString())),
+  });
+
+  return await docRefParent
+    .collection(`apps`)
+    .doc(`${pkgName}|${buildInfo}`)
+    .set({
+      appName,
+      pkgName,
+      runID,
+      runTS: parseInt(runTS.toString()),
+      appTS: parseInt(appTS.toString()),
+      status,
+      brokenStatus,
+      buildInfo,
+      deviceInfo,
+      appType,
+      appVersion,
+      history: JSON.stringify(history),
+      logs,
+      loginResults,
+    });
+}
+
+/**
+ *  testedOndevices - key to identify which device the app was tested on.
+ *
+ */
+function deviceBuildkey(result: BrokenAppResult | AmaceResult) {
+  const deviceName = result.deviceInfo.split("-")[0]!; // helios
+  const buildNamePieces = result.buildInfo.split("-"); // helios
+  const buildName = buildNamePieces.slice(0, 2).join("");
+  return `${deviceName}${buildName}|`;
+}
+
+/**
+ *
+ * Updates broken app result if app has already been tested.
+ *
+ */
+async function updateBrokenResult(
+  result: AmaceResult,
+  docRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
+) {
+  // If we havea  document that exists, that means we have tested this app this month already and its broken.
+  // we only need to update this entry to add the version tested if its newer, or if we tested on a newer device build.
+  const dbData = (await docRef.get()).data() as BrokenAppResult;
+
+  const updates = {} as BrokenAppResult;
+  updates["status"] = dbData.status;
+  updates["brokenStatus"] = dbData.brokenStatus;
+
+  // Update AppVersion
+  const versionsTested = dbData.appVersions;
+  const latestVersionTested = result.appVersion;
+
+  if (!versionsTested.includes(latestVersionTested))
+    updates["appVersions"] = `${versionsTested}${latestVersionTested}|`;
+
+  // Updates devices app was tested on
+  const devicesAlreadyTested = dbData.testedOndevices;
+
+  const _deviceBuildKey = deviceBuildkey(dbData);
+  if (!devicesAlreadyTested.includes(_deviceBuildKey))
+    updates["testedOndevices"] = `${devicesAlreadyTested}${_deviceBuildKey}|`;
+
+  await docRef.update(updates);
+}
+
+async function handleBrokenResults(result: AmaceResult) {
+  const {
+    appName,
+    appTS,
+    status,
+    brokenStatus,
+    pkgName,
+    runID,
+    runTS,
+    buildInfo,
+    deviceInfo,
+    appType,
+    appVersion,
+    history,
+    logs,
+    loginResults,
+  } = result;
+
+  const monthlyDocRef = db.collection(`BrokenApps`).doc(`${year} ${month}`);
+
+  const monthlyDoc = await monthlyDocRef.get();
+
+  if (!monthlyDoc.exists) {
+    await monthlyDocRef.set({
+      date: new Date(`${month}-01-${year}`),
+    });
+  }
+
+  const pkgNameDocRef = monthlyDocRef.collection("apps").doc(pkgName);
+
+  const pkgNameDoc = await pkgNameDocRef.get();
+  console.log("handling broken result, exists: ", pkgNameDoc.exists);
+
+  if (pkgNameDoc.exists) return await updateBrokenResult(result, pkgNameDocRef);
+  else
+    return await pkgNameDocRef.set({
+      appName,
+      pkgName,
+      runID,
+      runTS: parseInt(runTS.toString()),
+      appTS: parseInt(appTS.toString()),
+      status,
+      brokenStatus,
+      buildInfo,
+      deviceInfo,
+      appType,
+      appVersions: `${appVersion}|`,
+      history: JSON.stringify(history),
+      logs,
+      loginResults,
+      testedOndevices: deviceBuildkey(result),
+    });
+}
+
+async function handleTop250Results(result: AmaceResult) {
+  const {
+    appName,
+    appTS,
+    status,
+    brokenStatus,
+    pkgName,
+    runID,
+    runTS,
+    buildInfo,
+    deviceInfo,
+    appType,
+    appVersion,
+    history,
+    logs,
+    loginResults,
+  } = result;
+
+  const monthlyDocRef = db.collection(`Top250`).doc(`${year} ${month}`);
+
+  const monthlyDoc = await monthlyDocRef.get();
+
+  if (!monthlyDoc.exists) {
+    await monthlyDocRef.set({
+      date: new Date(`${month}-01-${year}`),
+    });
+  }
+
+  const pkgNameDocRef = monthlyDocRef.collection("apps").doc(pkgName);
+
+  const pkgNameDoc = await pkgNameDocRef.get();
+  console.log("handling Top 250 broken result, exists: ", pkgNameDoc.exists);
+
+  if (pkgNameDoc.exists) return await updateBrokenResult(result, pkgNameDocRef);
+  else
+    return await pkgNameDocRef.set({
+      appName,
+      pkgName,
+      runID,
+      runTS: parseInt(runTS.toString()),
+      appTS: parseInt(appTS.toString()),
+      status,
+      brokenStatus,
+      buildInfo,
+      deviceInfo,
+      appType,
+      appVersions: `${appVersion}|`,
+      history: JSON.stringify(history),
+      logs,
+      loginResults,
+      testedOndevices: deviceBuildkey(result),
+    });
+}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
@@ -38,132 +295,24 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     const body = req.body as AmaceResult;
-    console.log("Incoming body: ", req.body, body);
+    console.log("Incoming body: ", body);
+    const amaceResult = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
 
-    const {
-      appName,
-      appTS,
-      status,
-      brokenStatus,
-      pkgName,
-      runID,
-      runTS,
-      buildInfo,
-      deviceInfo,
-      appType,
-      appVersion,
-      history,
-      logs,
-      loginResults,
-    } = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
+    await handleAppResults(amaceResult);
+    await handleRunResults(amaceResult);
 
-    //Update Global list if the status is successful
-    console.log("New data to post: ", appType, appVersion, history, logs);
-    if (status >= 60) {
-      //  we need to make sure that the appversion we tested is newer than what is currently recorded before overwriting it....
-      // Update Global List
-      const globalDocRefParent = db
-        .collection(`GlobalAMACEStatus`)
-        .doc(`${pkgName}`);
-
-      const doc = await globalDocRefParent.get();
-      const parentData = doc.data() as GlobalAppResult;
-      // If recorded version is older than the verison just tested, update...
-      if (parentData !== undefined) {
-        if (
-          parentData.version == undefined ||
-          parentData.version < appVersion
-        ) {
-          const globalDocRefParentRes = await globalDocRefParent.set({
-            name: appName,
-            packageName: pkgName,
-            status: status,
-            version: appVersion,
-            date: new Date(),
-          });
-        }
-      }
-    }
-
-    // Get the device name
-    const device = deviceInfo.split(" - ")[0];
-    console.log("Device name", device);
-    console.log("Device info", deviceInfo);
-    // Update App results
-    const appResultParentRef = db.collection(`AppResults`).doc(`${pkgName}`);
-    await appResultParentRef.set({});
-
-    const appResultSubRef = appResultParentRef
-      .collection(`${device || ""}`)
-      .doc(`${runID}`);
-    const appResultRes = await appResultSubRef.set({
-      appName,
-      pkgName,
-      runID,
-      runTS: parseInt(runTS.toString()),
-      appTS: parseInt(appTS.toString()),
-      status,
-      brokenStatus,
-      buildInfo,
-      deviceInfo,
-      appType,
-      appVersion,
-      history: JSON.stringify(history),
-      logs,
-      loginResults,
-    });
-
-    console.log("Doc res", appResultRes);
-
-    //  Update Run results
-    const docRefParent = db.collection(`AmaceRuns`).doc(`${runID}`);
-
-    const parentRes = await docRefParent.set({
-      date: new Date(parseInt(runTS.toString())),
-    });
-
-    const docRefSub = docRefParent
-      .collection(`apps`)
-      .doc(`${pkgName}|${buildInfo}`);
-
-    const docRes = await docRefSub.set({
-      appName,
-      pkgName,
-      runID,
-      runTS: parseInt(runTS.toString()),
-      appTS: parseInt(appTS.toString()),
-      status,
-      brokenStatus,
-      buildInfo,
-      deviceInfo,
-      appType,
-      appVersion,
-      history: JSON.stringify(history),
-      logs,
-      loginResults,
-    });
-
-    console.log("Doc res", docRes);
+    if (
+      amaceResult.brokenStatus >= 40 &&
+      amaceResult.dSrcPath === "AppLists/Top 250"
+    )
+      await handleTop250Results(amaceResult);
+    else if (amaceResult.brokenStatus >= 40)
+      await handleBrokenResults(amaceResult);
 
     res.status(200).json({
       data: {
         success: true,
-        data: {
-          appName,
-          appTS,
-          status,
-          brokenStatus,
-          pkgName,
-          runID,
-          runTS,
-          buildInfo,
-          deviceInfo,
-          appType,
-          appVersion,
-          history,
-          logs,
-          loginResults,
-        },
+        data: amaceResult,
       },
       error: null,
     });
