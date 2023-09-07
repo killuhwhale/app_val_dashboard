@@ -227,6 +227,7 @@ const AmaceResultTable: React.FC<{
   endDate: number;
   selectedDocID: string;
   page: string;
+  hideHeader?: boolean;
 }> = ({
   amaceResults,
   height,
@@ -235,6 +236,7 @@ const AmaceResultTable: React.FC<{
   endDate,
   selectedDocID,
   page,
+  hideHeader,
 }) => {
   const [filteredPackageNames, setFilteredPackageNames] = useState<number[]>(
     []
@@ -363,49 +365,54 @@ const AmaceResultTable: React.FC<{
 
   return (
     <div className={`min-w-full flex-1 bg-slate-900`}>
-      <div className="mt-6 flex w-full items-center justify-around">
-        <div className="flex w-1/2">
-          <div className="w-2/3">
-            <p className="ml-6 text-white">
-              App results {`(${amaceResults.length}) `}
-              {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
-                splitDateStringWithColor(
-                  displayDateWithTime(new Date(amaceResults[0].runTS))
-                ).map((spanEl: React.ReactNode) => spanEl)
-              ) : (
-                <p>No date</p>
-              )}
-            </p>
-          </div>
-          <div className="flex w-1/3">
-            <TableToClipBoard
-              generateText={() => genText(resultState)}
-              tootlTipText="Copy Table"
-              key={"AmaceTable"}
-            />
-            <div className="ml-12 flex">
-              <ResultLink
-                query={`s_d=${startDate}&e_d=${endDate}&id=${selectedDocID}`}
-                page={page}
-                key={selectedDocID}
+      {hideHeader ? (
+        <></>
+      ) : (
+        <div className="mt-6 flex w-full items-center justify-around">
+          <div className="flex w-1/2">
+            <div className="w-2/3">
+              <p className="ml-6 text-white">
+                App results {`(${amaceResults.length}) `}
+                {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
+                  splitDateStringWithColor(
+                    displayDateWithTime(new Date(amaceResults[0].runTS))
+                  ).map((spanEl: React.ReactNode) => spanEl)
+                ) : (
+                  <p>No date</p>
+                )}
+              </p>
+            </div>
+            <div className="flex w-1/3">
+              <TableToClipBoard
+                generateText={() => genText(resultState)}
+                tootlTipText="Copy Table"
+                key={"AmaceTable"}
               />
+              <div className="ml-12 flex">
+                <ResultLink
+                  query={`s_d=${startDate}&e_d=${endDate}&id=${selectedDocID}`}
+                  page={page}
+                  key={selectedDocID}
+                />
+              </div>
             </div>
           </div>
+          <div className="flex w-1/3 items-center p-1">
+            <p className="text-white lg:mr-6">Filter</p>
+            <input
+              placeholder="Package name"
+              className=" block h-[35px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
+              onChange={(ev: ChangeEvent<HTMLInputElement>) =>
+                debFilterText(ev.target.value)
+              }
+            />
+          </div>
+          <div className="flex w-1/4 items-center justify-end p-1 lg:pr-12">
+            <DeleteAmaceRun docID={selectedDocID} key="DeleteDocFromFirebase" />
+          </div>
         </div>
-        <div className="flex w-1/3 items-center p-1">
-          <p className="text-white lg:mr-6">Filter</p>
-          <input
-            placeholder="Package name"
-            className=" block h-[35px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
-            onChange={(ev: ChangeEvent<HTMLInputElement>) =>
-              debFilterText(ev.target.value)
-            }
-          />
-        </div>
-        <div className="flex w-1/4 items-center justify-end p-1 lg:pr-12">
-          <DeleteAmaceRun docID={selectedDocID} key="DeleteDocFromFirebase" />
-        </div>
-      </div>
+      )}
+
       <div className={`block max-h-[465px] overflow-y-auto bg-slate-900`}>
         {amaceResults && amaceResults.length ? (
           <table

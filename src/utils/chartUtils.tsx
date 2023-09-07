@@ -75,7 +75,38 @@ const getReasonStatObj = () => {
   } as AppStatus;
 };
 
-const processStats = (amaceResults: AmaceDBResult[] | BrokenAppDBResult[]) => {
+const rebuildLatestAmaceResultsFromBrokenResult = (
+  results: BrokenAppDBResult[]
+): AmaceDBResult[] => {
+  return results.map((result: BrokenAppDBResult) => {
+    const testedHistory = result
+      ? (JSON.parse(result.testedHistory) as unknown as TestedHistoryStep[])
+      : ([] as TestedHistoryStep[]);
+
+    // TODO() Sort array to ensure we are taking the lastest entry...
+    const histStep = testedHistory[testedHistory.length - 1];
+
+    return {
+      appName: result?.appName,
+      pkgName: result?.pkgName,
+      appType: result?.appType,
+      appTS: histStep?.appTS,
+      buildInfo: histStep?.buildInfo,
+      deviceInfo: histStep?.deviceInfo,
+      runID: histStep?.runID,
+      runTS: histStep?.runTS,
+      status: histStep?.status,
+      brokenStatus: histStep?.brokenStatus,
+      appVersion: histStep?.appVersion,
+      history: histStep?.history,
+      logs: histStep?.logs,
+      loginResults: histStep?.loginResults,
+      dSrcPath: "",
+    } as AmaceDBResult;
+  });
+};
+
+const processStats = (amaceResults: AmaceDBResult[]) => {
   // console.log("Selected doc appResults: ", amaceResults);
 
   const reasons = getAmaceReasonStatObj();
@@ -147,4 +178,10 @@ const processStats = (amaceResults: AmaceDBResult[] | BrokenAppDBResult[]) => {
   ];
 };
 
-export { CustomTooltip, getAmaceReasonStatObj, getReasonStatObj, processStats };
+export {
+  CustomTooltip,
+  getAmaceReasonStatObj,
+  getReasonStatObj,
+  processStats,
+  rebuildLatestAmaceResultsFromBrokenResult,
+};

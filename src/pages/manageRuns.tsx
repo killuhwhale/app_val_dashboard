@@ -199,7 +199,7 @@ const ManageRunPage: React.FC = () => {
   useEffect(() => {
     // eslint-disable-next-line
     console.log("lastMsgs: ", lastMsgs);
-    if (progressRef.current) progressRef.current!.innerHTML = lastMsg;
+    progressRef.current!.innerHTML = lastMsg;
   }, [lastMsg]);
 
   return (

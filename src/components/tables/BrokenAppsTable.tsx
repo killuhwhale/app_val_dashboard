@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useLayoutEffect, useState } from "react";
-import { MdArrowDownward, MdArrowUpward, MdContentCopy } from "react-icons/md";
+import { MdArrowDownward, MdArrowUpward } from "react-icons/md";
 import { debounce, filter, filterOptions } from "~/utils/algos";
 import ViewHistoryModal from "../modals/ViewHistoryModal";
 import ViewLogsModal from "../modals/ViewLogsModal";
@@ -13,153 +13,8 @@ import {
   statusReasons,
 } from "../shared";
 import DeleteBrokenAppRuns from "../delete/DeleteBrokenAppRuns";
-import {
-  EmailIcon,
-  FacebookIcon,
-  GoogleIcon,
-  PlaceholderIcon,
-  decodeLoginResults,
-} from "./sharedTables";
-
-interface AmaceResultRowProps {
-  amaceResult: BrokenAppDBResult;
-  decoratedPackageName?: string;
-
-  setShowHistory(show: boolean): void;
-  setShowLogs(show: boolean): void;
-  onSelectHistory(text: string): void;
-  onSelectLogs(text: string): void;
-  onSelectAppName(text: string): void;
-}
-
-const AmaceResultRow: React.FC<AmaceResultRowProps> = ({
-  amaceResult,
-  decoratedPackageName,
-  setShowLogs,
-  setShowHistory,
-  onSelectHistory,
-  onSelectLogs,
-  onSelectAppName,
-}) => {
-  const {
-    pkgName,
-    appName,
-    status,
-    brokenStatus,
-    appTS,
-    runID,
-    runTS,
-    deviceInfo,
-    buildInfo,
-    appType,
-    appVersions,
-    history,
-    logs,
-    loginResults,
-    testedOndevices,
-  } = amaceResult;
-
-  // console.log("decoratedPackageNames", decoratedPackageName);
-  const hasLogs = logs?.length > 0 ?? false;
-  const loginLabels = [GoogleIcon, FacebookIcon, EmailIcon];
-  return (
-    <tr
-      className={`${
-        status > 59
-          ? "border border-slate-600 bg-slate-900"
-          : "border border-rose-600 bg-rose-900"
-      }  text-white`}
-      key={runTS.toString() + pkgName}
-    >
-      <td
-        className={`sticky left-0   ${
-          status > 59
-            ? "bg-gradient-to-r from-slate-900 via-slate-900 to-slate-700"
-            : "bg-gradient-to-r from-rose-900 via-rose-900 to-rose-700"
-        }  px-6 py-4 text-xs font-medium`}
-        dangerouslySetInnerHTML={{
-          __html:
-            decoratedPackageName && decoratedPackageName.length > 0
-              ? decoratedPackageName
-              : pkgName,
-        }}
-      ></td>
-
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {appName}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {statusReasons.get(status.toString())}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {brokenStatusReasons.get(brokenStatus.toString())}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {appType}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {appVersions}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {displayDateWithTime(new Date(appTS))}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {testedOndevices}
-      </td>
-      <td className="flex flex-row justify-center whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {decodeLoginResults(loginResults).map((num, idx) => {
-          return loginLabels[idx] && num > 0
-            ? loginLabels[idx]!(`llk${idx}_${pkgName}`)
-            : PlaceholderIcon(`llk${idx}_${pkgName}`);
-        })}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {runID}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {displayDate(new Date(runTS))}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {deviceInfo}
-      </td>
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium">
-        {buildInfo}
-      </td>
-      <td
-        onClick={() => {
-          if (history) {
-            onSelectAppName(appName);
-            onSelectHistory(history);
-            setShowHistory(true);
-          } else {
-            console.log("No history to show");
-          }
-        }}
-        className={`whitespace-nowrap px-6 py-4 text-xs font-medium ${
-          status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
-        }`}
-      >
-        Click to view history
-      </td>
-      <td
-        onClick={() => {
-          if (hasLogs) {
-            onSelectAppName(appName);
-            onSelectLogs(logs);
-            setShowLogs(true);
-          } else {
-            console.log("No logs to show");
-          }
-        }}
-        className={`whitespace-nowrap px-6 py-4 text-xs font-medium  ${
-          status > 0 ? "hover:bg-rose-700" : "hover:bg-slate-700"
-        }`}
-      >
-        {hasLogs ? "Click to view logs" : "No Logs"}
-      </td>
-    </tr>
-  );
-};
+import BrokenAppRow from "./BrokenAppRow";
+import TestedHistoryStepsModal from "../modals/TestedHistoryStepsModal";
 
 const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   const chunks: string[] = dateString.split(" ");
@@ -184,33 +39,43 @@ const genText = (rows: BrokenAppDBResult[]) => {
     "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tTested On\tLogin Results\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
   const data = [header];
   rows.forEach((row: BrokenAppDBResult) => {
+    const { pkgName, appName, appType, testedHistory: latestHistoryStr } = row;
+
+    const testedHistory = JSON.parse(latestHistoryStr) as TestedHistoryStep[];
+    if (!testedHistory || testedHistory.length === 0) {
+      return (
+        <tr>
+          <td>No data found</td>
+        </tr>
+      );
+    }
+
+    const latestHistory = testedHistory[
+      testedHistory.length - 1
+    ] as TestedHistoryStep;
     const {
-      appName,
       appTS,
       buildInfo,
       deviceInfo,
-      pkgName,
       runID,
       runTS,
       status,
       brokenStatus,
-      appType,
-      appVersions,
-      history,
+      appVersion,
       logs,
       loginResults,
-      testedOndevices,
-    } = row;
+      history,
+      testedOndevice,
+    } = latestHistory;
 
-    // TODO remove replaceALl, amace.go is updated to strip the \n now...
     data.push(
       `${pkgName}\t${appName}\t${
         statusReasons.get(status.toString()) ?? "failedtogetkey"
       }\t${
         brokenStatusReasons.get(brokenStatus.toString()) ?? "failedtogetkey2"
-      }\t${appType}\t${appVersions}\t${displayDateWithTime(
+      }\t${appType}\t${appVersion}\t${displayDateWithTime(
         new Date(appTS)
-      )}\t${testedOndevices}\t${loginResults}\t${runID}\t${displayDate(
+      )}\t${testedOndevice}\t${loginResults}\t${runID}\t${displayDate(
         new Date(runTS)
       )}\t${deviceInfo.replaceAll(
         "\n",
@@ -300,7 +165,8 @@ const BrokenAppsTable: React.FC<{
         Array.from(Array(amaceResults.length).keys()).map((idx) => idx)
       );
       const packageNameMarks = new Map<string, string>();
-      amaceResults.forEach((amaceResult: AmaceDBResult) => {
+
+      amaceResults.forEach((amaceResult: BrokenAppDBResult) => {
         packageNameMarks.set(
           amaceResult.pkgName ?? "",
           amaceResult.pkgName ?? ""
@@ -311,7 +177,7 @@ const BrokenAppsTable: React.FC<{
     }
     // Updates filtered data.
     const stringData = amaceResults.map(
-      (amaceResult: AmaceDBResult) => amaceResult.pkgName
+      (amaceResult: BrokenAppDBResult) => amaceResult.pkgName
     );
     // console.log("Filter text: ", searchTerm, stringData);
     const options: filterOptions = {
@@ -347,22 +213,26 @@ const BrokenAppsTable: React.FC<{
     .sort((amaceResult: BrokenAppDBResult, amaceResultB: BrokenAppDBResult) => {
       const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
       const sortDir = sortDirs[sortDirIdx] ?? 0;
-      if (sortKey === "loginResults") {
-        return sortLoginResult(
-          amaceResult[sortKey as keyof AmaceDBResult] as number
-        ) <
-          sortLoginResult(
-            amaceResultB[sortKey as keyof AmaceDBResult] as number
-          )
-          ? sortDir
-          : -sortDir;
-      }
+      // if (sortKey === "loginResults") {
+      //   return sortLoginResult(
+      //     amaceResult[sortKey as keyof BrokenAppDBResult] as number
+      //   ) <
+      //     sortLoginResult(
+      //       amaceResultB[sortKey as keyof BrokenAppDBResult] as number
+      //     )
+      //     ? sortDir
+      //     : -sortDir;
+      // }
 
-      return amaceResult[sortKey as keyof AmaceDBResult] <
-        amaceResultB[sortKey as keyof AmaceDBResult]
+      return amaceResult[sortKey as keyof BrokenAppDBResult] <
+        amaceResultB[sortKey as keyof BrokenAppDBResult]
         ? sortDir
         : -sortDir;
     });
+
+  const [showTestedHistory, setShowTestedHistory] = useState(false);
+  const [curTestedHistory, setCurTestedHistory] =
+    useState<BrokenAppDBResult | null>(null);
 
   return (
     <div className={`min-w-full flex-1 bg-slate-900`}>
@@ -371,13 +241,13 @@ const BrokenAppsTable: React.FC<{
           <div className="w-2/3">
             <p className="ml-6 text-white">
               App results {`(${amaceResults.length}) `}
-              {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
+              {/* {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
                 splitDateStringWithColor(
                   displayDateWithTime(new Date(amaceResults[0].runTS))
                 ).map((spanEl: React.ReactNode) => spanEl)
               ) : (
                 <p>No date</p>
-              )}
+              )} */}
             </p>
           </div>
           <div className="flex w-1/3">
@@ -630,38 +500,6 @@ const BrokenAppsTable: React.FC<{
                     )}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("history", 11);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    History{" "}
-                    {sortDirs[11] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("logs", 12);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Logs{" "}
-                    {sortDirs[12] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
               </tr>
             </thead>
             <tbody
@@ -675,14 +513,13 @@ const BrokenAppsTable: React.FC<{
                       amaceResult.pkgName
                     );
                   return (
-                    <AmaceResultRow
-                      key={`${amaceResult.appTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
+                    <BrokenAppRow
+                      onClick={() => {
+                        setCurTestedHistory(amaceResult);
+                        setShowTestedHistory(true);
+                      }}
+                      key={`${amaceResult.appName}_${amaceResult.pkgName}`}
                       amaceResult={amaceResult}
-                      setShowHistory={(show: boolean) => setShowHistory(show)}
-                      setShowLogs={(show: boolean) => setShowLogs(show)}
-                      onSelectHistory={(text: string) => onSelectHistory(text)}
-                      onSelectLogs={(text: string) => onSelectLogs(text)}
-                      onSelectAppName={(text: string) => onSelectAppName(text)}
                       decoratedPackageName={
                         curFilteredPackageNamesDecoratedStings
                       }
@@ -695,6 +532,12 @@ const BrokenAppsTable: React.FC<{
         ) : (
           <></>
         )}
+
+        <TestedHistoryStepsModal
+          isOpen={showTestedHistory}
+          onClose={() => setShowTestedHistory(false)}
+          brokenAppResult={curTestedHistory}
+        />
 
         <ViewHistoryModal
           isOpen={showHistory}

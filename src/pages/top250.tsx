@@ -17,7 +17,10 @@ import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
 import BrokenAppsTable from "~/components/tables/BrokenAppsTable";
 
-import { processStats } from "~/utils/chartUtils";
+import {
+  processStats,
+  rebuildLatestAmaceResultsFromBrokenResult,
+} from "~/utils/chartUtils";
 import { bcolors, formatFirebaseDate } from "~/utils/dateUtils";
 import { frontFirestore } from "~/utils/frontFirestore";
 
@@ -128,7 +131,9 @@ const Top250Page: React.FC = () => {
         _appResults.push(appData.data() as BrokenAppDBResult);
       });
 
-      const stats = processStats(_appResults);
+      const rebuiltResults =
+        rebuildLatestAmaceResultsFromBrokenResult(_appResults);
+      const stats = processStats(rebuiltResults);
       setTotalByStatus(stats);
       setAmaceResults(_appResults);
     });

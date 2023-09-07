@@ -27,7 +27,7 @@ type GlobalAppResult = {
 
 const today = new Date();
 const year = today.getFullYear();
-const month = MONTHS[today.getMonth()];
+const month = MONTHS[today.getMonth()]!;
 
 /**
  * AppResults
@@ -132,16 +132,35 @@ async function handleRunResults(result: AmaceResult) {
  *  testedOndevices - key to identify which device the app was tested on.
  *
  */
-function deviceBuildkey(result: BrokenAppResult | AmaceResult) {
+function deviceBuildkey(result: AmaceResult | TestedHistoryStep) {
   const deviceName = result.deviceInfo.split("-")[0]!; // helios
   const buildNamePieces = result.buildInfo.split("-"); // helios
-  const buildName = buildNamePieces.slice(0, 2).join("");
+  const buildName = buildNamePieces.slice(0, 2).join(" ");
   return `${deviceName}${buildName}|`;
 }
+
+// Given AmaceResult, create a snapshot of the history
+const makeTestHistory = (amaceResult: AmaceResult) => {
+  return {
+    testedOndevice: deviceBuildkey(amaceResult),
+    runID: amaceResult.runID,
+    runTS: amaceResult.runTS,
+    appTS: amaceResult.appTS,
+    buildInfo: amaceResult.buildInfo,
+    deviceInfo: amaceResult.deviceInfo,
+    appVersion: amaceResult.appVersion,
+    status: amaceResult.status,
+    brokenStatus: amaceResult.brokenStatus,
+    logs: amaceResult.logs,
+    loginResults: amaceResult.loginResults,
+    history: JSON.stringify(amaceResult.history),
+  } as TestedHistoryStep;
+};
 
 /**
  *
  * Updates broken app result if app has already been tested.
+ *  We wil update fields to reflect the devices the app was tested on and its reported failures.
  *
  */
 async function updateBrokenResult(
@@ -150,27 +169,37 @@ async function updateBrokenResult(
 ) {
   // If we havea  document that exists, that means we have tested this app this month already and its broken.
   // we only need to update this entry to add the version tested if its newer, or if we tested on a newer device build.
-  const dbData = (await docRef.get()).data() as BrokenAppResult;
+  const dbData = (await docRef.get()).data() as BrokenAppDBResult;
 
-  const updates = {} as BrokenAppResult;
-  updates["status"] = dbData.status;
-  updates["brokenStatus"] = dbData.brokenStatus;
+  // Check if app version and testedOnDevices are already stored, if so this is a repaet and we can move on....
+  let isDuplicate = false;
+  const testedHist = JSON.parse(dbData.testedHistory) as TestedHistoryStep[];
+  testedHist.forEach((tHist: TestedHistoryStep) => {
+    const key = `${result.appVersion}${deviceBuildkey(result)}`;
+    const curItemKey = `${tHist.appVersion}${deviceBuildkey(tHist)}`;
+    if (key === curItemKey) isDuplicate = true;
+  });
 
-  // Update AppVersion
-  const versionsTested = dbData.appVersions;
-  const latestVersionTested = result.appVersion;
+  if (isDuplicate) {
+    const histStep = makeTestHistory(result);
+    const prevSteps = JSON.parse(dbData.testedHistory) as TestedHistoryStep[];
+    let combinedSteps = [] as TestedHistoryStep[];
+    if (prevSteps.length > 0) {
+      combinedSteps = [...prevSteps, histStep];
+    } else {
+      combinedSteps = [histStep];
+    }
 
-  if (!versionsTested.includes(latestVersionTested))
-    updates["appVersions"] = `${versionsTested}${latestVersionTested}|`;
-
-  // Updates devices app was tested on
-  const devicesAlreadyTested = dbData.testedOndevices;
-
-  const _deviceBuildKey = deviceBuildkey(dbData);
-  if (!devicesAlreadyTested.includes(_deviceBuildKey))
-    updates["testedOndevices"] = `${devicesAlreadyTested}${_deviceBuildKey}|`;
-
-  await docRef.update(updates);
+    await docRef.update({
+      testedHistory: JSON.stringify(combinedSteps),
+    });
+  } else {
+    console.log(
+      `Broken app is a duplicate, we have already tested this app version(${
+        result.appVersion
+      }) on this device(${deviceBuildkey(result)})`
+    );
+  }
 }
 
 async function handleBrokenResults(result: AmaceResult) {
@@ -207,24 +236,16 @@ async function handleBrokenResults(result: AmaceResult) {
   console.log("handling broken result, exists: ", pkgNameDoc.exists);
 
   if (pkgNameDoc.exists) return await updateBrokenResult(result, pkgNameDocRef);
-  else
-    return await pkgNameDocRef.set({
+  else {
+    const appData = {
       appName,
       pkgName,
-      runID,
-      runTS: parseInt(runTS.toString()),
-      appTS: parseInt(appTS.toString()),
-      status,
-      brokenStatus,
-      buildInfo,
-      deviceInfo,
       appType,
-      appVersions: `${appVersion}|`,
-      history: JSON.stringify(history),
-      logs,
-      loginResults,
-      testedOndevices: deviceBuildkey(result),
-    });
+      testedHistory: JSON.stringify([makeTestHistory(result)]),
+    } as BrokenAppDBResult;
+
+    return await pkgNameDocRef.set(appData);
+  }
 }
 
 async function handleTop250Results(result: AmaceResult) {
@@ -261,24 +282,17 @@ async function handleTop250Results(result: AmaceResult) {
   console.log("handling Top 250 broken result, exists: ", pkgNameDoc.exists);
 
   if (pkgNameDoc.exists) return await updateBrokenResult(result, pkgNameDocRef);
-  else
-    return await pkgNameDocRef.set({
+  else {
+    console.log("Creating new handleTop250Results: ");
+    const appData = {
       appName,
       pkgName,
-      runID,
-      runTS: parseInt(runTS.toString()),
-      appTS: parseInt(appTS.toString()),
-      status,
-      brokenStatus,
-      buildInfo,
-      deviceInfo,
       appType,
-      appVersions: `${appVersion}|`,
-      history: JSON.stringify(history),
-      logs,
-      loginResults,
-      testedOndevices: deviceBuildkey(result),
-    });
+      testedHistory: JSON.stringify([makeTestHistory(result)]),
+    } as BrokenAppDBResult;
+
+    return await pkgNameDocRef.set(appData);
+  }
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -304,9 +318,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (
       amaceResult.brokenStatus >= 40 &&
       amaceResult.dSrcPath === "AppLists/Top 250"
-    )
+    ) {
+      console.log("handleTop250Results: ");
       await handleTop250Results(amaceResult);
-    else if (amaceResult.brokenStatus >= 40)
+    } else if (amaceResult.brokenStatus >= 40)
       await handleBrokenResults(amaceResult);
 
     res.status(200).json({
