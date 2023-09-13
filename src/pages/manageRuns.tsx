@@ -268,6 +268,17 @@ const ManageRunPage: React.FC = () => {
                   >
                     Stop Run
                   </p>
+                  <p
+                    onClick={() => {
+                      console.log("Updating...");
+                      wsInstance?.send(
+                        ping(`update_${currentDevice}`, {}, wssToken)
+                      );
+                    }}
+                    className=" cursor-crosshair border border-rose-500 pb-2 pl-4 pr-4 pt-2 hover:bg-rose-400  focus:bg-blue-400"
+                  >
+                    Update
+                  </p>
                 </div>
               </>
             ) : (

@@ -54,10 +54,12 @@ app.prepare().then(() => {
       const message = mping['msg']
       const wssToken = mping['data']['wssToken']
 
-      // console.log(`>>>> WSServer received message: w/ key ${wssToken}`, );
+      console.log(`>>>> WSServer received message: w/ JWToken ${wssToken}`);
+
 
       // Verify wssToken and reject if fails....
       try {
+        // console.log("Verifying w/ secret:", env.NEXTAUTH_SECRET, env.NEXTAUTH_SECRET.length)
         jwt.verify(wssToken, env.NEXTAUTH_SECRET, { algorithms: ['HS512'] });
         // Token is valid
       } catch (error) {
@@ -94,6 +96,9 @@ app.prepare().then(() => {
             client.send(pingBuffer.toString());
           }
           else if(message.toString().startsWith("runstopped:")){
+            client.send(pingBuffer.toString());
+          }
+          else if(message.toString().startsWith("update_")){
             client.send(pingBuffer.toString());
           }
         }
