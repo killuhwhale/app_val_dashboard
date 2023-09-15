@@ -229,18 +229,19 @@ const ManageRunPage: React.FC = () => {
                   (Copy &#38; paste from sheets, to ensure formatting.)
                   <br />
                   <strong>Select List:</strong> Click list to select. This will
-                  be the list of apps tested when presing 'Start Run'
+                  be the list of apps tested when presing &#39;Start Run&#39;
                   <br />
                   <hr />
                   <br />
                   <strong>Start Run:</strong> Select device, then an App List
-                  and press 'Start Run' [new run wont start if a run is in
-                  progress.]
+                  and press &#39;Start Run&#39; [new run wont start if a run is
+                  in progress.]
                   <br />
                   <strong>Query:</strong> Gets current status (running or
                   stopped)
                   <br />
-                  <strong>Stop:</strong> Press 'Stop Run' (cancels current run)
+                  <strong>Stop:</strong> Press &#39;Stop Run&#39; (cancels
+                  current run)
                   <br />
                   <strong>Update:</strong> Press Update and then Stop. (Updates
                   Host device from Git repo)
