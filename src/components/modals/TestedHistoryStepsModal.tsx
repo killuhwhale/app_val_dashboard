@@ -21,7 +21,6 @@ const TestedHistoryStepsModal: React.FC<ActionCancelProps> = ({
 
   const rebuiltAmaceResults = testedHistory?.map(
     (histStep: TestedHistoryStep) => {
-      // Todo() Rebuild a row for Table
       return {
         appName: brokenAppResult?.appName,
         pkgName: brokenAppResult?.pkgName,

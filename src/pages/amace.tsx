@@ -81,7 +81,6 @@ const AMACEPage: React.FC = () => {
     )
       return console.log("Early return due to date", lastStartDate);
 
-    // TODO() probably can remove casting to date?
     const q = query(
       collection(frontFirestore, "AmaceRuns"),
       where("date", ">=", formatFirebaseDate(new Date(startDate.getTime()))),

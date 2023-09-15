@@ -110,6 +110,16 @@ const ManageRunPage: React.FC = () => {
 
       wsInstance.onerror = (err) => {
         console.log("Error: ", err);
+        if (
+          (wsInstance &&
+            (wsInstance as WebSocket).readyState !== WebSocket.OPEN) ||
+          (wsInstance as WebSocket).readyState !== WebSocket.CLOSING ||
+          (wsInstance as WebSocket).readyState !== WebSocket.CONNECTING
+        ) {
+          (wsInstance as WebSocket).close();
+          setWsInstance(null);
+          // TODO() Check if this works by reconnecting on error....
+        }
       };
 
       wsInstance.onmessage = (evt) => {
@@ -167,7 +177,8 @@ const ManageRunPage: React.FC = () => {
               RECONNECT_DELAY / 1000
             } seconds...`
           );
-          setTimeout(connectToWebSocket, RECONNECT_DELAY);
+          setWsInstance(null);
+          // setTimeout(connectToWebSocket, RECONNECT_DELAY);
         }
       };
     }

@@ -30,7 +30,6 @@ const useFirebaseSession = () => {
     if (status == "authenticated") return;
 
     if (session && session.status === "authenticated") {
-      // signInWithCredential(auth, )  TODO() Setup Firebase/Auth for lcient side?
       console.log("signInWithCustomToken", session.data.user);
 
       signInWithCustomToken(frontEndAuth, session.data.user.custom_token)
