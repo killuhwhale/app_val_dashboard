@@ -111,10 +111,8 @@ const ManageRunPage: React.FC = () => {
       wsInstance.onerror = (err) => {
         console.log("Error: ", err);
         if (
-          (wsInstance &&
-            (wsInstance as WebSocket).readyState !== WebSocket.OPEN) ||
-          (wsInstance as WebSocket).readyState !== WebSocket.CLOSING ||
-          (wsInstance as WebSocket).readyState !== WebSocket.CONNECTING
+          (wsInstance && wsInstance.readyState !== WebSocket.OPEN) ||
+          wsInstance.readyState !== WebSocket.CLOSING
         ) {
           (wsInstance as WebSocket).close();
           setWsInstance(null);
