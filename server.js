@@ -101,11 +101,14 @@ app.prepare().then(() => {
           else if(message.toString().startsWith("update_")){
             client.send(pingBuffer.toString());
           }
+          else if(message.toString().startsWith("updating:")){
+            client.send(pingBuffer.toString());
+          }
         }
       });
     });
 
-    ws.send(ping("Hello from WebSocket server bro nextjs!", {}));
+    ws.send(ping("Hello from WebSocket server nextjs!", {}));
   });
 
   server.on("upgrade", (req, socket, head) => {

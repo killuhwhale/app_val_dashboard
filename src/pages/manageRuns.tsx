@@ -20,7 +20,7 @@ import CreateAppListModal from "~/components/modals/CreateAppListModal";
 import EditAppListModal from "~/components/modals/EditAppListModal";
 import Dropdown from "~/components/select/dropdown";
 import { ping, pj, wssURL } from "~/components/shared";
-import { MdEditSquare, MdNoteAdd } from "react-icons/md";
+import { MdInfoOutline, MdEditSquare, MdNoteAdd } from "react-icons/md";
 import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
 import { Tooltip } from "react-tooltip";
 import TwoThirdsColumn from "~/components/columns/TwoThirdsColumn";
@@ -202,6 +202,7 @@ const ManageRunPage: React.FC = () => {
     progressRef.current!.innerHTML = lastMsg;
   }, [lastMsg]);
 
+  const InfoIconTTID = "InfoTooltipID";
   return (
     <>
       <TwoThirdsColumn height="min-h-[535px] h-[90vh]">
@@ -216,6 +217,50 @@ const ManageRunPage: React.FC = () => {
               }}
               currentItem={currentDevice}
             />
+          </div>
+          <div className="flex w-6 w-full justify-end">
+            <div className="flex w-6 " data-tooltip-id={InfoIconTTID}>
+              <MdInfoOutline className="cursor-pointer" size={24} />
+              <Tooltip variant="dark" id={InfoIconTTID}>
+                <div>
+                  <strong>App Lists</strong>
+                  <br />
+                  <strong>Create List:</strong> Add a new list of apps to test.
+                  (Copy &#38; paste from sheets, to ensure formatting.)
+                  <br />
+                  <strong>Select List:</strong> Click list to select. This will
+                  be the list of apps tested when presing 'Start Run'
+                  <br />
+                  <hr />
+                  <br />
+                  <strong>Start Run:</strong> Select device, then an App List
+                  and press 'Start Run' [new run wont start if a run is in
+                  progress.]
+                  <br />
+                  <strong>Query:</strong> Gets current status (running or
+                  stopped)
+                  <br />
+                  <strong>Stop:</strong> Press 'Stop Run' (cancels current run)
+                  <br />
+                  <strong>Update:</strong> Press Update and then Stop. (Updates
+                  Host device from Git repo)
+                  <br />
+                  <br />
+                  <hr />
+                  <br />
+                  <strong>View Runs:</strong> View each run in Amace-E.
+                  <br />
+                  <strong>Top 250:</strong> View all failed apps from Top 250
+                  O4C apps
+                  <br />
+                  <strong>Broken Apps:</strong> View all failed apps from all
+                  other lists tested. (A collection of broken apps grouped
+                  monthly.)
+                  <br />
+                  <br />
+                </div>
+              </Tooltip>
+            </div>
           </div>
           <div className=" mt-[30px] flex flex-col items-center justify-center">
             {currentDevice.length > 0 ? (
