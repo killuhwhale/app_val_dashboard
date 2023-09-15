@@ -114,7 +114,7 @@ const ManageRunPage: React.FC = () => {
           (wsInstance && wsInstance.readyState !== WebSocket.OPEN) ||
           wsInstance.readyState !== WebSocket.CLOSING
         ) {
-          (wsInstance as WebSocket).close();
+          wsInstance.close();
           setWsInstance(null);
           // TODO() Check if this works by reconnecting on error....
         }
