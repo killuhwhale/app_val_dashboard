@@ -37,6 +37,72 @@ const ReplaceDateTimePattern =
 
 const ReplaceDateTimePatternSecond =
   /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z/;
+
+const isValidIP = (ip: string) => {
+  const ipPieces = ip.split(".");
+  console.log("ipPieces: ", ipPieces);
+  let valid = true;
+  if (ipPieces.length > 5) {
+    // ip should only contain 4 parts
+    return false;
+  }
+
+  if (ipPieces.length === 5 && ip.endsWith(".")) {
+    return false;
+  }
+
+  ipPieces.forEach((piece: string) => {
+    console.log("piece len", piece.length);
+    if (piece.length > 3 || !/^\d*$/.test(piece)) {
+      valid = false;
+    }
+  });
+
+  return valid;
+};
+
+const isValidIPString = (val: string) => {
+  let isvalid = true;
+  val.split(" ").forEach((ip) => {
+    // Build string, if string isnt empty, then some of the ips are invalid
+    if (!isValidIP(ip)) {
+      isvalid = false;
+    }
+  });
+  return isvalid;
+};
+
+// stores dutIPs under hostDevice key. Create new entry is key DNE.
+const updateDeviceNameDutsLocalStorage = (
+  hostDevice: string,
+  dutIPs: string
+) => {
+  const currentData = localStorage.getItem("devices");
+
+  // Parse the data if it exists, otherwise start with an empty object
+  // eslint-disable-next-line
+  const data = currentData ? JSON.parse(currentData) : {};
+
+  // Update the data with the provided hostDevice and dutIPs
+  // eslint-disable-next-line
+  data[hostDevice] = dutIPs;
+
+  // Store the updated data back to localStorage
+  localStorage.setItem("devices", JSON.stringify(data));
+};
+
+const getDeviceNameDutsLocalStorage = (hostDevice: string): string => {
+  const currentData = localStorage.getItem("devices");
+
+  // Parse the data if it exists, otherwise start with an empty object
+  // eslint-disable-next-line
+  const data = currentData ? JSON.parse(currentData) : {};
+
+  // Update the data with the provided hostDevice and dutIPs
+  // eslint-disable-next-line
+  return data[hostDevice] ? data[hostDevice] : "";
+};
+
 const ManageRunPage: React.FC = () => {
   const router = useRouter();
   const { query: _query } = router;
@@ -212,6 +278,14 @@ const ManageRunPage: React.FC = () => {
   }, [lastMsg]);
 
   const InfoIconTTID = "InfoTooltipID";
+
+  useEffect(() => {
+    if (currentDevice) {
+      getDeviceNameDutsLocalStorage(currentDevice);
+    }
+  }, [currentDevice]);
+
+  const [duts, setDuts] = useState("");
   return (
     <>
       <TwoThirdsColumn height="min-h-[535px] h-[90vh]">
@@ -285,11 +359,19 @@ const ManageRunPage: React.FC = () => {
                     onClick={() => {
                       if (!selectedList?.listname)
                         return alert("Select a list!");
+
+                      // TODO() implement more sophisticated ip addr check
+                      // However, we are doing a few simple checks to help nudge the user in the right direction.
+                      // if (!isValidIpString(duts))
+                      //   return alert(`Invalid duts: ${duts}`);
+
+                      updateDeviceNameDutsLocalStorage(currentDevice, duts);
+
                       console.log("Starting run using list: ", selectedList);
                       wsInstance?.send(
                         ping(
                           `startrun_${currentDevice}`,
-                          selectedList,
+                          { ...selectedList, devices: duts },
                           wssToken
                         )
                       );
@@ -334,6 +416,20 @@ const ManageRunPage: React.FC = () => {
                   >
                     Update
                   </p>
+                </div>
+                <div className=" mt-12 flex w-full flex-row items-center justify-center">
+                  <p>Devices to test on: </p>{" "}
+                  <input
+                    className="ml-4 w-1/2 rounded-md bg-slate-500 p-2"
+                    value={duts}
+                    onChange={(ev) => {
+                      const val = ev.target?.value;
+                      const isvalid = isValidIPString(val);
+                      if (isvalid) {
+                        setDuts(ev.target?.value);
+                      }
+                    }}
+                  />
                 </div>
               </>
             ) : (
