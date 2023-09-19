@@ -361,9 +361,8 @@ const ManageRunPage: React.FC = () => {
                         return alert("Select a list!");
 
                       // TODO() implement more sophisticated ip addr check
-                      // However, we are doing a few simple checks to help nudge the user in the right direction.
-                      // if (!isValidIpString(duts))
-                      //   return alert(`Invalid duts: ${duts}`);
+                      if (!duts || duts.length < "0.0.0.0".length)
+                        return alert("Enter ip address for target duts!");
 
                       updateDeviceNameDutsLocalStorage(currentDevice, duts);
 
