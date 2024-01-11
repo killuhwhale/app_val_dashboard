@@ -22,11 +22,6 @@ export const env = createEnv({
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
       process.env.VERCEL ? z.string().min(1) : z.string().url(),
     ),
-    // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
-    DISCORD_CLIENT_ID: z.string(),
-    DISCORD_CLIENT_SECRET: z.string(),
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
   },
 
   /**
@@ -36,14 +31,6 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
-    NEXT_PUBLIC_GOOGLE_PROJECT_ID: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_API_KEY: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
-    NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET: z.string().min(1),
   },
 
   /**
@@ -55,18 +42,6 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
-    DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    NEXT_PUBLIC_GOOGLE_PROJECT_ID: process.env.GOOGLE_PROJECT_ID,
-    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET: process.env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL
   },
 });

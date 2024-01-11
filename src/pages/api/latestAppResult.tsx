@@ -1,11 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
-//import AppRequest from "~/pages/api/latestAppResult"
-
-// initializeApp({
-//   credential: applicationDefault(),
-// });
+import CONFIG from "../../../config.json";
 
 type AppRequest = {
   pkgName: string;
@@ -20,10 +16,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello get" });
   else if (req.method !== "POST")
     return res.status(404).json({ text: "Hello 404" });
-  else if (
-    req.headers.authorization !==
-    env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET
-  )
+  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
     return res.status(403).json({ text: "Hello unauth guy" });
 
   try {
@@ -31,24 +24,30 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const body = req.body as AppRequest;
     console.log("Incoming body: ", req.body, body);
 
-    const {
-      pkgName,
-      deviceInfo,
-    } = JSON.parse(JSON.stringify(req.body)) as AppRequest;
+    const { pkgName, deviceInfo } = JSON.parse(
+      JSON.stringify(req.body)
+    ) as AppRequest;
 
     // Get the device name
     const device = deviceInfo.split(" - ")[0];
     console.log("Device name", device);
     console.log("Device info", deviceInfo);
-    
+
     // Get latest app result on device
-    let entry, id = "";
-    const querySnapshot = await db.collection(`AppResults`).doc(`${pkgName}`).collection(`${device || ''}`).orderBy("runTS", "desc").limit(1).get();
+    let entry,
+      id = "";
+    const querySnapshot = await db
+      .collection(`AppResults`)
+      .doc(`${pkgName}`)
+      .collection(`${device || ""}`)
+      .orderBy("runTS", "desc")
+      .limit(1)
+      .get();
     const snapshotResult = querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        console.log(doc.id, " => ", doc.data());
-        entry = doc.data();
-        id = doc.id
+      // doc.data() is never undefined for query doc snapshots
+      console.log(doc.id, " => ", doc.data());
+      entry = doc.data();
+      id = doc.id;
     });
 
     console.log("Entry result", entry);
@@ -60,7 +59,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       },
       error: null,
     });
-
   } catch (err: any) {
     console.log("Caught error: ", err);
     res.status(500).json({

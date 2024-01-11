@@ -9,6 +9,13 @@
   - curl -X POST  -H "Authorization: token_here"  -H "Content-Type: application/json"  http://localhost:3000/api/createCreds
     - Credentials for downloaded apps during automation.
 
+
+# Google Cloud Console Credentials and Keys
+
+## src/utils/firebaseServiceAccount.json
+## src/utils/serviceAccountKey.json
+
+
 #Possible Chrome Ext:
 
 Change color of apps script since itsawful to look at white screen

@@ -2,7 +2,7 @@
 appcreds.json
 src/utils/firebaseServiceAccount.json
 src/utils/serviceAccountKey.json
-
+config.json
 
 # dependencies
 /node_modules

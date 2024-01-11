@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { MONTHS, compareStrings } from "~/components/shared";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
+import CONFIG from "../../../config.json";
+
 const db = firestore;
 
 type GlobalAppResult = {
@@ -301,10 +303,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello get" });
   else if (req.method !== "POST")
     return res.status(404).json({ text: "Hello 404" });
-  else if (
-    req.headers.authorization !==
-    env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET
-  )
+  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
     return res.status(403).json({ text: "Hello unauth guy" });
 
   try {

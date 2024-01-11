@@ -1,20 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
+import CONFIG from "../../../config.json";
 
 const db = firestore;
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  console.log(req.method);
+  console.log("applist: ", req.method);
   console.log(req.headers["content-type"]);
 
   if (req.method === "POST") res.status(200).json({ text: "Hello post" });
   else if (req.method !== "GET")
     return res.status(404).json({ text: "Hello 404" });
-  else if (
-    req.headers.authorization !==
-    env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET
-  )
+  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
     return res.status(403).json({ text: "Hello unauth guy" });
 
   try {

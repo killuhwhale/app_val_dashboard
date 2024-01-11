@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
-import { initializeApp, applicationDefault, cert } from "firebase-admin/app";
 import { firestore } from "~/utils/firestore";
 import { env } from "~/env.mjs";
+import CONFIG from "../../../config.json";
 
 // initializeApp({
 //   credential: applicationDefault(),
@@ -18,10 +17,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") res.status(200).json({ text: "Hello" });
   else if (req.method?.toLocaleLowerCase() !== "post")
     return res.status(404).json({ text: "Hello 404" });
-  else if (
-    req.headers.authorization !==
-    env.NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET
-  )
+  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
     return res.status(403).json({ text: "Hello unauthor guy" });
   try {
     const body = req.body as RawAppResult;

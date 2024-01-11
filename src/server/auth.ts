@@ -3,6 +3,7 @@ import {
   getServerSession,
   type NextAuthOptions,
   type DefaultSession,
+  Profile,
 } from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
@@ -12,7 +13,27 @@ import GoogleProvider from "next-auth/providers/google";
 import { FirestoreAdapter } from "@next-auth/firebase-adapter";
 import jwt, { Secret } from "jsonwebtoken";
 import { firestore, auth, backEndApp } from "~/utils/firestore";
+import config from "config.json";
 import { AdapterUser } from "next-auth/adapters";
+
+const DEV_ENV = process.env.NODE_ENV === "development";
+
+console.warn(`Authentication is using ${DEV_ENV ? "dev" : "prod"} env!`);
+const devAccounts = [
+  "andayac@gmail.com",
+  "ethancox16@gmail.com",
+  "testminnie001@gmail.com",
+];
+
+function isDevAccount(profile: Profile | AdapterUser | undefined) {
+  // const isDevAct = devAccounts.indexOf(user.email) >= 0;
+  return profile && devAccounts.indexOf(profile!.email!) >= 0;
+}
+
+function isGoogleAccount(profile: Profile | AdapterUser | undefined) {
+  // const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
+  return profile && (profile!.email!.split("@")[1] ?? "") === "google.com";
+}
 
 type AppValUser = {
   id: string;
@@ -34,7 +55,7 @@ declare module "next-auth" {
   }
 }
 
-function encodeJWT(user: AppValUser) {
+function encodeJWT(user: AdapterUser) {
   const maxAge = 10 * 24 * 60 * 60 * 1000;
   const jwtClaims = {
     email: user.email,
@@ -56,36 +77,18 @@ function encodeJWT(user: AppValUser) {
 export const authOptions: NextAuthOptions = {
   secret: env.NEXTAUTH_SECRET,
   callbacks: {
-    // jwt: ({ account, token, user, profile, session, trigger }) => {
-    //   console.log("JWT callback: ", token, user, account);
-
-    //   if (account?.accessToken) {
-    //     token.accessToken = account.accessToken;
-    //   }
-    //   return token;
-    // },
     session: async ({ session, user, token }) => {
-      let customToken = "";
       // console.log("Session callback: check for access token: ", session, token);
-      const isDevAct =
-        [
-          "andayac@gmail.com",
-          "ethancox16@gmail.com",
-          "testminnie001@gmail.com",
-        ].indexOf(user.email) >= 0;
-      const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
-      let wssToken;
-      if (isDevAct || isGoogler) {
+      let customToken,
+        wssToken = "";
+      if (isDevAccount(user) || isGoogleAccount(user) || DEV_ENV) {
         try {
           customToken = await auth.createCustomToken(user.email ?? "");
-          // eslint-disable-next-line
-          wssToken = encodeJWT(user as AdapterUser as unknown as AppValUser);
-          // console.log("Custom token:", wssToken);
+          wssToken = encodeJWT(user);
         } catch (err) {
           console.log("Error auth.createCustomToken(): ", err);
         }
       }
-      // console.log("Session auth: ", wssToken);
       return {
         ...session,
         user: {
@@ -105,23 +108,8 @@ export const authOptions: NextAuthOptions = {
         profile.email &&
         account.provider === "google"
       ) {
-        const isDevAct =
-          [
-            "andayac@gmail.com",
-            "ethancox16@gmail.com",
-            "testminnie001@gmail.com",
-          ].indexOf(profile.email) >= 0;
-        //   abc@google.com => ['abc', 'google.com']
-        const isGoogler = (profile.email.split("@")[1] ?? "") === "google.com";
-        console.log(
-          "isDev or isGoog",
-          isDevAct,
-          isGoogler,
-          isDevAct || isGoogler
-        );
-        return isDevAct || isGoogler;
+        return isDevAccount(profile) || isGoogleAccount(profile) || DEV_ENV;
       }
-
       console.log("Sign in: false");
       return false;
     },
@@ -131,8 +119,8 @@ export const authOptions: NextAuthOptions = {
   // adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      clientId: config.oauthcreds.web.client_id,
+      clientSecret: config.oauthcreds.web.client_secret,
     }),
     /**
      * ...add more providers here.

@@ -35,10 +35,6 @@ brokenStatusReasons.set("101", "FailedInstall");
 brokenStatusReasons.set("102", "FailedLaunch");
 brokenStatusReasons.set("103", "FailedAmaceCheck");
 
-// When updating GCP project these need new names.
-const frontendFirestoreName = "frontendv2";
-const backendFirestoreName = "backendv3";
-
 const ping = (
   msg: string,
   // eslint-disable-next-line
@@ -148,8 +144,6 @@ export {
   statusReasons,
   brokenStatusReasons,
   wssURL,
-  frontendFirestoreName,
-  backendFirestoreName,
   ping,
   pj,
   DefaultDict,

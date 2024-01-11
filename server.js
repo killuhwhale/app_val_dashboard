@@ -2,8 +2,8 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const WebSocket = require("ws");
-const { env } = require("process");
 const jwt = require('jsonwebtoken');
+const config = require("./config.json");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -11,12 +11,13 @@ const port = process.env.PORT ?? 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
+// Create a message to send.
 const ping = (msg, data) => {
   return JSON.stringify({ msg, data });
 };
 
+// parseJson
 const pj = (s) => {
-  // parseJson
   return JSON.parse(s);
 };
 
@@ -28,13 +29,7 @@ app.prepare().then(() => {
       const parsedUrl = parse(req.url, true);
       const { pathname, query } = parsedUrl;
 
-      if (pathname === "/a") {
-        await app.render(req, res, "/a", query);
-      } else if (pathname === "/b") {
-        await app.render(req, res, "/b", query);
-      } else {
-        await handle(req, res, parsedUrl);
-      }
+      await handle(req, res, parsedUrl);
     } catch (err) {
       console.error("Error occurred handling", req.url, err);
       res.statusCode = 500;
@@ -44,64 +39,31 @@ app.prepare().then(() => {
   // Setup the WebSocket Server
   const wss = new WebSocket.Server({ port: 3001 });
 
-
   wss.on("connection", (ws) => {
-    // console.log("Client connected");
+    console.log("Client connected");
 
     // Echo back to clients
     ws.on("message", (pingBuffer) => {
       const mping = pj(pingBuffer)
       const message = mping['msg']
       const wssToken = mping['data']['wssToken']
-
-      console.log(`>>>> WSServer received message: w/ JWToken ${wssToken}`);
-
+      console.debug(`>>>> WSServer received message: w/ JWToken ${wssToken}`);
 
       // Verify wssToken and reject if fails....
       try {
         // console.log("Verifying w/ secret:", env.NEXTAUTH_SECRET, env.NEXTAUTH_SECRET.length)
-        jwt.verify(wssToken, env.NEXTAUTH_SECRET, { algorithms: ['HS512'] });
+        jwt.verify(wssToken, config.NEXTAUTH_SECRET, { algorithms: ['HS512'] });
         // Token is valid
       } catch (error) {
         return console.error('Token verification failed:', error.message);
       }
-      // Broadcast the message to all connected clients - basic sanitize/ routing .toString plus match
-      // TODO() Sanitize input and maybe create a router?
+      // Broadcast the message to all connected clients
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
+          const messageText = message.toString();
+          const messagePattern = /^(startrun_|progress:|runstarted:|querystatus_|getdevicename|getdevicename:|status:|stoprun_|runstopped:|update_|updating:)/;
 
-
-          if (message.toString().startsWith("startrun_")) {
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("progress:")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("runstarted:")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("querystatus_")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString() == "getdevicename"){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("getdevicename:")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("status:") ){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("stoprun_")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("runstopped:")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("update_")){
-            client.send(pingBuffer.toString());
-          }
-          else if(message.toString().startsWith("updating:")){
+          if (messagePattern.test(messageText)) {
             client.send(pingBuffer.toString());
           }
         }
@@ -120,7 +82,7 @@ app.prepare().then(() => {
       // handle(req, socket, head);
       // socket.destroy();
     } else if (pathname.startsWith("wss")) {
-      console.log("Handling upgrade to wss......");
+      console.log("Handling upgrade to wss...");
       wss.handleUpgrade(req, socket, head, (ws) => {
         wss.emit("connection", ws, req);
       });
