@@ -47,7 +47,7 @@ app.prepare().then(() => {
       const mping = pj(pingBuffer)
       const message = mping['msg']
       const wssToken = mping['data']['wssToken']
-      console.debug(`>>>> WSServer received message: w/ JWToken ${wssToken}`);
+      console.debug(`>>>> WSServer received message: w/ msg ${message}`);
 
       // Verify wssToken and reject if fails....
       try {
