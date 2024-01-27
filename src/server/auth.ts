@@ -27,12 +27,12 @@ const devAccounts = [
 
 function isDevAccount(profile: Profile | AdapterUser | undefined) {
   // const isDevAct = devAccounts.indexOf(user.email) >= 0;
-  return profile && devAccounts.indexOf(profile!.email!) >= 0;
+  return profile && devAccounts.indexOf(profile.email!) >= 0;
 }
 
 function isGoogleAccount(profile: Profile | AdapterUser | undefined) {
   // const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
-  return profile && (profile!.email!.split("@")[1] ?? "") === "google.com";
+  return profile && (profile.email!.split("@")[1] ?? "") === "google.com";
 }
 
 type AppValUser = {
