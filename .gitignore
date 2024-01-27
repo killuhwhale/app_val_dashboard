@@ -3,7 +3,7 @@ appcreds.json
 src/utils/firebaseServiceAccount.json
 src/utils/serviceAccountKey.json
 config.json
-
+.env_backup
 # dependencies
 /node_modules
 /.pnp

@@ -1,5 +1,5 @@
+# Executing this heredoc, will create the .env file that next js, auth js and firebase needs
 #!/bin/bash
-# Executing this file will write this content to a service file. This will start the Django server when the machine turns on which allows the automation program to communicate with the host.
 CONFIG_CONTENT=$(<./config.json)
 
 
@@ -16,5 +16,4 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID="$(echo "$CONFIG_CONTENT" | jq -r ".NEXT_PUBLIC_
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="$(echo "$CONFIG_CONTENT" | jq -r ".NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET")"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="$(echo "$CONFIG_CONTENT" | jq -r ".NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID")"
 NEXT_PUBLIC_FIREBASE_APP_ID="$(echo "$CONFIG_CONTENT" | jq -r ".NEXT_PUBLIC_FIREBASE_APP_ID")"
-NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET="$(echo "$CONFIG_CONTENT" | jq -r ".NEXT_PUBLIC_FIREBASE_HOST_POST_ENDPOINT_SECRET")"
 EOF
