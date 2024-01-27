@@ -22,7 +22,7 @@ const backEndApp =
       // ),
       // credential: admin.credential.cert(adc as firebase.ServiceAccount),
       // credential: admin.credential.refreshToken(adc),
-      // credential: admin.credential.applicationDefault(),
+      credential: admin.credential.applicationDefault(),
 
       projectId: config.PROJECT_INFO.projectId,
       storageBucket: config.PROJECT_INFO.storageBucket,
