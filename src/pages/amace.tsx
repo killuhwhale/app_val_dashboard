@@ -8,23 +8,20 @@ import {
   collection,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
   query,
   where,
 } from "firebase/firestore";
 import { useRouter } from "next/router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MdViewModule } from "react-icons/md";
 import { Tooltip } from "react-tooltip";
 import AmaceResultTable from "~/components/tables/AmaceResultTable";
 import AmaceRuns from "~/components/AmaceRuns";
 import DatePicker from "~/components/AppValDatePicker";
-import ResultLink from "~/components/ResultLink";
+
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
-import Dropdown from "~/components/select/dropdown";
-import { wssURL } from "~/components/shared";
 
 import { processStats } from "~/utils/chartUtils";
 import {
@@ -98,8 +95,6 @@ const AMACEPage: React.FC = () => {
       let selDocIdx = 0;
       let idx = 0;
       querySnapshot.forEach((doc) => {
-        // TODO detect doc id and set
-        // console.log("Doc id", doc.id);
         if (doc.id === qSelectedDocID) {
           selDocIdx = idx;
         }
@@ -107,11 +102,8 @@ const AMACEPage: React.FC = () => {
         idx++;
       });
       setAppRunResults(appRuns);
-      // console.log("AppRuns: ", appRuns);
-      // Set a default doc
-      // console.log("AppRuns: ", selectedDoc);
+
       if (!selectedDoc) {
-        // console.log("Setting Selected Doc: ", appRuns[selDocIdx]);
         setSelectedDoc(appRuns[selDocIdx]);
       }
     });
@@ -126,30 +118,17 @@ const AMACEPage: React.FC = () => {
   const [appResults, setAppResults] = useState<AmaceDBResult[]>([]);
 
   useEffect(() => {
-    // const _appResults: AmaceDBResult[] = [];
     if (!selectedDoc) return;
-    // console.log("Getting sub collection", selectedDoc);
+
     // eslint-disable-next-line
     const getSubCollection = async () => {
-      // Get Doc on subcollection once, will not update as new apps are added.
-      // const results = await getDocs(
-      //   collection(frontFirestore, `AppRuns/${selectedDoc.id}/apps`)
-      // );
-      // results.forEach((appData) => {
-      //   console.log("appData: ", appData.data());
-      //   _appResults.push(appData.data() as AmaceDBResult);
-      // });
-      // processStats(_appResults);
-
       // Monitor collection as apps are added.
       const unSub = onSnapshot(
         collection(frontFirestore, `AmaceRuns/${selectedDoc.id}/apps`),
         (colSnap: QuerySnapshot<DocumentData>) => {
           const _appResults: AmaceDBResult[] = [];
-          // console.log("Sub collection SS: ", colSnap);
 
           colSnap.docs.forEach((appData) => {
-            // console.log("Pussing from SS: ", appData.data());
             _appResults.push(appData.data() as AmaceDBResult);
           });
           const stats = processStats(_appResults);

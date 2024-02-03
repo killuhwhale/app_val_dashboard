@@ -61,8 +61,6 @@ const MonthlyhRows: React.FC<{
   );
 };
 
-export const isBrowser = typeof window !== "undefined";
-
 const Top250Page: React.FC = () => {
   const today = new Date();
   const router = useRouter();

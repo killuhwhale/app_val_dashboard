@@ -24,10 +24,6 @@ import {
 import { bcolors, formatFirebaseDate } from "~/utils/dateUtils";
 import { frontFirestore } from "~/utils/frontFirestore";
 
-type AppsScriptUrlFB = {
-  url: string;
-};
-
 const MonthlyhRows: React.FC<{
   onSelect(month: QueryDocumentSnapshot<DocumentData>): void;
   selected: QueryDocumentSnapshot<DocumentData> | null;
@@ -62,6 +58,7 @@ const MonthlyhRows: React.FC<{
 };
 
 export const isBrowser = typeof window !== "undefined";
+
 const BAPage: React.FC = () => {
   const today = new Date();
   const router = useRouter();

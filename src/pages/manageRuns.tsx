@@ -3,15 +3,9 @@
 import { Unsubscribe } from "firebase/auth";
 import {
   DocumentData,
-  QueryDocumentSnapshot,
   QuerySnapshot,
   collection,
-  doc,
-  getDoc,
-  getDocs,
   onSnapshot,
-  query,
-  where,
 } from "firebase/firestore";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
@@ -30,7 +24,7 @@ import { AnsiUp } from "ansi_up";
 const ansi: AnsiUp = new AnsiUp();
 ansi.use_classes = true;
 
-export const isBrowser = typeof window !== "undefined";
+const isBrowser = typeof window !== "undefined";
 
 const ReplaceDateTimePattern =
   /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z \[\d{2}:\d{2}:\d{2}\.\d+\]/;
@@ -106,11 +100,7 @@ const getDeviceNameDutsLocalStorage = (hostDevice: string): string => {
 const ManageRunPage: React.FC = () => {
   const router = useRouter();
   const { query: _query } = router;
-  const [init, setInit] = useState(true);
   const unSubRef = useRef<Unsubscribe>();
-  const [appRunResults, setAppRunResults] = useState<
-    QueryDocumentSnapshot<DocumentData>[]
-  >([]);
 
   const [appLists, setAppLists] = useState<AppListEntry[]>([]);
   const [selectedList, setSelectedList] = useState<AppListEntry | null>(null);
@@ -120,10 +110,7 @@ const ManageRunPage: React.FC = () => {
       collection(frontFirestore, `AppLists`),
       (colSnap: QuerySnapshot<DocumentData>) => {
         const _appLists: AppListEntry[] = [];
-        // console.log("Sub collection SS: ", colSnap);
-
         colSnap.docs.forEach((appData) => {
-          // console.log("Pussing from SS: ", appData.data());
           _appLists.push(appData.data() as AppListEntry);
         });
         setAppLists(_appLists);
@@ -182,7 +169,6 @@ const ManageRunPage: React.FC = () => {
         ) {
           wsInstance.close();
           setWsInstance(null);
-          // TODO() Check if this works by reconnecting on error....
         }
       };
 
