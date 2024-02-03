@@ -4,8 +4,14 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { signInWithCustomToken } from "firebase/auth";
+import {
+  signInWithCustomToken,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
 import config from "config.json";
+
+const provider = new GoogleAuthProvider();
 
 const frontEndApp = frontInitializeApp(
   config.firebaseAppInfo,
@@ -19,20 +25,26 @@ const frontFirestore = getFrontFirestore(frontEndApp);
 const useFirebaseSession = () => {
   const session = useSession();
   const [status, setStatus] = useState(session.status);
+  const [loggingIn, setLoggingIn] = useState(false);
+  console.log("useFirebaseSession func: ", session.status);
 
   useEffect(() => {
     if (status == "authenticated") return;
-
-    if (session && session.status === "authenticated") {
-      console.log("signInWithCustomToken", session.data.user);
-
-      signInWithCustomToken(frontEndAuth, session.data.user.custom_token)
-        .then(() => {
-          setStatus("authenticated");
-        })
-        .catch((err: any) => {
-          console.log("Error firebase session", err);
-        });
+    console.log("Session signInwithpop: ", session.status, !loggingIn);
+    if (session && session.status === "loading" && !loggingIn) {
+      console.log("setLoggingIn!!!!!!!!!!!!!!!!");
+      setLoggingIn(true);
+      try {
+        signInWithPopup(frontEndAuth, provider)
+          .then(() => {
+            setStatus("authenticated");
+          })
+          .catch((err: any) => {
+            console.log("Error firebase session", err);
+          });
+      } catch (err) {
+        console.log("Error firebase session login", err);
+      }
     }
   }, [session]);
 

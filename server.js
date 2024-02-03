@@ -5,10 +5,10 @@ const WebSocket = require("ws");
 const jwt = require('jsonwebtoken');
 const config = require("./config.json");
 
-const dev = process.env.NODE_ENV !== "production";
+const dev = process.env.NODE_ENV === "development";
 const hostname = "localhost";
 const port = process.env.PORT ?? 3000;
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname, port, });
 const handle = app.getRequestHandler();
 
 // Create a message to send.

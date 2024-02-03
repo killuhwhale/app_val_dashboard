@@ -5,9 +5,7 @@ import {
   type DefaultSession,
   Profile,
 } from "next-auth";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
-import { prisma } from "~/server/db";
 
 import GoogleProvider from "next-auth/providers/google";
 import { FirestoreAdapter } from "@next-auth/firebase-adapter";
@@ -18,29 +16,14 @@ import { AdapterUser } from "next-auth/adapters";
 
 const DEV_ENV = process.env.NODE_ENV === "development";
 
-console.warn(`Authentication is using ${DEV_ENV ? "dev" : "prod"} env!`);
-const devAccounts = [
-  "andayac@gmail.com",
-  "ethancox16@gmail.com",
-  "testminnie001@gmail.com",
-];
-
-function isDevAccount(profile: Profile | AdapterUser | undefined) {
-  // const isDevAct = devAccounts.indexOf(user.email) >= 0;
-  return profile && devAccounts.indexOf(profile.email!) >= 0;
-}
-
-function isGoogleAccount(profile: Profile | AdapterUser | undefined) {
-  // const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
-  return profile && (profile.email!.split("@")[1] ?? "") === "google.com";
-}
+console.log(
+  `\u001B[31m Authentication is using ${DEV_ENV ? "dev" : "prod"} env!`
+);
 
 type AppValUser = {
   id: string;
   custom_token: string;
   wssToken: string;
-  // ...other properties
-  // role: UserRole;
 } & DefaultSession["user"];
 
 /**
@@ -69,6 +52,15 @@ function encodeJWT(user: AdapterUser) {
   return encodedToken;
 }
 
+function isDevAccount(profile: Profile | AdapterUser | undefined) {
+  return profile && config.devAccounts.indexOf(profile.email!) >= 0;
+}
+
+function isGoogleAccount(profile: Profile | AdapterUser | undefined) {
+  // const isGoogler = (user.email.split("@")[1] ?? "") === "google.com";
+  return profile && (profile.email!.split("@")[1] ?? "") === "google.com";
+}
+
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
@@ -77,16 +69,14 @@ function encodeJWT(user: AdapterUser) {
 export const authOptions: NextAuthOptions = {
   secret: env.NEXTAUTH_SECRET,
   callbacks: {
-    session: async ({ session, user, token }) => {
-      // console.log("Session callback: check for access token: ", session, token);
+    session: ({ session, user, token }) => {
       let customToken,
         wssToken = "";
       if (isDevAccount(user) || isGoogleAccount(user) || DEV_ENV) {
         try {
-          customToken = await auth.createCustomToken(user.email ?? "");
           wssToken = encodeJWT(user);
         } catch (err) {
-          console.log("Error auth.createCustomToken(): ", err);
+          console.log("Error wssToken encodeJWT: ", err);
         }
       }
       return {
@@ -108,6 +98,10 @@ export const authOptions: NextAuthOptions = {
         profile.email &&
         account.provider === "google"
       ) {
+        console.log(
+          "Auth Sign in returning: ",
+          isDevAccount(profile) || isGoogleAccount(profile) || DEV_ENV
+        );
         return isDevAccount(profile) || isGoogleAccount(profile) || DEV_ENV;
       }
       console.log("Sign in: false");
@@ -122,15 +116,6 @@ export const authOptions: NextAuthOptions = {
       clientId: config.oauthcreds.web.client_id,
       clientSecret: config.oauthcreds.web.client_secret,
     }),
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
   ],
 };
 
