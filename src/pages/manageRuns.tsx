@@ -15,10 +15,11 @@ import EditAppListModal from "~/components/modals/EditAppListModal";
 import Dropdown from "~/components/select/dropdown";
 import { ping, pj, wssURL } from "~/components/shared";
 import { MdInfoOutline, MdEditSquare, MdNoteAdd } from "react-icons/md";
-import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
+import { frontFirestore } from "~/utils/frontFirestore";
 import { Tooltip } from "react-tooltip";
 import TwoThirdsColumn from "~/components/columns/TwoThirdsColumn";
 import { AnsiUp } from "ansi_up";
+import { useSession } from "next-auth/react";
 
 // eslint-disable-next-line
 const ansi: AnsiUp = new AnsiUp();
@@ -34,10 +35,7 @@ const ReplaceDateTimePatternSecond =
 
 const isValidIP = (ip: string) => {
   const ipPieces = ip.split(".");
-  console.log("ipPieces: ", ipPieces);
-  let valid = true;
   if (ipPieces.length > 5) {
-    // ip should only contain 4 parts
     return false;
   }
 
@@ -45,25 +43,13 @@ const isValidIP = (ip: string) => {
     return false;
   }
 
-  ipPieces.forEach((piece: string) => {
-    console.log("piece len", piece.length);
-    if (piece.length > 3 || !/^\d*$/.test(piece)) {
-      valid = false;
-    }
+  return !ipPieces.some((piece: string) => {
+    return piece.length > 3 || !/^\d*$/.test(piece);
   });
-
-  return valid;
 };
 
 const isValidIPString = (val: string) => {
-  let isvalid = true;
-  val.split(" ").forEach((ip) => {
-    // Build string, if string isnt empty, then some of the ips are invalid
-    if (!isValidIP(ip)) {
-      isvalid = false;
-    }
-  });
-  return isvalid;
+  return !val.split(" ").some((ip) => !isValidIP(ip));
 };
 
 // stores dutIPs under hostDevice key. Create new entry is key DNE.
@@ -127,9 +113,8 @@ const ManageRunPage: React.FC = () => {
   const [currentDevice, setCurrentDevice] = useState("");
   const RECONNECT_DELAY = 5000; // 5 seconds
 
-  const sesh = useFirebaseSession();
-  console.log("Manage Runs sesh: ", sesh);
-  const wssToken = sesh.data?.user.wssToken ?? "";
+  const { data: session, status } = useSession();
+  const wssToken = session?.user.wssToken ?? "";
   const MSG_LIMIT = 100;
   const connectToWebSocket = () => {
     console.log("connectToWebSocket", wsInstance);
@@ -173,7 +158,6 @@ const ManageRunPage: React.FC = () => {
       };
 
       wsInstance.onmessage = (evt) => {
-        console.log("raw message recv'd: ", evt.data);
         let mping;
         try {
           mping = pj(evt.data as string);
@@ -267,7 +251,9 @@ const ManageRunPage: React.FC = () => {
 
   useEffect(() => {
     if (currentDevice) {
-      getDeviceNameDutsLocalStorage(currentDevice);
+      const savedDUTIP = getDeviceNameDutsLocalStorage(currentDevice);
+      console.log("Setting saved DUT UP: ", savedDUTIP);
+      setDuts(savedDUTIP);
     }
   }, [currentDevice]);
 

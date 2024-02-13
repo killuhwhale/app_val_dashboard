@@ -112,34 +112,83 @@ const processStats = (amaceResults: AmaceDBResult[]) => {
   const reasons = getAmaceReasonStatObj();
 
   for (let i = 0; i < amaceResults.length; i++) {
-    const {
-      appName,
-      appTS,
-      buildInfo,
-      deviceInfo,
-      pkgName,
-      runID,
-      runTS,
-      status,
-    } = amaceResults[i]!;
+    const { status } = amaceResults[i]!;
 
-    if (status == 0) reasons.Fail++;
-    if (status == 1) reasons.LaunchFail++;
-    if (status == 2) reasons.Crashed++;
-    if (status == 10) reasons.Needspurchase++;
-    if (status == 20) reasons.Appisold++;
-    if (status == 30) reasons.Failedtoinstall++;
-    if (status == 31) reasons.TooManyAttempts++;
-    if (status == 40) reasons.Devicenotcompatible++;
-    if (status == 41) reasons.Chromebooknotcompatible++;
-    if (status == 50) reasons.CountryNA++;
-    if (status == 60) reasons.O4C++;
-    if (status == 70) reasons.O4CFSonly++;
-    if (status == 80) reasons.FSAmace++;
-    if (status == 90) reasons.Phoneonly++;
-    if (status == 100) reasons.Tabletonly++;
-    if (status == 110) reasons.Amace++;
-    if (status == 120) reasons.PWA++;
+    // if (status == 0) reasons.Fail++;
+    // if (status == 1) reasons.LaunchFail++;
+    // if (status == 2) reasons.Crashed++;
+    // if (status == 10) reasons.Needspurchase++;
+    // if (status == 20) reasons.Appisold++;
+    // if (status == 30) reasons.Failedtoinstall++;
+    // if (status == 31) reasons.TooManyAttempts++;
+    // if (status == 40) reasons.Devicenotcompatible++;
+    // if (status == 41) reasons.Chromebooknotcompatible++;
+    // if (status == 50) reasons.CountryNA++;
+    // if (status == 60) reasons.O4C++;
+    // if (status == 70) reasons.O4CFSonly++;
+    // if (status == 80) reasons.FSAmace++;
+    // if (status == 90) reasons.Phoneonly++;
+    // if (status == 100) reasons.Tabletonly++;
+    // if (status == 110) reasons.Amace++;
+    // if (status == 120) reasons.PWA++;
+
+    switch (status) {
+      case 0:
+        reasons.Fail++;
+        break;
+      case 1:
+        reasons.LaunchFail++;
+        break;
+      case 2:
+        reasons.Crashed++;
+        break;
+      case 10:
+        reasons.Needspurchase++;
+        break;
+      case 20:
+        reasons.Appisold++;
+        break;
+      case 30:
+        reasons.Failedtoinstall++;
+        break;
+      case 31:
+        reasons.TooManyAttempts++;
+        break;
+      case 40:
+        reasons.Devicenotcompatible++;
+        break;
+      case 41:
+        reasons.Chromebooknotcompatible++;
+        break;
+      case 50:
+        reasons.CountryNA++;
+        break;
+      case 60:
+        reasons.O4C++;
+        break;
+      case 70:
+        reasons.O4CFSonly++;
+        break;
+      case 80:
+        reasons.FSAmace++;
+        break;
+      case 90:
+        reasons.Phoneonly++;
+        break;
+      case 100:
+        reasons.Tabletonly++;
+        break;
+      case 110:
+        reasons.Amace++;
+        break;
+      case 120:
+        reasons.PWA++;
+        break;
+      // add more cases as needed
+      default:
+        // handle any cases not explicitly handled above
+        break;
+    }
   }
 
   return [

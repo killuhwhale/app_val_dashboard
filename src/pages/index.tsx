@@ -7,7 +7,6 @@ import FullColumn from "~/components/columns/FullColumn";
 import HalfColumn from "~/components/columns/HalfColumn";
 import ThirdColumn from "~/components/columns/ThirdColumn";
 import { api } from "~/utils/api";
-import { frontEndAuth, useFirebaseSession } from "~/utils/frontFirestore";
 
 export const formatDateToString = (date: Date): string => {
   return date.toLocaleDateString("en-US", {
@@ -18,9 +17,6 @@ export const formatDateToString = (date: Date): string => {
 };
 
 const Home: React.FC = () => {
-  const sesh = useFirebaseSession();
-  console.log(sesh);
-
   return (
     <>
       <FullColumn height="h-[85px]">

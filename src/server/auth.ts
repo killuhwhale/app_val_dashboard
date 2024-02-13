@@ -15,14 +15,12 @@ import config from "config.json";
 import { AdapterUser } from "next-auth/adapters";
 
 const DEV_ENV = process.env.NODE_ENV === "development";
-
 console.log(
-  `\u001B[31m Authentication is using ${DEV_ENV ? "dev" : "prod"} env!`
+  `\u001B[31m Authentication is using ${DEV_ENV ? "dev" : "prod"} env!\u001B[0m`
 );
 
 type AppValUser = {
   id: string;
-  custom_token: string;
   wssToken: string;
 } & DefaultSession["user"];
 
@@ -39,7 +37,7 @@ declare module "next-auth" {
 }
 
 function encodeJWT(user: AdapterUser) {
-  const maxAge = 10 * 24 * 60 * 60 * 1000;
+  const maxAge = 10 * 24 * 60 * 60 * 1000; // 10 days
   const jwtClaims = {
     email: user.email,
     iat: Date.now() / 1000,
@@ -70,8 +68,7 @@ export const authOptions: NextAuthOptions = {
   secret: env.NEXTAUTH_SECRET,
   callbacks: {
     session: ({ session, user, token }) => {
-      let customToken,
-        wssToken = "";
+      let wssToken = "";
       if (isDevAccount(user) || isGoogleAccount(user) || DEV_ENV) {
         try {
           wssToken = encodeJWT(user);
@@ -84,27 +81,20 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: user.id,
-          custom_token: customToken,
           wssToken: wssToken,
         },
       };
     },
     signIn: ({ account, profile, user, credentials }) => {
-      // Basic filtering of emails after a user signs in via Google
-      console.log("Sign in called with ", account?.expires_at, profile);
-      if (
-        account &&
-        profile &&
-        profile.email &&
-        account.provider === "google"
-      ) {
-        console.log(
-          "Auth Sign in returning: ",
-          isDevAccount(profile) || isGoogleAccount(profile) || DEV_ENV
-        );
-        return isDevAccount(profile) || isGoogleAccount(profile) || DEV_ENV;
+      const isValid =
+        account && profile && profile.email && account.provider === "google";
+      if (isValid) {
+        const isGood =
+          isDevAccount(profile) || isGoogleAccount(profile) || DEV_ENV;
+        console.debug("Auth Sign in returning: ", isGood);
+        return isGood;
       }
-      console.log("Sign in: false");
+      console.debug("Auth Sign in failed.");
       return false;
     },
   },

@@ -28,12 +28,12 @@ import {
   formatFirebaseDate,
   formatFromDatepickerToFirebase,
 } from "~/utils/dateUtils";
-import { frontFirestore, useFirebaseSession } from "~/utils/frontFirestore";
+import { frontFirestore } from "~/utils/frontFirestore";
 
 type AppsScriptUrlFB = {
   url: string;
 };
-export const isBrowser = typeof window !== "undefined";
+
 const AMACEPage: React.FC = () => {
   const [init, setInit] = useState(true);
   const unSubRangeResultsRef = useRef<Unsubscribe>();
@@ -68,8 +68,6 @@ const AMACEPage: React.FC = () => {
   const [totalByStatus, setTotalByStatus] = useState<BarLineChartDataPoint[]>(
     []
   );
-
-  const sesh = useFirebaseSession();
 
   useEffect(() => {
     if (
