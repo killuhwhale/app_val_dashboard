@@ -34,6 +34,27 @@ type AppsScriptUrlFB = {
   url: string;
 };
 
+const AMACEBarChart: React.FC<{
+  appResults: AmaceDBResult[];
+  totalByStatus: BarLineChartDataPoint[];
+}> = ({ appResults, totalByStatus }) => {
+  return (
+    <div>
+      <h2 className="pl-10 text-center">Totals Bar Chart</h2>
+
+      <div className="h-[420px]">
+        {appResults.length > 0 ? (
+          <BarChartPassFailTotals data={totalByStatus} />
+        ) : (
+          <div className="flex h-[400px] flex-1 items-center justify-center">
+            <p className="text-white">Loading...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AMACEPage: React.FC = () => {
   const [init, setInit] = useState(true);
   const unSubRangeResultsRef = useRef<Unsubscribe>();
@@ -152,11 +173,10 @@ const AMACEPage: React.FC = () => {
       getDoc(doc(frontFirestore, `AppsScript/url`))
         .then((doc) => {
           const urlData = doc.data() as AppsScriptUrlFB;
-          console.log("Url from FB: ", urlData.url);
           setAppsScriptUrl(urlData.url);
         })
         .catch((err) =>
-          console.log("Error getting Apps Script URL from Firebase: ", err)
+          console.error("Error getting Apps Script URL from Firebase: ", err)
         );
     }
   });
@@ -187,55 +207,29 @@ const AMACEPage: React.FC = () => {
       </FullColumn>
 
       <FullColumn height="h-[120px]">
-        <div className="h-full w-full items-center justify-center bg-slate-800">
-          {appRunResults.length ? (
-            <AmaceRuns
-              docs={appRunResults}
-              height={0}
-              selectedDoc={selectedDoc}
-              onSelect={(sDoc) => setSelectedDoc(sDoc)}
-            />
-          ) : (
-            <div className="flex h-[85px] flex-1 items-center justify-center">
-              <p className="text-white">No App runs from selected date range</p>
-            </div>
-          )}
-        </div>
+        <AmaceRuns
+          docs={appRunResults}
+          height={0}
+          selectedDoc={selectedDoc}
+          onSelect={(sDoc) => setSelectedDoc(sDoc)}
+        />
       </FullColumn>
 
       <FullColumn height="h-[545px] mt-6">
-        {selectedDoc && appResults.length > 0 ? (
-          <AmaceResultTable
-            height={400}
-            key={`key__${selectedDoc.id}`}
-            parentKey={`key__${selectedDoc.id}`}
-            amaceResults={appResults}
-            startDate={startDate.getTime()}
-            endDate={endDate.getTime()}
-            selectedDocID={selectedDoc?.id ?? ""}
-            page="amace"
-          />
-        ) : (
-          <div className="flex h-[400px] flex-1 items-center justify-center">
-            <p className="text-white">Select an App Run Above</p>
-          </div>
-        )}
+        <AmaceResultTable
+          height={400}
+          key={`key__${selectedDoc?.id}`}
+          parentKey={`key__${selectedDoc?.id}`}
+          amaceResults={appResults}
+          startDate={startDate.getTime()}
+          endDate={endDate.getTime()}
+          selectedDocID={selectedDoc?.id ?? ""}
+          page="amace"
+        />
       </FullColumn>
 
       <FullColumn height="h-[500px]">
-        <div>
-          <h2 className="pl-10 text-center">Totals Bar Chart</h2>
-
-          <div className="h-[420px]">
-            {appResults.length > 0 ? (
-              <BarChartPassFailTotals data={totalByStatus} />
-            ) : (
-              <div className="flex h-[400px] flex-1 items-center justify-center">
-                <p className="text-white">Loading...</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <AMACEBarChart appResults={appResults} totalByStatus={totalByStatus} />
       </FullColumn>
     </>
   );

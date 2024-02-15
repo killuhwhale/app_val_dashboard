@@ -45,48 +45,58 @@ const AmaceRuns: React.FC<{
   };
 
   return (
-    <div className={`pt-1`}>
-      <p className="pl-4 text-white">
-        App runs:{" "}
-        <b>
-          <span className={` ${colors[docs.length % colors.length]!}`}>
-            {" "}
-            {docs.length}
-          </span>
-        </b>
-      </p>
-      <div
-        ref={containerRef}
-        className={`flex h-[75px] items-center space-x-4 overflow-auto p-2`}
-      >
-        {docs && docs.length ? (
-          docs.map((docu: QueryDocumentSnapshot<DocumentData>, idx: number) => {
-            const data = docu.data() as unknown as AppRun;
-            return (
-              <div
-                key={docu.id}
-                className={`${
-                  selectedDoc && selectedDoc.id === docu.id
-                    ? "bg-slate-700"
-                    : "bg-slate-900"
-                } flex max-h-[30px] min-h-[30px] min-w-[140px] items-center justify-center border ${bcolors[
-                  idx % bcolors.length
-                ]!} p-1 text-white hover:bg-slate-700`}
-                onClick={() => onSelect(docu)}
-              >
-                <p
-                  onPointerDown={onPointerDown}
-                  className="text-ellipsis text-xs  md:text-sm"
-                >
-                  {displayDate(new Date(data.date?.seconds * 1000))}
-                </p>
-              </div>
-            );
-          })
-        ) : (
-          <></>
-        )}
-      </div>
+    <div className="h-full w-full items-center justify-center bg-slate-800">
+      {docs.length ? (
+        <div className={`pt-1`}>
+          <p className="pl-4 text-white">
+            App runs:{" "}
+            <b>
+              <span className={` ${colors[docs.length % colors.length]!}`}>
+                {" "}
+                {docs.length}
+              </span>
+            </b>
+          </p>
+          <div
+            ref={containerRef}
+            className={`flex h-[75px] items-center space-x-4 overflow-auto p-2`}
+          >
+            {docs && docs.length ? (
+              docs.map(
+                (docu: QueryDocumentSnapshot<DocumentData>, idx: number) => {
+                  const data = docu.data() as unknown as AppRun;
+                  return (
+                    <div
+                      key={docu.id}
+                      className={`${
+                        selectedDoc && selectedDoc.id === docu.id
+                          ? "bg-slate-700"
+                          : "bg-slate-900"
+                      } flex max-h-[30px] min-h-[30px] min-w-[140px] items-center justify-center border ${bcolors[
+                        idx % bcolors.length
+                      ]!} p-1 text-white hover:bg-slate-700`}
+                      onClick={() => onSelect(docu)}
+                    >
+                      <p
+                        onPointerDown={onPointerDown}
+                        className="text-ellipsis text-xs  md:text-sm"
+                      >
+                        {displayDate(new Date(data.date?.seconds * 1000))}
+                      </p>
+                    </div>
+                  );
+                }
+              )
+            ) : (
+              <></>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-[85px] flex-1 items-center justify-center">
+          <p className="text-white">No App runs from selected date range</p>
+        </div>
+      )}
     </div>
   );
 };

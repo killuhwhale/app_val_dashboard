@@ -364,332 +364,355 @@ const AmaceResultTable: React.FC<{
     });
 
   return (
-    <div className={`min-w-full flex-1 bg-slate-900`}>
-      {hideHeader ? (
-        <></>
-      ) : (
-        <div className="mt-6 flex w-full items-center justify-around">
-          <div className="flex w-1/2">
-            <div className="w-2/3">
-              <p className="ml-6 text-white">
-                App results {`(${amaceResults.length}) `}
-                {amaceResults && amaceResults[0] && amaceResults[0]?.runTS ? (
-                  splitDateStringWithColor(
-                    displayDateWithTime(new Date(amaceResults[0].runTS))
-                  ).map((spanEl: React.ReactNode) => spanEl)
-                ) : (
-                  <p>No date</p>
-                )}
-              </p>
-            </div>
-            <div className="flex w-1/3">
-              <TableToClipBoard
-                generateText={() => genText(resultState)}
-                tootlTipText="Copy Table"
-                key={"AmaceTable"}
-              />
-              <div className="ml-12 flex">
-                <ResultLink
-                  query={`s_d=${startDate}&e_d=${endDate}&id=${selectedDocID}`}
-                  page={page}
-                  key={selectedDocID}
+    <>
+      {selectedDocID && amaceResults.length > 0 ? (
+        <div className={`min-w-full flex-1 bg-slate-900`}>
+          {hideHeader ? (
+            <></>
+          ) : (
+            <div className="mt-6 flex w-full items-center justify-around">
+              <div className="flex w-1/2">
+                <div className="w-2/3">
+                  <p className="ml-6 text-white">
+                    App results {`(${amaceResults.length}) `}
+                    {amaceResults &&
+                    amaceResults[0] &&
+                    amaceResults[0]?.runTS ? (
+                      splitDateStringWithColor(
+                        displayDateWithTime(new Date(amaceResults[0].runTS))
+                      ).map((spanEl: React.ReactNode) => spanEl)
+                    ) : (
+                      <p>No date</p>
+                    )}
+                  </p>
+                </div>
+                <div className="flex w-1/3">
+                  <TableToClipBoard
+                    generateText={() => genText(resultState)}
+                    tootlTipText="Copy Table"
+                    key={"AmaceTable"}
+                  />
+                  <div className="ml-12 flex">
+                    <ResultLink
+                      query={`s_d=${startDate}&e_d=${endDate}&id=${selectedDocID}`}
+                      page={page}
+                      key={selectedDocID}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex w-1/3 items-center p-1">
+                <p className="text-white lg:mr-6">Filter</p>
+                <input
+                  placeholder="Package name"
+                  className=" block h-[35px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
+                  onChange={(ev: ChangeEvent<HTMLInputElement>) =>
+                    debFilterText(ev.target.value)
+                  }
+                />
+              </div>
+              <div className="flex w-1/4 items-center justify-end p-1 lg:pr-12">
+                <DeleteAmaceRun
+                  docID={selectedDocID}
+                  key="DeleteDocFromFirebase"
                 />
               </div>
             </div>
-          </div>
-          <div className="flex w-1/3 items-center p-1">
-            <p className="text-white lg:mr-6">Filter</p>
-            <input
-              placeholder="Package name"
-              className=" block h-[35px] w-[100px] rounded-lg border border-gray-300 bg-slate-900 p-2.5 text-sm  text-white focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 sm:w-[300px]"
-              onChange={(ev: ChangeEvent<HTMLInputElement>) =>
-                debFilterText(ev.target.value)
-              }
+          )}
+
+          <div className={`block max-h-[465px] overflow-y-auto bg-slate-900`}>
+            {amaceResults && amaceResults.length ? (
+              <table
+                className={`max-w-full bg-slate-900 text-center text-sm font-light text-white`}
+                key={"TableStatic"}
+              >
+                <thead className="sticky top-0 z-10 border-b border-neutral-500 bg-slate-900 font-medium">
+                  <tr>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("pkgName", 0);
+                      }}
+                      className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Package NameZ{" "}
+                        {sortDirs[0] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("appName", 1);
+                      }}
+                      className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Name{" "}
+                        {sortDirs[1] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => {
+                        onHeaderClick("status", 2);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Status{" "}
+                        {sortDirs[2] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => {
+                        onHeaderClick("brokenStatus", 3);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Broken Status{" "}
+                        {sortDirs[3] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+
+                    <th
+                      onClick={() => {
+                        onHeaderClick("appType", 4);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        App Type{" "}
+                        {sortDirs[4] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      onClick={() => {
+                        onHeaderClick("appVersion", 5);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        App Version{" "}
+                        {sortDirs[5] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("appTS", 6);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        App TS{" "}
+                        {sortDirs[6] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("loginResults", 13);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Login Results{" "}
+                        {sortDirs[13] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("runID", 7);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Run ID{" "}
+                        {sortDirs[7] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("runTS", 8);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Run TS{" "}
+                        {sortDirs[8] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("deviceInfo", 9);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Device Info{" "}
+                        {sortDirs[9] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("buildInfo", 10);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Build Info{" "}
+                        {sortDirs[10] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("history", 11);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        History{" "}
+                        {sortDirs[11] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      scope="col"
+                      onClick={() => {
+                        onHeaderClick("logs", 12);
+                      }}
+                      className="px-6 py-4 hover:bg-slate-700"
+                    >
+                      <div className="flex items-center justify-center">
+                        Logs{" "}
+                        {sortDirs[12] === -1 ? (
+                          <MdArrowDownward size={24} />
+                        ) : (
+                          <MdArrowUpward size={24} />
+                        )}
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  className="ml-5 overflow-y-auto bg-slate-900"
+                  key={parentKey}
+                >
+                  {resultState.map(
+                    (amaceResult: AmaceDBResult, idx: number) => {
+                      const curFilteredPackageNamesDecoratedStings =
+                        filteredPackageNamesDecoratedStings?.get(
+                          amaceResult.pkgName
+                        );
+                      return (
+                        <AmaceResultRow
+                          key={`${amaceResult.appTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
+                          amaceResult={amaceResult}
+                          setShowHistory={(show: boolean) =>
+                            setShowHistory(show)
+                          }
+                          setShowLogs={(show: boolean) => setShowLogs(show)}
+                          onSelectHistory={(text: string) =>
+                            onSelectHistory(text)
+                          }
+                          onSelectLogs={(text: string) => onSelectLogs(text)}
+                          onSelectAppName={(text: string) =>
+                            onSelectAppName(text)
+                          }
+                          decoratedPackageName={
+                            curFilteredPackageNamesDecoratedStings
+                          }
+                        />
+                      );
+                    }
+                  )}
+                </tbody>
+              </table>
+            ) : (
+              <></>
+            )}
+
+            <ViewHistoryModal
+              isOpen={showHistory}
+              history={selHistory}
+              appName={selAppName}
+              onClose={() => setShowHistory(!showHistory)}
+            />
+
+            <ViewLogsModal
+              isOpen={showLogs}
+              logs={selLogs}
+              onClose={() => setShowLogs(!showLogs)}
+              appName={selAppName}
             />
           </div>
-          <div className="flex w-1/4 items-center justify-end p-1 lg:pr-12">
-            <DeleteAmaceRun docID={selectedDocID} key="DeleteDocFromFirebase" />
-          </div>
+        </div>
+      ) : (
+        <div className="flex h-[400px] flex-1 items-center justify-center">
+          <p className="text-white">Select an App Run Above</p>
         </div>
       )}
-
-      <div className={`block max-h-[465px] overflow-y-auto bg-slate-900`}>
-        {amaceResults && amaceResults.length ? (
-          <table
-            className={`max-w-full bg-slate-900 text-center text-sm font-light text-white`}
-            key={"TableStatic"}
-          >
-            <thead className="sticky top-0 z-10 border-b border-neutral-500 bg-slate-900 font-medium">
-              <tr>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("pkgName", 0);
-                  }}
-                  className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Package NameZ{" "}
-                    {sortDirs[0] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("appName", 1);
-                  }}
-                  className=" bg-slate-900 px-6 py-4  hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Name{" "}
-                    {sortDirs[1] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => {
-                    onHeaderClick("status", 2);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Status{" "}
-                    {sortDirs[2] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => {
-                    onHeaderClick("brokenStatus", 3);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Broken Status{" "}
-                    {sortDirs[3] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-
-                <th
-                  onClick={() => {
-                    onHeaderClick("appType", 4);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    App Type{" "}
-                    {sortDirs[4] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  onClick={() => {
-                    onHeaderClick("appVersion", 5);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    App Version{" "}
-                    {sortDirs[5] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("appTS", 6);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    App TS{" "}
-                    {sortDirs[6] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("loginResults", 13);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Login Results{" "}
-                    {sortDirs[13] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("runID", 7);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Run ID{" "}
-                    {sortDirs[7] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("runTS", 8);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Run TS{" "}
-                    {sortDirs[8] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("deviceInfo", 9);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Device Info{" "}
-                    {sortDirs[9] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("buildInfo", 10);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Build Info{" "}
-                    {sortDirs[10] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("history", 11);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    History{" "}
-                    {sortDirs[11] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  onClick={() => {
-                    onHeaderClick("logs", 12);
-                  }}
-                  className="px-6 py-4 hover:bg-slate-700"
-                >
-                  <div className="flex items-center justify-center">
-                    Logs{" "}
-                    {sortDirs[12] === -1 ? (
-                      <MdArrowDownward size={24} />
-                    ) : (
-                      <MdArrowUpward size={24} />
-                    )}
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody
-              className="ml-5 overflow-y-auto bg-slate-900"
-              key={parentKey}
-            >
-              {resultState.map((amaceResult: AmaceDBResult, idx: number) => {
-                const curFilteredPackageNamesDecoratedStings =
-                  filteredPackageNamesDecoratedStings?.get(amaceResult.pkgName);
-                return (
-                  <AmaceResultRow
-                    key={`${amaceResult.appTS}_${amaceResult.runID}_${amaceResult.pkgName}`}
-                    amaceResult={amaceResult}
-                    setShowHistory={(show: boolean) => setShowHistory(show)}
-                    setShowLogs={(show: boolean) => setShowLogs(show)}
-                    onSelectHistory={(text: string) => onSelectHistory(text)}
-                    onSelectLogs={(text: string) => onSelectLogs(text)}
-                    onSelectAppName={(text: string) => onSelectAppName(text)}
-                    decoratedPackageName={
-                      curFilteredPackageNamesDecoratedStings
-                    }
-                  />
-                );
-              })}
-            </tbody>
-          </table>
-        ) : (
-          <></>
-        )}
-
-        <ViewHistoryModal
-          isOpen={showHistory}
-          history={selHistory}
-          appName={selAppName}
-          onClose={() => setShowHistory(!showHistory)}
-        />
-
-        <ViewLogsModal
-          isOpen={showLogs}
-          logs={selLogs}
-          onClose={() => setShowLogs(!showLogs)}
-          appName={selAppName}
-        />
-      </div>
-    </div>
+    </>
   );
 };
 

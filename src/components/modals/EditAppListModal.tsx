@@ -16,10 +16,12 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
   onClose,
   listProp,
 }) => {
+  // Makes copy of current list
   const [list, setList] = useState<AppListEntry | null>(
     listProp ? { ...listProp } : null
   );
 
+  // Allow updates to reflect
   useEffect(() => {
     console.log("useEffect props: ", listProp);
     if (
@@ -30,6 +32,7 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
       setList({ ...listProp });
   }, [listProp]);
 
+  // Change local copy
   const onChange = (text: string) => {
     const cList: AppListEntry = { ...list } as AppListEntry;
     cList["apps"] = text;
@@ -43,13 +46,14 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
   };
 
   const updateListTRPC = api.example.updateAppList.useMutation();
+
+  // Use local copy to update firebase
   const updateList = () => {
     if (list && list.listname) {
       if (!list.driveURL && !list.apps) {
         return alert("Entry must have either Folder ID or List of apps!");
       }
       try {
-        console.log("Creating: ", list);
         updateListTRPC.mutate(list);
       } catch (err) {
         alert(`Failed to create app list: ${(err as string).toString()}`);
@@ -59,12 +63,10 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
 
   useEffect(() => {
     if (updateListTRPC.data !== undefined) {
-      onClose();
       if (!updateListTRPC.data.updated) {
-        alert("Failed to update list: ");
-      } else {
-        console.log("Updated list!");
+        return alert("Failed to update list: ");
       }
+      onClose();
     }
   }, [updateListTRPC.data]);
 
@@ -77,20 +79,22 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
             onClick={onClose}
           ></div>
           <div className="z-50 flex h-[475px] w-[600px] flex-col justify-between rounded-md bg-white p-4">
-            <h2 className="mb-2 justify-center text-center  text-lg font-bold">
+            <h2 className="mb-2 justify-center text-center  text-lg font-bold text-black">
               App Val
             </h2>
-            <h3 className="text-center font-bold">Update App List</h3>
+            <h3 className="text-center font-bold text-black">
+              Update App List
+            </h3>
 
             {list !== null && list !== undefined ? (
               <div className="flex flex-col justify-center">
-                <p className="font-medium">
+                <p className="font-medium text-black">
                   Editing: <span className="font-light">{list.listname}</span>
                 </p>
                 {list.playstore ? (
                   <></>
                 ) : (
-                  <p className="font-medium">
+                  <p className="font-medium text-black">
                     Folder:{" "}
                     <input
                       className="w-full  bg-slate-300 font-light"
@@ -103,10 +107,10 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
                   </p>
                 )}
 
-                <p className="pb-1 pt-4 font-light">Apps</p>
+                <p className="pb-1 pt-4 font-bold text-black">Apps</p>
 
                 <textarea
-                  className="bg-slate-300 pl-1"
+                  className="bg-slate-300 pl-1 text-emerald-700"
                   rows={9}
                   cols={80}
                   placeholder="Apps"

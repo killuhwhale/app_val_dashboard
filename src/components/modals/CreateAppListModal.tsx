@@ -73,22 +73,24 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
             onClick={onClose}
           ></div>
           <div className="z-50 flex h-[650px] w-[600px] flex-col justify-between rounded-md bg-white p-4">
-            <h2 className="mb-2 justify-center text-center  text-lg font-bold">
+            <h2 className="mb-2 justify-center text-center  text-lg font-bold text-black">
               App Val
             </h2>
-            <h3 className="text-center font-bold">Create App List</h3>
+            <h3 className="text-center font-bold text-black">
+              Create App List
+            </h3>
 
             <div className="flex flex-col justify-center">
-              <p className="pb-1 pt-4 font-light">List name</p>
+              <p className="pb-1 pt-4 text-black">List name</p>
               <input
-                className="bg-slate-300  font-light"
+                className="bg-slate-300  font-light "
                 placeholder="List name"
                 value={list.listname}
                 onChange={(event: ChangeEvent<HTMLInputElement>) =>
                   onChangeName(event.target.value)
                 }
               />
-              <p className="pb-1 pt-4 font-light">Drive URL</p>
+              <p className="pb-1 pt-4 text-black">Drive URL</p>
               <input
                 className="bg-slate-300  font-light"
                 placeholder="Drive URL"
@@ -97,7 +99,7 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
                   onChangeDriveURL(event.target.value)
                 }
               />
-              <p className="pb-1 pt-4 font-light">Apps</p>
+              <p className="pb-1 pt-4 text-black">Apps</p>
               <textarea
                 className="bg-slate-300 pl-1  font-light"
                 rows={9}
