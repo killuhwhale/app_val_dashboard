@@ -35,6 +35,10 @@ brokenStatusReasons.set("101", "FailedInstall");
 brokenStatusReasons.set("102", "FailedLaunch");
 brokenStatusReasons.set("103", "FailedAmaceCheck");
 
+function isBrokenStatus(status: number): boolean {
+  return status >= 40;
+}
+
 const ping = (
   msg: string,
   // eslint-disable-next-line
@@ -143,6 +147,7 @@ function compareStrings(s1: string, s2: string): number {
 export {
   statusReasons,
   brokenStatusReasons,
+  isBrokenStatus,
   wssURL,
   ping,
   pj,

@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
-import CONFIG from "../../../config.json";
+import { isValidGetRequest, isValidPostReq } from "./utils";
 
 const db = firestore;
 
@@ -15,14 +14,8 @@ type AppCreds = {
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  console.log(req.method);
-  console.log(req.headers["content-type"]);
-
-  if (req.method === "POST") res.status(200).json({ text: "Hello post" });
-  else if (req.method !== "GET")
-    return res.status(404).json({ text: "Hello 404" });
-  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
-    return res.status(403).json({ text: "Hello unauth guy" });
+  if (!isValidGetRequest(req))
+    return res.status(403).json({ text: "Invalid get request" });
 
   try {
     const docRefParent = db.collection(`AppCreds`);
@@ -34,8 +27,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       results[doc.id] = { l: docData.l, p: docData.p };
     });
 
-    console.log("Results: ", results);
-
     res.status(200).json({
       data: {
         success: true,
@@ -44,13 +35,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       error: null,
     });
   } catch (err: any) {
-    console.log("Caught error: ", err);
+    console.log("Caught error appCreds: ", err);
     res.status(500).json({
       data: {
         success: false,
         data: null,
       },
-      error: `Err posting: ${String(err)}`,
+      error: `Err: ${String(err)}`,
     });
   }
 };

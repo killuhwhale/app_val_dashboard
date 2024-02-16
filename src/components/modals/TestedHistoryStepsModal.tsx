@@ -4,7 +4,7 @@ import AmaceResultTable from "../tables/AmaceResultTable";
 interface ActionCancelProps {
   isOpen: boolean;
   onClose(): void;
-  brokenAppResult: BrokenAppDBResult | null;
+  brokenAppResult: StackedAppDBResult | null;
 }
 const TestedHistoryStepsModal: React.FC<ActionCancelProps> = ({
   isOpen,

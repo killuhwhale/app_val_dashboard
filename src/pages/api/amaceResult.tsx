@@ -1,18 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { MONTHS, compareStrings } from "~/components/shared";
-import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
-import CONFIG from "../../../config.json";
+import { isValidPostReq } from "./utils";
+import { MONTHS, isBrokenStatus } from "~/components/shared";
 
 const db = firestore;
-
-type GlobalAppResult = {
-  name: string;
-  packageName: string;
-  status: string;
-  version: string;
-  date: Date;
-};
 
 /**  Endpoint to post a single app run.
  *
@@ -32,7 +23,7 @@ const year = today.getFullYear();
 const month = MONTHS[today.getMonth()]!;
 
 /**
- * AppResults
+ * AppResults @ecox
  *   -  using to process latest runs to enable effiecient runs in the future
  */
 async function handleAppResults(result: AmaceResult) {
@@ -85,7 +76,7 @@ async function handleAppResults(result: AmaceResult) {
  * AmaceRuns
  *   - Main results for ea runID shown in table on the dashboard
  */
-async function handleRunResults(result: AmaceResult) {
+async function handleAmaceRuns(result: AmaceResult) {
   const {
     appName,
     appTS,
@@ -165,13 +156,13 @@ const makeTestHistory = (amaceResult: AmaceResult) => {
  *  We wil update fields to reflect the devices the app was tested on and its reported failures.
  *
  */
-async function updateBrokenResult(
+async function updateStackedResult(
   result: AmaceResult,
   docRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
 ) {
   // If we havea  document that exists, that means we have tested this app this month already and its broken.
   // we only need to update this entry to add the version tested if its newer, or if we tested on a newer device build.
-  const dbData = (await docRef.get()).data() as BrokenAppDBResult;
+  const dbData = (await docRef.get()).data() as StackedAppDBResult;
 
   // Check if app version and testedOnDevices are already stored, if so this is a repaet and we can move on....
   let isDuplicate = false;
@@ -182,47 +173,30 @@ async function updateBrokenResult(
     if (key === curItemKey) isDuplicate = true;
   });
 
-  if (isDuplicate) {
+  if (!isDuplicate) {
     const histStep = makeTestHistory(result);
     const prevSteps = JSON.parse(dbData.testedHistory) as TestedHistoryStep[];
-    let combinedSteps = [] as TestedHistoryStep[];
-    if (prevSteps.length > 0) {
-      combinedSteps = [...prevSteps, histStep];
-    } else {
-      combinedSteps = [histStep];
-    }
+    const combinedSteps = [...prevSteps, histStep] as TestedHistoryStep[];
 
     await docRef.update({
       testedHistory: JSON.stringify(combinedSteps),
     });
   } else {
     console.log(
-      `Broken app is a duplicate, we have already tested this app version(${
-        result.appVersion
-      }) on this device(${deviceBuildkey(result)})`
+      `${dbData.appName} has already been tested:
+       App version(${result.appVersion})
+       on this device(${deviceBuildkey(result)})`
     );
   }
 }
 
-async function handleBrokenResults(result: AmaceResult) {
-  const {
-    appName,
-    appTS,
-    status,
-    brokenStatus,
-    pkgName,
-    runID,
-    runTS,
-    buildInfo,
-    deviceInfo,
-    appType,
-    appVersion,
-    history,
-    logs,
-    loginResults,
-  } = result;
+async function handleStackedResults(
+  result: AmaceResult,
+  collectionName: string
+) {
+  const { appName, pkgName, appType } = result;
 
-  const monthlyDocRef = db.collection(`BrokenApps`).doc(`${year} ${month}`);
+  const monthlyDocRef = db.collection(collectionName).doc(`${year} ${month}`);
 
   const monthlyDoc = await monthlyDocRef.get();
 
@@ -231,97 +205,56 @@ async function handleBrokenResults(result: AmaceResult) {
       date: new Date(`${month}-01-${year}`),
     });
   }
-
   const pkgNameDocRef = monthlyDocRef.collection("apps").doc(pkgName);
-
   const pkgNameDoc = await pkgNameDocRef.get();
-  console.log("handling broken result, exists: ", pkgNameDoc.exists);
 
-  if (pkgNameDoc.exists) return await updateBrokenResult(result, pkgNameDocRef);
-  else {
-    const appData = {
-      appName,
-      pkgName,
-      appType,
-      testedHistory: JSON.stringify([makeTestHistory(result)]),
-    } as BrokenAppDBResult;
-
-    return await pkgNameDocRef.set(appData);
+  if (pkgNameDoc.exists) {
+    return await updateStackedResult(result, pkgNameDocRef);
   }
+
+  const appData = {
+    appName,
+    pkgName,
+    appType,
+    testedHistory: JSON.stringify([makeTestHistory(result)]),
+  } as StackedAppDBResult;
+
+  return await pkgNameDocRef.set(appData);
+}
+
+async function handleBrokenResults(result: AmaceResult) {
+  return await handleStackedResults(result, "BrokenApps");
 }
 
 async function handleTop250Results(result: AmaceResult) {
-  const {
-    appName,
-    appTS,
-    status,
-    brokenStatus,
-    pkgName,
-    runID,
-    runTS,
-    buildInfo,
-    deviceInfo,
-    appType,
-    appVersion,
-    history,
-    logs,
-    loginResults,
-  } = result;
+  return await handleStackedResults(result, "Top250");
+}
 
-  const monthlyDocRef = db.collection(`Top250`).doc(`${year} ${month}`);
-
-  const monthlyDoc = await monthlyDocRef.get();
-
-  if (!monthlyDoc.exists) {
-    await monthlyDocRef.set({
-      date: new Date(`${month}-01-${year}`),
-    });
-  }
-
-  const pkgNameDocRef = monthlyDocRef.collection("apps").doc(pkgName);
-
-  const pkgNameDoc = await pkgNameDocRef.get();
-  console.log("handling Top 250 broken result, exists: ", pkgNameDoc.exists);
-
-  if (pkgNameDoc.exists) return await updateBrokenResult(result, pkgNameDocRef);
-  else {
-    console.log("Creating new handleTop250Results: ");
-    const appData = {
-      appName,
-      pkgName,
-      appType,
-      testedHistory: JSON.stringify([makeTestHistory(result)]),
-    } as BrokenAppDBResult;
-
-    return await pkgNameDocRef.set(appData);
+// Handle reporting of apps that have been tested multiple times
+async function handleStackedReporting(amaceResult: AmaceResult) {
+  if (isBrokenStatus(amaceResult.brokenStatus)) {
+    if (amaceResult.dSrcPath === "AppLists/Top 250") {
+      await handleTop250Results(amaceResult);
+    }
+    return await handleBrokenResults(amaceResult);
   }
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  console.log(req.method);
-  console.log(req.headers["content-type"]);
-  if (req.method === "GET") res.status(200).json({ text: "Hello get" });
-  else if (req.method !== "POST")
-    return res.status(404).json({ text: "Hello 404" });
-  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
-    return res.status(403).json({ text: "Hello unauth guy" });
+  if (!isValidPostReq(req))
+    return res.status(403).json({ text: "invalidPostRequest" });
+  // if (req.method === "GET") res.status(200).json({ text: "Hello get" });
+  // else if (req.method !== "POST")
+  //   return res.status(404).json({ text: "Hello 404" });
+  // else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
+  //   return res.status(403).json({ text: "Hello unauth guy" });
 
   try {
-    const body = req.body as AmaceResult;
-    console.log("Incoming body: ", body);
     const amaceResult = JSON.parse(JSON.stringify(req.body)) as AmaceResult;
 
     await handleAppResults(amaceResult);
-    await handleRunResults(amaceResult);
-
-    if (
-      amaceResult.brokenStatus >= 40 &&
-      amaceResult.dSrcPath === "AppLists/Top 250"
-    ) {
-      console.log("handleTop250Results: ");
-      await handleTop250Results(amaceResult);
-    } else if (amaceResult.brokenStatus >= 40)
-      await handleBrokenResults(amaceResult);
+    await handleAmaceRuns(amaceResult);
+    await handleStackedReporting(amaceResult);
 
     res.status(200).json({
       data: {

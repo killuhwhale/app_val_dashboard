@@ -76,9 +76,9 @@ const getReasonStatObj = () => {
 };
 
 const rebuildLatestAmaceResultsFromBrokenResult = (
-  results: BrokenAppDBResult[]
+  results: StackedAppDBResult[]
 ): AmaceDBResult[] => {
-  return results.map((result: BrokenAppDBResult) => {
+  return results.map((result: StackedAppDBResult) => {
     const testedHistory = result
       ? (JSON.parse(result.testedHistory) as unknown as TestedHistoryStep[])
       : ([] as TestedHistoryStep[]);

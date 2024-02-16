@@ -110,8 +110,7 @@ type AmaceDBResult = {
   loginResults: number;
 };
 
-// From firebase to UI
-type BrokenAppDBResult = {
+type StackedAppDBResult = {
   appName: string;
   pkgName: string;
   appType: AppType;

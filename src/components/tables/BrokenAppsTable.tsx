@@ -34,11 +34,11 @@ const splitDateStringWithColor = (dateString: string): React.ReactNode[] => {
   return result;
 };
 
-const genText = (rows: BrokenAppDBResult[]) => {
+const genText = (rows: StackedAppDBResult[]) => {
   const header =
     "Package Name\tName\tStatus\tBroken Status\tApp Type\tApp Version\tApp TS\tTested On\tLogin Results\tRun ID\tRun TS\tDevice Info\tBuild Info\tHistory\tLogs\n";
   const data = [header];
-  rows.forEach((row: BrokenAppDBResult) => {
+  rows.forEach((row: StackedAppDBResult) => {
     const { pkgName, appName, appType, testedHistory: latestHistoryStr } = row;
 
     const testedHistory = JSON.parse(latestHistoryStr) as TestedHistoryStep[];
@@ -88,7 +88,7 @@ const genText = (rows: BrokenAppDBResult[]) => {
 
 const BrokenAppsTable: React.FC<{
   //   monthlyDoc: QueryDocumentSnapshot<DocumentData>;
-  amaceResults: BrokenAppDBResult[];
+  amaceResults: StackedAppDBResult[];
   height: number;
   parentKey: string;
   path: string;
@@ -148,7 +148,7 @@ const BrokenAppsTable: React.FC<{
     );
 
     const packageNameMarks = new Map<string, string>();
-    amaceResults.forEach((amaceResult: BrokenAppDBResult) => {
+    amaceResults.forEach((amaceResult: StackedAppDBResult) => {
       packageNameMarks.set(
         amaceResult.pkgName ?? "",
         amaceResult.pkgName ?? ""
@@ -166,7 +166,7 @@ const BrokenAppsTable: React.FC<{
       );
       const packageNameMarks = new Map<string, string>();
 
-      amaceResults.forEach((amaceResult: BrokenAppDBResult) => {
+      amaceResults.forEach((amaceResult: StackedAppDBResult) => {
         packageNameMarks.set(
           amaceResult.pkgName ?? "",
           amaceResult.pkgName ?? ""
@@ -177,7 +177,7 @@ const BrokenAppsTable: React.FC<{
     }
     // Updates filtered data.
     const stringData = amaceResults.map(
-      (amaceResult: BrokenAppDBResult) => amaceResult.pkgName
+      (amaceResult: StackedAppDBResult) => amaceResult.pkgName
     );
     // console.log("Filter text: ", searchTerm, stringData);
     const options: filterOptions = {
@@ -210,29 +210,31 @@ const BrokenAppsTable: React.FC<{
 
   const resultState = amaceResults
     .filter((_, i: number) => filteredPackageNames.indexOf(i) >= 0)
-    .sort((amaceResult: BrokenAppDBResult, amaceResultB: BrokenAppDBResult) => {
-      const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
-      const sortDir = sortDirs[sortDirIdx] ?? 0;
-      // if (sortKey === "loginResults") {
-      //   return sortLoginResult(
-      //     amaceResult[sortKey as keyof BrokenAppDBResult] as number
-      //   ) <
-      //     sortLoginResult(
-      //       amaceResultB[sortKey as keyof BrokenAppDBResult] as number
-      //     )
-      //     ? sortDir
-      //     : -sortDir;
-      // }
+    .sort(
+      (amaceResult: StackedAppDBResult, amaceResultB: StackedAppDBResult) => {
+        const sortDirIdx = keysToIdx[sortKey as keyof typeof keysToIdx];
+        const sortDir = sortDirs[sortDirIdx] ?? 0;
+        // if (sortKey === "loginResults") {
+        //   return sortLoginResult(
+        //     amaceResult[sortKey as keyof StackedAppDBResult] as number
+        //   ) <
+        //     sortLoginResult(
+        //       amaceResultB[sortKey as keyof StackedAppDBResult] as number
+        //     )
+        //     ? sortDir
+        //     : -sortDir;
+        // }
 
-      return amaceResult[sortKey as keyof BrokenAppDBResult] <
-        amaceResultB[sortKey as keyof BrokenAppDBResult]
-        ? sortDir
-        : -sortDir;
-    });
+        return amaceResult[sortKey as keyof StackedAppDBResult] <
+          amaceResultB[sortKey as keyof StackedAppDBResult]
+          ? sortDir
+          : -sortDir;
+      }
+    );
 
   const [showTestedHistory, setShowTestedHistory] = useState(false);
   const [curTestedHistory, setCurTestedHistory] =
-    useState<BrokenAppDBResult | null>(null);
+    useState<StackedAppDBResult | null>(null);
 
   return (
     <div className={`min-w-full flex-1 bg-slate-900`}>
@@ -507,7 +509,7 @@ const BrokenAppsTable: React.FC<{
               key={parentKey}
             >
               {resultState.map(
-                (amaceResult: BrokenAppDBResult, idx: number) => {
+                (amaceResult: StackedAppDBResult, idx: number) => {
                   const curFilteredPackageNamesDecoratedStings =
                     filteredPackageNamesDecoratedStings?.get(
                       amaceResult.pkgName

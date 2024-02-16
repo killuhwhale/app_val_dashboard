@@ -1,19 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import fs from "fs";
-import { env } from "~/env.mjs";
 import { firestore } from "~/utils/firestore";
-import CONFIG from "../../../config.json";
+import { isValidPostReq } from "./utils";
 
 const db = firestore;
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   console.log(req.method);
   console.log(req.headers["content-type"]);
-  if (req.method === "GET") res.status(200).json({ text: "Hello get" });
-  else if (req.method !== "POST")
-    return res.status(404).json({ text: "Hello 404" });
-  else if (req.headers.authorization !== CONFIG.AMACE_API_KEY)
-    return res.status(403).json({ text: "Hello unauth guy" });
+  if (!isValidPostReq(req))
+    return res.status(403).json({ text: "Invalid post request" });
+
   try {
     // doc.id = packageName
     // {
@@ -43,13 +40,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       error: null,
     });
   } catch (err: any) {
-    console.log("Caught error: ", err);
+    console.log("Caught error createCreds: ", err);
     res.status(500).json({
       data: {
         success: false,
         data: process.cwd(),
       },
-      error: `Err posting: ${String(err)}`,
+      error: `Err: ${String(err)}`,
     });
   }
 };

@@ -16,19 +16,18 @@ import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 import { MdViewModule } from "react-icons/md";
 import { Tooltip } from "react-tooltip";
+
 import AmaceResultTable from "~/components/tables/AmaceResultTable";
 import AmaceRuns from "~/components/AmaceRuns";
 import DatePicker from "~/components/AppValDatePicker";
-
 import BarChartPassFailTotals from "~/components/charts/BarChartPassFailTotals";
 import FullColumn from "~/components/columns/FullColumn";
-
-import { processStats } from "~/utils/chartUtils";
 import {
   formatFirebaseDate,
   formatFromDatepickerToFirebase,
 } from "~/utils/dateUtils";
 import { frontFirestore } from "~/utils/frontFirestore";
+import { processStats } from "~/utils/chartUtils";
 
 type AppsScriptUrlFB = {
   url: string;
@@ -65,7 +64,7 @@ const AMACEPage: React.FC = () => {
   const [selectedDoc, setSelectedDoc] =
     useState<QueryDocumentSnapshot<DocumentData>>();
 
-  const days = 4;
+  const days = 4; // Default range of days to query
 
   const router = useRouter();
   const { query: _query } = router;
@@ -180,7 +179,7 @@ const AMACEPage: React.FC = () => {
         );
     }
   });
-
+  const talbeKey = `key__${selectedDoc ? selectedDoc?.id : ""}`;
   return (
     <>
       <FullColumn height="h-[60px]">
@@ -218,8 +217,8 @@ const AMACEPage: React.FC = () => {
       <FullColumn height="h-[545px] mt-6">
         <AmaceResultTable
           height={400}
-          key={`key__${selectedDoc?.id}`}
-          parentKey={`key__${selectedDoc?.id}`}
+          key={talbeKey}
+          parentKey={talbeKey}
           amaceResults={appResults}
           startDate={startDate.getTime()}
           endDate={endDate.getTime()}

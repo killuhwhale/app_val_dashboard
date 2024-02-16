@@ -10,6 +10,30 @@ import {
 
 const currentPageColor = "bg-emerald-900";
 
+const NavMenuItem: React.FC<{
+  path: string;
+  title: string;
+  currentLoc: string;
+  itemIcon: JSX.Element;
+  itemEndIcon?: JSX.Element;
+}> = ({ path, title, currentLoc, itemIcon, itemEndIcon }) => {
+  const i = <MdDashboardCustomize />;
+  return (
+    <li>
+      <Link
+        href={path}
+        className={`${
+          currentLoc.endsWith(path) ? currentPageColor : ""
+        } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
+      >
+        {itemIcon}
+        <span className="ml-3 flex-1 whitespace-nowrap">{title}</span>
+        {itemEndIcon}
+      </Link>
+    </li>
+  );
+};
+
 const NavMenu: React.FC = () => {
   const [currentLoc, setCurrentLoc] = useState("");
   useEffect(() => {
@@ -27,103 +51,65 @@ const NavMenu: React.FC = () => {
     >
       <div className="h-full overflow-y-auto bg-transparent px-3 pb-4">
         <ul className="space-y-2 font-medium text-slate-100">
-          <li>
-            <Link
-              href="/"
-              className="flex items-center rounded-lg p-2  hover:bg-blue-500 "
-            >
-              <MdDashboardCustomize />
-              <span className="ml-3 flex-1 whitespace-nowrap">Home</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/brokenAppsView"
-              className={`${
-                currentLoc.endsWith("/brokenAppsView") ? currentPageColor : ""
-              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
-            >
-              <MdPhoneAndroid />
-              <span className="ml-3 max-w-[90px] flex-1 text-ellipsis whitespace-nowrap text-sm">
-                Broken Apps
-              </span>
-              {/* <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                Mobile
-              </span> */}
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/top250"
-              className={`${
-                currentLoc.endsWith("/top250") ? currentPageColor : ""
-              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
-            >
-              <MdPhoneAndroid />
-              <span className="ml-3 max-w-[90px] flex-1 text-ellipsis whitespace-nowrap text-sm">
-                Top 250
-              </span>
-              {/* <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                Mobile
-              </span> */}
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/amace"
-              className={`${
-                currentLoc.endsWith("/amace") ? currentPageColor : ""
-              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
-            >
-              <MdCenterFocusWeak />
-              <span className="ml-3 flex-1 whitespace-nowrap">Amac-E</span>
+          <NavMenuItem
+            path="/"
+            itemIcon={<MdDashboardCustomize />}
+            title="Home"
+            currentLoc={currentLoc}
+          />
+
+          <NavMenuItem
+            path="/brokenAppsView"
+            itemIcon={<MdPhoneAndroid />}
+            title="Broken Apps"
+            currentLoc={currentLoc}
+          />
+
+          <NavMenuItem
+            path="/top250"
+            itemIcon={<MdPhoneAndroid />}
+            title="Top 250"
+            currentLoc={currentLoc}
+          />
+          <NavMenuItem
+            path="/amace"
+            itemIcon={<MdPhoneAndroid />}
+            itemEndIcon={
               <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 Mobile
               </span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/manageRuns"
-              className={`${
-                currentLoc.endsWith("/manageRuns") ? currentPageColor : ""
-              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
-            >
-              <MdCenterFocusWeak />
-              <span className="ml-3 flex-1 whitespace-nowrap">Manage</span>
+            }
+            title="Amac-E"
+            currentLoc={currentLoc}
+          />
+          <NavMenuItem
+            path="/manageRuns"
+            itemIcon={<MdCenterFocusWeak />}
+            itemEndIcon={
               <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 Mobile
               </span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/enterprise"
-              className={`${
-                currentLoc.endsWith("/enterprise") ? currentPageColor : ""
-              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
-            >
-              <MdLaptopChromebook />
-              <span className="ml-3 flex-1 whitespace-nowrap">Enterprise</span>
-              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+            }
+            title="Manage"
+            currentLoc={currentLoc}
+          />
+          <NavMenuItem
+            path="/enterprise"
+            itemIcon={<MdLaptopChromebook />}
+            itemEndIcon={
+              <span className="ml-3 inline-flex items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 Web
               </span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/settings"
-              className={`${
-                currentLoc.endsWith("/settings") ? currentPageColor : ""
-              } flex items-center rounded-lg p-2  hover:bg-blue-500 `}
-            >
-              <MdSettings />
-              <span className="ml-3 flex-1 whitespace-nowrap">Settings</span>
-              {/* <span className="ml-3 inline-flex h-3 w-3 items-center justify-center rounded-full bg-blue-100 p-3 text-sm font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                  3
-                </span> */}
-            </Link>
-          </li>
+            }
+            title="Enterprise"
+            currentLoc={currentLoc}
+          />
+          <NavMenuItem
+            path="/settings"
+            itemIcon={<MdSettings />}
+            title="Settings"
+            currentLoc={currentLoc}
+          />
         </ul>
       </div>
     </aside>

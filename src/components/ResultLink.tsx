@@ -28,7 +28,6 @@ const ResultLink: React.FC<ResultLinkProps> = ({ page, query }) => {
       setInit(false);
       return;
     }
-    console.log("Linking: ", query);
 
     const setClip = async (text: string) => {
       try {
@@ -44,7 +43,6 @@ const ResultLink: React.FC<ResultLinkProps> = ({ page, query }) => {
   }, [toggle]);
 
   // const link = `http://localhost:3000/${page}/s_d=${startDate}&e_d=${endDate}&id=${selectedDocID}`
-
   return (
     <>
       <p

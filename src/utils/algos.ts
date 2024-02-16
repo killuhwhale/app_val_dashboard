@@ -48,8 +48,6 @@ export const filter = (
   // prepare options
   const ignoreCase = option("case", false);
   const enableMarking = option("mark", true);
-  // const markPrefix = option("prefix", "<span style='color: green;'>");
-  // const markSuffix = option("suffix", "</span>");
   const markSuffix = "</span>";
   const matchWholeWords = option("word", true);
   const limit = option("limit", 0);
@@ -116,7 +114,6 @@ export const filter = (
         )}${markSuffix}`;
 
         markNum += 1;
-        // console.log("Marked first char", wordIndex);
       }
       textIndex = wordIndex + wordLength;
     }

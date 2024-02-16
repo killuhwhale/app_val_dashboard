@@ -10,7 +10,6 @@ const ProfileMenu: React.FC = () => {
 
   useEffect(() => {
     if (ref.current) return;
-    console.log("INit", ref.current);
     window.document.addEventListener("click", (ev) => {
       if (!showDropdown && ev.target !== iconRef.current) {
         setShowDropdown(false);
@@ -40,7 +39,7 @@ const ProfileMenu: React.FC = () => {
               src={
                 sessionData && sessionData.user && sessionData.user.image
                   ? sessionData.user.image
-                  : "https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                  : "images/alien_head.png"
               }
               alt="user photo"
             />

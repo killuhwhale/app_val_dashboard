@@ -15,9 +15,9 @@ import {
 } from "./sharedTables";
 
 interface BrokenAppRowProps {
-  amaceResult: BrokenAppDBResult;
+  amaceResult: StackedAppDBResult;
   decoratedPackageName?: string;
-  onClick(item: BrokenAppDBResult): void;
+  onClick(item: StackedAppDBResult): void;
 }
 
 const BrokenAppRow: React.FC<BrokenAppRowProps> = ({
