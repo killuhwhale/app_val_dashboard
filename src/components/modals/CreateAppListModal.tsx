@@ -1,5 +1,6 @@
 import { ChangeEvent, ChangeEventHandler, useEffect, useState } from "react";
 import { api } from "~/utils/api";
+import { getAppCount } from "./EditAppListModal";
 
 interface EditAppListModalProps {
   isOpen: boolean;
@@ -99,7 +100,7 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
                   onChangeDriveURL(event.target.value)
                 }
               />
-              <p className="pb-1 pt-4 text-black">Apps</p>
+              <p className="pb-1 pt-4 text-black">Apps ({getAppCount(list)})</p>
               <textarea
                 className="bg-slate-300 pl-1  font-light"
                 rows={9}

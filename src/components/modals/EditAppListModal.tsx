@@ -11,6 +11,19 @@ function unEscapeAppList(escapedList: string): string {
   return escapedList.replaceAll("\\n", "\n").replaceAll("\\t", "\t");
 }
 
+export function getAppCount(list: AppListEntry | null) {
+  if (!list) return 0;
+
+  const text = list["apps"];
+  let numApps = 0;
+  if (text.indexOf("\\n") > -1) {
+    numApps = text.split("\\n").length;
+  } else {
+    numApps = text.split("\n").length;
+  }
+  return numApps;
+}
+
 const EditAppListModal: React.FC<EditAppListModalProps> = ({
   isOpen,
   onClose,
@@ -28,15 +41,17 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
       listProp?.listname !== list?.listname &&
       listProp !== null &&
       listProp !== undefined
-    )
-      setList({ ...listProp });
+    ) {
+      const listCopy = { ...listProp };
+      setList(listCopy);
+    }
   }, [listProp]);
 
   // Change local copy
   const onChange = (text: string) => {
-    const cList: AppListEntry = { ...list } as AppListEntry;
-    cList["apps"] = text;
-    setList(cList);
+    const listCopy: AppListEntry = { ...list } as AppListEntry;
+    listCopy["apps"] = text;
+    setList(listCopy);
   };
 
   const onChangeDriveURL = (text: string) => {
@@ -107,7 +122,9 @@ const EditAppListModal: React.FC<EditAppListModalProps> = ({
                   </p>
                 )}
 
-                <p className="pb-1 pt-4 font-bold text-black">Apps</p>
+                <p className="pb-1 pt-4 font-bold text-black">
+                  Apps ({getAppCount(list)})
+                </p>
 
                 <textarea
                   className="bg-slate-300 pl-1 text-emerald-700"
