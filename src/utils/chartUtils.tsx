@@ -33,6 +33,7 @@ const getAmaceReasonStatObj = () => {
     Fail: 0,
     LaunchFail: 0,
     Crashed: 0,
+    DNE: 0,
     Needspurchase: 0,
     Appisold: 0,
     Failedtoinstall: 0,

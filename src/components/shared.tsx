@@ -2,9 +2,11 @@ const statusReasons = new Map<string, string>();
 const brokenStatusReasons = new Map<string, string>();
 
 // Display String based on status
+// NOTE: also update chartutils/getAmaceReasonStatObj as well.
 statusReasons.set("0", "Fail");
 statusReasons.set("1", "Launch Fail");
 statusReasons.set("2", "Crashed");
+statusReasons.set("3", "DNE");
 statusReasons.set("10", "Needs purchase");
 statusReasons.set("20", "App is old");
 statusReasons.set("30", "Failed to install");
@@ -20,6 +22,7 @@ statusReasons.set("100", "Tablet only");
 statusReasons.set("110", "Amace");
 statusReasons.set("120", "PWA");
 
+// NOTE: also update chartutils/getReasonStatObj as well.
 brokenStatusReasons.set("0", "LoggedinGoogle");
 brokenStatusReasons.set("10", "LoggedinFacebook");
 brokenStatusReasons.set("20", "LoggedinEmail");
